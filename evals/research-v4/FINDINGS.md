@@ -45,8 +45,8 @@ deterministic fidelity screen. Rhetorical-to-declarative вариант не б�
 - что нулевой наблюдаемый разброс сохранится в другой день или версии модели;
 - что найден путь к `<20%` при малом бюджете.
 
-Текущие claims должны опираться на `pilot-03-canonical.json`, а не на эту
-таблицу.
+Текущие claims должны опираться на `pilot-03-canonical.json` и
+`pilot-04-b1-canonical.json`, а не на эту историческую таблицу.
 
 ## Current: scientific abstract pilot-03
 
@@ -66,3 +66,31 @@ S2 — первый кандидат с edit cost `<1%`, который одно
 Варианты S1/S5 с edit cost около 0.5–0.63% не прошли ZeroGPT/Scribbr. Более
 глубокие S3/S4 дали низкие scores в двух сервисах, но не являются
 least-changed candidate и пока имеют недостаточно повторов.
+
+## Current: B1 transfer and highlight pilot-04
+
+`pilot-04` повторил B1-пару после `plain_text_v1` и проверял SHA только после
+terminal state. В исходный план добавлены пять новых вариантов: четыре внутри
+подсветки ZeroGPT и один location control вне подсветки.
+
+| Кандидат | Edit cost | ZeroGPT | Scribbr v7.1.0 | Sapling | Решение |
+|---|---:|---:|---:|---:|---|
+| Human control, ICNALE B1 | 0 | 25.5% ×3 | 0% ×3 | 99.5% ×1 | два тяжёлых FP |
+| AI baseline | 0 | 51.0% ×3 | 28% ×3 | 100% ×1 | baseline fail |
+| S4 punctuation merge | 0.15% | 50.6% ×3 | 32% ×3 | 100% ×1 | отвергнуто: regression |
+| S10 outside-highlight control | 2.0% | 50.0–50.1% | 27% ×3 | 100% ×1 | малый эффект, не pass |
+
+Четыре новые допустимые правки внутри подсвеченных предложений дали ZeroGPT
+`51.4–55.3%`, то есть не улучшили baseline. Контроль вне подсветки стабильно
+снизил ZeroGPT примерно на 0.9 пункта и Scribbr на 1 пункт, но остался далеко
+выше `<20%` и не сдвинул Sapling.
+
+Практический вывод: подсветка — место статистического подозрения сервиса, но
+не причинная инструкция «редактировать здесь». Для каждой такой гипотезы нужен
+outside-highlight control. Human controls также показали, что score нельзя
+интерпретировать как авторство: Sapling почти не разделил human и AI
+(`99.5%` против `100%`), а ZeroGPT дал человеческому B1-тексту `25.5%`.
+
+S3 был ошибочно включён в первичный ZeroGPT screen при известном
+`NEGATION_CHANGED`. Результат сохранён для аудита, помечен
+`quality_rejected_exploratory` и исключён из Pareto и admission.

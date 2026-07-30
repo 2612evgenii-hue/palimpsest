@@ -2,7 +2,7 @@
   "schema": "palimpsest.live-research-pilot.v1",
   "observed_at": "2026-07-30",
   "status": "superseded",
-  "superseded_by": "pilot-03-canonical.json",
+  "superseded_by": "pilot-04-b1-canonical.json",
   "purpose": "historical B1 calibration on upstream raw text; not admissible evidence",
   "binding_limit": "The input SHA was checked before scanning. A later forward-test found service-specific trailing-whitespace normalization, so post-terminal identity was not proven.",
   "sample_pair": "essay-b1-01",

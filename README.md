@@ -43,14 +43,16 @@ Plateau, waiver, средний score, один прошедший сервис 
 human/AI corpus, calibration/holdout split, однофакторные варианты, повторы,
 human controls, CEFR/fidelity/style screens и Pareto-отбор.
 
-Исследование публикует и отрицательные результаты. Текущий canonical
-scientific pilot нашёл вариант с edit cost 0,73%, который прошёл ZeroGPT и
-Scribbr, но остался 99,6% в Sapling; human control в Sapling получил 100%.
-Поэтому вариант не превращён в «рецепт». Прежний B1 pilot помечен superseded
-после обнаружения transport whitespace. См.
+Исследование публикует и отрицательные результаты. Scientific pilot нашёл
+вариант с edit cost 0,73%, который прошёл ZeroGPT и Scribbr, но остался 99,6%
+в Sapling. Новый canonical B1 pilot проверил десять однофакторных правок:
+единственный повторяемый cross-service эффект составил лишь −0,9…−1 п.п.,
+остался далеко выше порога, а правки в подсвеченных ZeroGPT зонах чаще
+ухудшали score. Ни один вариант не превращён в «рецепт». См.
 [протокол](evals/research-v4/PROTOCOL.md),
 [текущие результаты](evals/research-v4/FINDINGS.md) и
-[машиночитаемый pilot-03](evals/research-v4/pilot-03-canonical.json).
+[машиночитаемые pilot-03](evals/research-v4/pilot-03-canonical.json) /
+[pilot-04](evals/research-v4/pilot-04-b1-canonical.json).
 
 ## Для чего нужен Palimpsest
 

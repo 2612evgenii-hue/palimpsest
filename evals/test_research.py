@@ -14,6 +14,7 @@ SCRIPTS = ROOT / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 import research_matrix  # noqa: E402
 import research_corpus  # noqa: E402
+import research_pilot  # noqa: E402
 import research_variants  # noqa: E402
 
 
@@ -86,7 +87,7 @@ class ResearchCorpusTests(unittest.TestCase):
             (ROOT / "evals/research-v4/pilot-02-b1.json").read_text(encoding="utf-8")
         )
         self.assertEqual(pilot["status"], "superseded")
-        self.assertEqual(pilot["superseded_by"], "pilot-03-canonical.json")
+        self.assertEqual(pilot["superseded_by"], "pilot-04-b1-canonical.json")
         for observation in pilot["observations"]:
             self.assertEqual(
                 observation["candidate_sha256"],
@@ -147,6 +148,105 @@ class ResearchCorpusTests(unittest.TestCase):
         self.assertEqual(scores("human-control", "sapling"), [100])
         self.assertFalse(pilot["admission"]["passes_all_observed_services"])
         self.assertFalse(pilot["admission"]["rule_admitted"])
+
+    def test_canonical_b1_pilot_rejects_highlight_map_and_small_score_gain(
+        self,
+    ) -> None:
+        pilot = json.loads(
+            (ROOT / "evals/research-v4/pilot-04-b1-canonical.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(pilot["status"], "current_calibration")
+        candidates = pilot["candidates"]
+        plan = json.loads(
+            (
+                ROOT / "evals/research-v4/essay-b1-01-variant-plan.json"
+            ).read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            plan["original_sha256"],
+            candidates["baseline"]["canonical_sha256"],
+        )
+        self.assertEqual(
+            {operation["id"] for operation in plan["operations"]},
+            set(candidates) - {"human-control", "baseline"},
+        )
+        for observation in pilot["observations"]:
+            expected_sha = candidates[observation["candidate"]]["canonical_sha256"]
+            self.assertEqual(observation["post_visible_text_sha256"], expected_sha)
+            self.assertEqual(observation["terminal_state"], "complete")
+
+        def scores(candidate: str, service: str) -> list[float]:
+            matches = [
+                observation["scores_pct"]
+                for observation in pilot["observations"]
+                if observation["candidate"] == candidate
+                and observation["service"] == service
+            ]
+            self.assertEqual(len(matches), 1)
+            return matches[0]
+
+        self.assertEqual(scores("human-control", "zerogpt"), [25.5, 25.5, 25.5])
+        self.assertEqual(scores("human-control", "scribbr"), [0, 0, 0])
+        self.assertEqual(scores("human-control", "sapling"), [99.5])
+        self.assertGreater(
+            scores("s4-merge-smell-frame", "scribbr")[0],
+            scores("baseline", "scribbr")[0],
+        )
+        self.assertLess(
+            max(scores("s10-unhighlighted-control", "zerogpt")),
+            min(scores("baseline", "zerogpt")),
+        )
+        self.assertLess(
+            max(scores("s10-unhighlighted-control", "scribbr")),
+            min(scores("baseline", "scribbr")),
+        )
+        self.assertEqual(
+            scores("s10-unhighlighted-control", "sapling"),
+            scores("baseline", "sapling"),
+        )
+        highlighted_new = {
+            "s6-split-health-example",
+            "s7-active-passive-smoke-claim",
+            "s8-expand-balanced-frame",
+            "s9-expand-imagined-scene",
+        }
+        baseline_score = scores("baseline", "zerogpt")[0]
+        self.assertTrue(
+            all(
+                scores(candidate, "zerogpt")[0] > baseline_score
+                for candidate in highlighted_new
+            )
+        )
+        rejected = candidates["s3-rhetorical-to-declarative"]
+        self.assertEqual(rejected["quality"]["status"], "rejected")
+        self.assertNotIn(
+            "s3-rhetorical-to-declarative",
+            pilot["pareto"]["eligible_candidates"],
+        )
+        self.assertFalse(
+            pilot["admission"]["highlight_map_supported_as_causal_edit_guide"]
+        )
+        self.assertFalse(pilot["admission"]["rule_admitted"])
+        computed = research_pilot.validate_declared_pareto(
+            ROOT / "evals/research-v4/pilot-04-b1-canonical.json"
+        )
+        self.assertEqual(
+            computed["eligible_candidates"],
+            ["baseline", "s4-merge-smell-frame", "s10-unhighlighted-control"],
+        )
+        self.assertFalse(any(row["hard_pass"] for row in computed["rows"]))
+
+    def test_live_pilot_validator_rejects_declared_pareto_theater(self) -> None:
+        pilot_path = ROOT / "evals/research-v4/pilot-04-b1-canonical.json"
+        pilot = json.loads(pilot_path.read_text(encoding="utf-8"))
+        pilot["pareto"]["rows"][-1]["hard_pass"] = True
+        with tempfile.TemporaryDirectory() as temp:
+            tampered = Path(temp) / "pilot.json"
+            tampered.write_text(json.dumps(pilot), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "declared pareto mismatch"):
+                research_pilot.validate_declared_pareto(tampered)
 
 
 class ResearchVariantTests(unittest.TestCase):
