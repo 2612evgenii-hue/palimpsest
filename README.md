@@ -48,11 +48,34 @@ human controls, CEFR/fidelity/style screens и Pareto-отбор.
 в Sapling. Новый canonical B1 pilot проверил десять однофакторных правок:
 единственный повторяемый cross-service эффект составил лишь −0,9…−1 п.п.,
 остался далеко выше порога, а правки в подсвеченных ZeroGPT зонах чаще
-ухудшали score. Ни один вариант не превращён в «рецепт». См.
+ухудшали score. Technical C1 pilot добавил ещё десять однофакторных вариантов
+и прогрессивные пакеты: edit cost до 7,32% не сдвинул насыщенные 100% в
+ZeroGPT/Scribbr, а уже четыре объединённые правки нарушили CEFR-envelope.
+Human control при этом получил 38% в ZeroGPT, 0% в Scribbr и 99,1% в Sapling.
+Ни один вариант не превращён в «рецепт». См.
 [протокол](evals/research-v4/PROTOCOL.md),
 [текущие результаты](evals/research-v4/FINDINGS.md) и
 [машиночитаемые pilot-03](evals/research-v4/pilot-03-canonical.json) /
-[pilot-04](evals/research-v4/pilot-04-b1-canonical.json).
+[pilot-04](evals/research-v4/pilot-04-b1-canonical.json) /
+[pilot-05](evals/research-v4/pilot-05-tech-canonical.json).
+
+Воспроизвести закреплённый corpus, варианты pilot-05 и проверку Pareto:
+
+```bash
+python3 scripts/research_corpus.py \
+  --manifest evals/research-v4/corpus-manifest.json \
+  --out-dir work/research-corpus
+python3 scripts/research_variants.py \
+  --original work/research-corpus/qa-tech-01-ai.txt \
+  --plan evals/research-v4/qa-tech-01-variant-plan.json \
+  --out-dir work/qa-tech-01-variants
+python3 scripts/research_variants.py \
+  --original work/research-corpus/qa-tech-01-ai.txt \
+  --plan evals/research-v4/qa-tech-01-progressive-plan.json \
+  --out-dir work/qa-tech-01-progressive
+python3 scripts/research_pilot.py \
+  --pilot evals/research-v4/pilot-05-tech-canonical.json
+```
 
 ## Для чего нужен Palimpsest
 

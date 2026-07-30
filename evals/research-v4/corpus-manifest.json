@@ -212,6 +212,37 @@
       "canonical_sha256": "e8a5e18a2a1944171e06f0a6843ef49a802b0823eab8a4235082dd5506ed1e59"
     },
     {
+      "id": "qa-tech-01-human",
+      "dataset": "aigc-text-bank-deepseek",
+      "row_id": "qa_000958",
+      "range_start": 48000000,
+      "range_length": 1000000,
+      "field": "text",
+      "model": "DeepSeek",
+      "authorship": "human",
+      "genre": "technical_explanation",
+      "topic_pair": "qa-tech-01",
+      "partition": "calibration",
+      "word_count": 192,
+      "sha256": "23647552b6146b0914beccb38abc02565a56a485881836df4adc947e27b593b4"
+    },
+    {
+      "id": "qa-tech-01-ai",
+      "dataset": "aigc-text-bank-deepseek",
+      "row_id": "qa_000958",
+      "range_start": 48000000,
+      "range_length": 1000000,
+      "field": "text_ai",
+      "model": "DeepSeek",
+      "authorship": "ai",
+      "genre": "technical_explanation",
+      "topic_pair": "qa-tech-01",
+      "partition": "calibration",
+      "word_count": 191,
+      "sha256": "ce05ac1fe2e9a0ab59907d42594b41af6f739da38b849b1b8fb9781053108963",
+      "canonical_sha256": "291f288af76993e300921dfd71dc35ee824299f2e1c52b447776bcad3309e862"
+    },
+    {
       "id": "news-01-human",
       "dataset": "aigc-text-bank-deepseek",
       "row_id": "news_000636",

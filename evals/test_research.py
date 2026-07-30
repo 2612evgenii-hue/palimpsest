@@ -238,6 +238,59 @@ class ResearchCorpusTests(unittest.TestCase):
         )
         self.assertFalse(any(row["hard_pass"] for row in computed["rows"]))
 
+    def test_technical_pilot_records_saturation_and_quality_cliff(self) -> None:
+        pilot_path = ROOT / "evals/research-v4/pilot-05-tech-canonical.json"
+        pilot = json.loads(pilot_path.read_text(encoding="utf-8"))
+        self.assertEqual(pilot["status"], "current_calibration")
+        self.assertEqual(pilot["genre"], "technical_explanation")
+        self.assertTrue(pilot["source_as_reference"])
+        candidates = pilot["candidates"]
+
+        def scores(candidate: str, service: str) -> list[float]:
+            matches = [
+                observation["scores_pct"]
+                for observation in pilot["observations"]
+                if observation["candidate"] == candidate
+                and observation["service"] == service
+            ]
+            self.assertEqual(len(matches), 1)
+            return matches[0]
+
+        self.assertEqual(scores("human-control", "zerogpt"), [38, 38, 38])
+        self.assertEqual(scores("human-control", "scribbr"), [0, 0, 0])
+        self.assertEqual(scores("human-control", "sapling"), [99.1])
+        self.assertEqual(scores("baseline", "zerogpt"), [100, 100, 100])
+        self.assertEqual(scores("baseline", "scribbr"), [100, 100, 100])
+        self.assertEqual(
+            scores("p2-punctuation-and-verb", "zerogpt"),
+            [100, 100, 100],
+        )
+        self.assertEqual(
+            scores("p2-punctuation-and-verb", "scribbr"),
+            [100, 100, 100],
+        )
+        self.assertEqual(
+            pilot["zerogpt_highlight_map"]["baseline_marked_sentences"],
+            pilot["zerogpt_highlight_map"]["baseline_total_sentences"],
+        )
+        self.assertEqual(
+            candidates["p4-plus-two-splits"]["quality"]["status"],
+            "rejected",
+        )
+        self.assertGreater(
+            candidates["p6-plus-frame-removals"]["quality"]["style_distance"],
+            30,
+        )
+        self.assertEqual(pilot["blocked_services"][0]["service"], "copyleaks")
+        self.assertFalse(pilot["admission"]["rule_admitted"])
+        computed = research_pilot.validate_declared_pareto(pilot_path)
+        self.assertEqual(
+            computed["eligible_candidates"],
+            ["baseline", "p2-punctuation-and-verb"],
+        )
+        self.assertEqual(computed["frontier"], ["baseline"])
+        self.assertFalse(any(row["hard_pass"] for row in computed["rows"]))
+
     def test_live_pilot_validator_rejects_declared_pareto_theater(self) -> None:
         pilot_path = ROOT / "evals/research-v4/pilot-04-b1-canonical.json"
         pilot = json.loads(pilot_path.read_text(encoding="utf-8"))
@@ -300,6 +353,77 @@ class ResearchVariantTests(unittest.TestCase):
                 encoding="utf-8",
             )
             with self.assertRaisesRegex(ValueError, "expected one source span"):
+                research_variants.build(original, plan, root / "variants")
+
+    def test_builder_supports_hash_bound_progressive_bundles(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            original_text = "First stable sentence. Second stable sentence."
+            original = root / "original.txt"
+            original.write_text(original_text, encoding="utf-8")
+            plan = root / "plan.json"
+            plan.write_text(
+                json.dumps(
+                    {
+                        "original_sha256": digest(original_text),
+                        "operations": [
+                            {
+                                "id": "two-local-edits",
+                                "factor": "progressive_bundle",
+                                "replacements": [
+                                    {
+                                        "old": "First stable sentence.",
+                                        "new": "The first sentence is stable.",
+                                    },
+                                    {
+                                        "old": "Second stable sentence.",
+                                        "new": "The second sentence is stable.",
+                                    },
+                                ],
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            result = research_variants.build(original, plan, root / "variants")
+            candidate = result["variants"][0]
+            self.assertEqual(candidate["replacement_count"], 2)
+            self.assertEqual(
+                Path(candidate["path"]).read_text(encoding="utf-8"),
+                "The first sentence is stable. The second sentence is stable.",
+            )
+
+    def test_builder_rejects_mixed_single_and_bundle_shapes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            original_text = "A stable sentence."
+            original = root / "original.txt"
+            original.write_text(original_text, encoding="utf-8")
+            plan = root / "plan.json"
+            plan.write_text(
+                json.dumps(
+                    {
+                        "original_sha256": digest(original_text),
+                        "operations": [
+                            {
+                                "id": "ambiguous-shape",
+                                "factor": "test",
+                                "old": "A stable sentence.",
+                                "new": "The sentence is stable.",
+                                "replacements": [
+                                    {
+                                        "old": "A stable sentence.",
+                                        "new": "The sentence remains stable.",
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "not both"):
                 research_variants.build(original, plan, root / "variants")
 
     def test_surface_metric_counts_punctuation_only_edit(self) -> None:

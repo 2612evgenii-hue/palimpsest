@@ -28,6 +28,38 @@ def character_change_metrics(original: str, candidate: str) -> dict:
     }
 
 
+def _operation_replacements(operation: dict) -> list[dict[str, str]]:
+    """Return one or more exact replacements for a candidate operation.
+
+    A single-factor operation keeps the compact ``old``/``new`` form.  A
+    progressive bundle uses ``replacements`` so the research harness can test
+    cumulative low-cost edits without hand-building an unbound text file.
+    """
+    if "replacements" in operation:
+        replacements = operation["replacements"]
+        if (
+            not isinstance(replacements, list)
+            or not replacements
+            or any(
+                not isinstance(replacement, dict)
+                or not isinstance(replacement.get("old"), str)
+                or not isinstance(replacement.get("new"), str)
+                for replacement in replacements
+            )
+        ):
+            raise ValueError(f"{operation.get('id', '<unknown>')}: invalid replacements")
+        if "old" in operation or "new" in operation:
+            raise ValueError(
+                f"{operation.get('id', '<unknown>')}: use old/new or replacements, not both"
+            )
+        return replacements
+    if not isinstance(operation.get("old"), str) or not isinstance(
+        operation.get("new"), str
+    ):
+        raise ValueError(f"{operation.get('id', '<unknown>')}: missing old/new")
+    return [{"old": operation["old"], "new": operation["new"]}]
+
+
 def build(original_path: Path, plan_path: Path, out_dir: Path) -> dict:
     original = original_path.read_text(encoding="utf-8")
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
@@ -36,12 +68,18 @@ def build(original_path: Path, plan_path: Path, out_dir: Path) -> dict:
     out_dir.mkdir(parents=True, exist_ok=True)
     rows = []
     for operation in plan["operations"]:
-        old = operation["old"]
-        new = operation["new"]
-        count = original.count(old)
-        if count != 1:
-            raise ValueError(f"{operation['id']}: expected one source span, found {count}")
-        candidate = original.replace(old, new, 1)
+        candidate = original
+        replacements = _operation_replacements(operation)
+        for replacement_number, replacement in enumerate(replacements, start=1):
+            old = replacement["old"]
+            new = replacement["new"]
+            count = candidate.count(old)
+            if count != 1:
+                raise ValueError(
+                    f"{operation['id']} replacement {replacement_number}: "
+                    f"expected one source span, found {count}"
+                )
+            candidate = candidate.replace(old, new, 1)
         destination = out_dir / f"{operation['id']}.txt"
         destination.write_text(candidate, encoding="utf-8")
         metrics = minimality.analyze(original, candidate, 1.0, 1.0)
@@ -50,6 +88,7 @@ def build(original_path: Path, plan_path: Path, out_dir: Path) -> dict:
             {
                 "id": operation["id"],
                 "factor": operation["factor"],
+                "replacement_count": len(replacements),
                 "path": str(destination),
                 "sha256": digest(candidate),
                 "doc_change_ratio": metrics["doc_change_ratio"],

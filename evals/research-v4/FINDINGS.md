@@ -45,8 +45,9 @@ deterministic fidelity screen. Rhetorical-to-declarative вариант не б�
 - что нулевой наблюдаемый разброс сохранится в другой день или версии модели;
 - что найден путь к `<20%` при малом бюджете.
 
-Текущие claims должны опираться на `pilot-03-canonical.json` и
-`pilot-04-b1-canonical.json`, а не на эту историческую таблицу.
+Текущие claims должны опираться на `pilot-03-canonical.json`,
+`pilot-04-b1-canonical.json` и `pilot-05-tech-canonical.json`, а не на эту
+историческую таблицу.
 
 ## Current: scientific abstract pilot-03
 
@@ -94,3 +95,37 @@ outside-highlight control. Human controls также показали, что sc
 S3 был ошибочно включён в первичный ZeroGPT screen при известном
 `NEGATION_CHANGED`. Результат сохранён для аудита, помечен
 `quality_rejected_exploratory` и исключён из Pareto и admission.
+
+## Current: technical C1 saturation pilot-05
+
+`pilot-05` использует связанную human/DeepSeek пару из одной строки
+AIGC-text-bank. AI-текст — техническое объяснение объёмом 191 слово; при
+отсутствующем внешнем референсе он сам служит style reference. Целевой уровень
+зафиксирован как C1.
+
+| Кандидат | Edit cost | ZeroGPT | Scribbr v7.1.0 | Sapling | Решение |
+|---|---:|---:|---:|---:|---|
+| Human control | 0 | 38% ×3 | 0% ×3 | 99,1% ×1 | тяжёлый FP в Sapling, FP ZeroGPT |
+| AI baseline | 0 | 100% ×3 | 100% ×3 | 100% ×1 | saturated baseline |
+| 8 допустимых single-factor | 0,15–2,36% | 100% ×1 | 100% ×1 | — | нет измеримого эффекта |
+| P2: punctuation + verb | 0,52% | 100% ×3 | 100% ×3 | 100% ×1 | baseline доминирует |
+| P4: + two splits | 1,55% | 100% ×1 | 100% ×1 | — | rejected: CEFR drift |
+| P6: + frame removals | 5,04% | 100% ×1 | 100% ×1 | — | rejected: CEFR/style |
+| P7: + analogy removal | 7,32% | 100% ×1 | 100% ×1 | 100% ×1 | rejected: CEFR/style |
+
+ZeroGPT отметил все 11 предложений baseline. Поэтому highlight map не дал
+локальной гипотезы: «редактировать подсвеченное» означало бы редактировать весь
+текст. Восемь прошедших quality screen микроправок — пунктуация, локальный
+глагол, удаление мета-перехода, parenthetical structure, два split,
+снятие аналогии и прямое начало — не сдвинули ни ZeroGPT, ни Scribbr с потолка
+100%.
+
+Progressive bundles были диагностическим ceiling/cliff probe, а не попыткой
+обойти критерий допуска комбинаций. Уже P4 вышел за допустимый C1 drift, P6/P7
+дали style distance выше 30, но score всё равно не изменился. Практический
+вывод: на таком saturated sample эскалацию нужно остановить раньше потери
+уровня и почерка. Правила «менять пунктуацию», «делить предложения» или
+«удалять AI-like frame» из этого пилота не допускаются.
+
+Copyleaks принял точный human-control текст в публичную форму, но после submit
+вернул `scan limit reached`; score не записан и не восстановлен догадкой.

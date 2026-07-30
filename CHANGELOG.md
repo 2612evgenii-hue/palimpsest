@@ -1,5 +1,19 @@
 # Changelog
 
+## Research 4.0 — в работе, версия skill не повышена
+
+- добавлена hash-pinned human/DeepSeek пара технического EN-текста;
+- проведён `pilot-05`: human controls, три baseline repeats, десять
+  однофакторных правок и progressive ceiling/cliff probe;
+- при edit cost до 7,32% ZeroGPT и Scribbr остались на насыщенных 100%;
+- human control получил 38% в ZeroGPT, 0% в Scribbr и 99,1% в Sapling;
+- Copyleaks зафиксирован как `blocked`, без подстановки выдуманного score;
+- правило в production-skill не допущено: четыре объединённые правки уже
+  нарушали C1-envelope, а измеримого detector response не появилось;
+- research builder поддерживает несколько точных hash-bound replacements в
+  одном прогрессивном кандидате;
+- полный selftest расширен до 114 тестов.
+
 ## 3.5.0 — 2026-07-30
 
 Версия возвращена к исходному пользовательскому контракту F1.

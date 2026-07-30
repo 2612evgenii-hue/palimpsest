@@ -2,6 +2,19 @@
 
 Дата среза: 2026-07-30.
 
+## ZeroGPT
+
+- [Публичная страница ZeroGPT](https://www.zerogpt.com/) описывает
+  DeepAnalyse™ как многоэтапную deep-learning методологию от macro- к
+  micro-level, обученную на интернет-текстах, educational datasets и
+  proprietary synthetic data. Точные признаки, версия модели и benchmark
+  protocol на странице не раскрыты.
+
+Вывод: подсветка предложений показывает вклад по мнению black-box сервиса, но
+не раскрывает причинный edit rule. В pilot-05 ZeroGPT пометил все 11
+предложений, а восемь разных микроправок сохранили 100%; на таком потолке
+highlight нельзя использовать как локальный навигатор.
+
 ## GPTZero
 
 - [GPTZero: Robust Detection of LLM-Generated Texts](https://arxiv.org/abs/2602.13042)
@@ -9,6 +22,10 @@
 - [Официальное пояснение GPTZero](https://support.gptzero.me/articles/9585228410-how-do-i-interpret-burstiness-or-perplexity)
   прямо говорит, что с осени 2023 года perplexity и burstiness больше не
   используются для AI detection.
+- [Технологическая страница GPTZero](https://gptzero.me/technology) описывает
+  mixed classification и Advanced Scan, который ранжирует вклад участков
+  документа, но не утверждает, что локальная правка подсветки причинно снизит
+  итоговый score.
 
 Вывод: старое правило «добавить burstiness» не может быть основанием для 4.0.
 Коммерческий GPTZero нужно проверять как меняющийся classifier.
@@ -17,7 +34,9 @@
 
 - [V10 testing methodology](https://copyleaks.com/ai-detector/testing-methodology)
   описывает отдельные human/AI наборы, API-тестирование, ROC-AUC, TPR/TNR и
-  минимальную длину 350 символов.
+  минимальную длину 350 символов. Методология также публикует три sensitivity
+  levels; extra-sensitive режим заявлен специально для текстов после
+  humanizer/text spinner.
 - [How the detector works](https://copyleaks.com/ai-detector) перечисляет
   frequency ratios, parts of speech, syllable dispersion и hyphen usage.
 - [AI Logic](https://copyleaks.com/ai-detector/ai-logic) добавляет AI Phrases и
@@ -25,12 +44,15 @@
 
 Вывод: единичная замена синонима не обязана сдвигать многослойный результат.
 Тестировать нужно полный документ, естественные операции и переносимость.
+Публичные vendor benchmarks нельзя переносить на наш UI-run: они получены
+через API на закрытых наборах и не раскрывают score каждого текста.
 
 ## Scribbr / QuillBot family
 
 - [Официальное описание Scribbr](https://help.scribbr.com/hc/en-us/articles/39232894253719-How-does-the-AI-Detector-work)
   называет predictability, variation in sentence structure and length и
-  категории AI-generated / AI-refined / human-written.
+  категории AI-generated / AI-refined / human-written; страница отдельно
+  предупреждает, что результат не является стопроцентной гарантией.
 
 В live-интерфейсе 2026-07-30 Scribbr сообщил model `v7.1.0`. Это одна связанная
 семья, а не независимый голос сверх QuillBot.
@@ -43,20 +65,25 @@
 
 Вывод: Sapling полезен как дополнительная research-family для коротких EN
 текстов, но human control обязателен. В pilot-03 он дал 100% на человеческом
-scientific abstract, поэтому единичный Sapling score нельзя трактовать как
-авторство.
+scientific abstract, а в pilot-05 — 99,1% на человеческом technical control.
+Поэтому единичный Sapling score нельзя трактовать как авторство.
 
 ## Turnitin
 
 - [Как читать AI Writing report](https://guides.turnitin.com/hc/en-us/articles/27139000787853-How-should-I-review-the-AI-Writing-report)
   предупреждает, что score не должен использоваться как самостоятельный
   окончательный вывод.
+- [Using the AI Writing Report](https://guides.turnitin.com/hc/en-us/articles/22774058814093-AI-writing-detection-in-the-new-enhanced-Similarity-Report)
+  требует минимум 300 слов qualifying prose и скрывает точные значения 1–19%,
+  потому что в этом диапазоне выше риск false positives.
 - [Product updates](https://guides.turnitin.com/hc/en-us/articles/29645383597965-Turnitin-product-updates)
   подтверждают обновляемость моделей и отдельное обнаружение AI-paraphrased /
   bypassed content.
 
 Вывод: Turnitin важен как institutional reference, но без доступного
 повторяемого режима не может быть live-сервисом Palimpsest по умолчанию.
+Короткие пилоты на 100–200 слов также нельзя выдавать за proxy для Turnitin:
+они не проходят его опубликованный minimum-length contract.
 
 ## Независимые исследования
 
