@@ -728,8 +728,299 @@ class ResearchMicroEditTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "excluded"):
                 research_micro.load_result(path)
 
+    def test_micro_two_preregistration_is_minimal_first_and_source_bound(self) -> None:
+        path = ROOT / "evals/research-v4/micro-02-preregistration.json"
+        prereg = research_micro.validate_preregistration(path)
+        self.assertEqual(
+            prereg["schema"],
+            "palimpsest.micro-edit-preregistration.v2",
+        )
+        costs = {
+            item["id"]: item["edit_cost"]
+            for item in prereg["candidates"]
+            if item["eligible_for_live"]
+        }
+        self.assertEqual(
+            prereg["live_order"],
+            sorted(costs, key=lambda item: (costs[item], item)),
+        )
+        excluded = next(
+            item
+            for item in prereg["candidates"]
+            if item["id"] == "f3-metaphor-removal"
+        )
+        self.assertFalse(excluded["eligible_for_live"])
+        self.assertEqual(
+            excluded["exclusion_reason"],
+            "quality_first_style_non_improvement",
+        )
+
+    def test_micro_two_rejects_excluded_candidate_and_missing_transition(self) -> None:
+        prereg = json.loads(
+            (
+                ROOT / "evals/research-v4/micro-02-preregistration.json"
+            ).read_text(encoding="utf-8")
+        )
+        excluded = next(
+            item
+            for item in prereg["candidates"]
+            if item["id"] == "f3-metaphor-removal"
+        )
+        observation = {
+            "sample": excluded["sample"],
+            "id": excluded["id"],
+            "service": "zerogpt",
+            "scores_pct": [40],
+            "candidate_sha256": excluded["sha256"],
+            "post_visible_text_sha256": excluded["sha256"],
+            "terminal_states": ["complete"],
+            "transition_signals": ["loading_or_disabled_observed"],
+            "observed_at": ["2026-07-30T18:00:00Z"],
+        }
+        with self.assertRaisesRegex(ValueError, "unknown candidate"):
+            research_micro.observation_map(
+                {"observations": [observation]},
+                prereg,
+            )
+        eligible = next(
+            item for item in prereg["candidates"] if item["eligible_for_live"]
+        )
+        observation.update(
+            {
+                "sample": eligible["sample"],
+                "id": eligible["id"],
+                "candidate_sha256": eligible["sha256"],
+                "post_visible_text_sha256": eligible["sha256"],
+                "transition_signals": ["missing"],
+            }
+        )
+        with self.assertRaisesRegex(ValueError, "transition signal"):
+            research_micro.observation_map(
+                {"observations": [observation]},
+                prereg,
+            )
+
+    def test_micro_two_recomputes_cross_family_minimal_success(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            human_sha = "1" * 64
+            ai_sha = "2" * 64
+            candidate_sha = "3" * 64
+            baseline = {
+                "observations": [
+                    {
+                        "pair": "p1",
+                        "role": role,
+                        "service": service,
+                        "scores_pct": scores,
+                        "candidate_sha256": human_sha if role == "human" else ai_sha,
+                    }
+                    for role, service, scores in (
+                        ("human", "zerogpt", [10, 10, 10]),
+                        ("ai", "zerogpt", [50, 50, 50]),
+                        ("human", "scribbr", [0, 0, 0]),
+                        ("ai", "scribbr", [40, 40, 40]),
+                    )
+                ]
+            }
+            baseline_path = root / "baseline.json"
+            baseline_path.write_text(json.dumps(baseline), encoding="utf-8")
+            prereg = {
+                "schema": "palimpsest.micro-edit-preregistration.v2",
+                "baseline_binding": {
+                    "path": baseline_path.name,
+                    "sha256": hashlib.sha256(baseline_path.read_bytes()).hexdigest(),
+                    "selected_pairs": ["p1"],
+                },
+                "candidates": [
+                    {
+                        "sample": "p1",
+                        "id": "c1",
+                        "factor": "safe_factor",
+                        "sha256": candidate_sha,
+                        "edit_cost": 0.01,
+                        "eligible_for_live": True,
+                    }
+                ],
+                "factors": [{"id": "safe_factor"}],
+                "services": {
+                    "primary_screen": [
+                        {
+                            "id": "zerogpt",
+                            "minimum_effect_pct": 2,
+                            "maximum_same_sha_range_pct": 5,
+                        },
+                        {
+                            "id": "scribbr",
+                            "minimum_effect_pct": 2,
+                            "maximum_same_sha_range_pct": 5,
+                        },
+                    ],
+                    "start_controls": {
+                        "maximum_drift_from_frozen_median_pct": 5
+                    },
+                },
+            }
+
+            def observation(
+                *,
+                service: str,
+                scores: list[float],
+                sha: str,
+                role: str | None = None,
+            ) -> dict:
+                row = {
+                    "service": service,
+                    "scores_pct": scores,
+                    "candidate_sha256": sha,
+                    "post_visible_text_sha256": sha,
+                    "terminal_states": ["complete"] * len(scores),
+                    "transition_signals": [
+                        "loading_or_disabled_observed"
+                    ] * len(scores),
+                    "observed_at": [
+                        f"2026-07-30T18:00:0{index}Z"
+                        for index in range(len(scores))
+                    ],
+                }
+                if role is None:
+                    row.update({"sample": "p1", "id": "c1"})
+                    if service == "scribbr":
+                        row.update(
+                            {
+                                "ai_generated_pct": scores,
+                                "ai_refined_pct": [0] * len(scores),
+                                "human_pct": [100 - score for score in scores],
+                            }
+                        )
+                else:
+                    row.update({"sample": "p1", "role": role})
+                return row
+
+            data = {
+                "controls": [
+                    observation(
+                        service=service,
+                        scores=[score],
+                        sha=human_sha if role == "human" else ai_sha,
+                        role=role,
+                    )
+                    for role, service, score in (
+                        ("human", "zerogpt", 10),
+                        ("ai", "zerogpt", 50),
+                        ("human", "scribbr", 0),
+                        ("ai", "scribbr", 40),
+                    )
+                ],
+                "observations": [
+                    observation(
+                        service="zerogpt",
+                        scores=[45, 44, 45],
+                        sha=candidate_sha,
+                    ),
+                    observation(
+                        service="scribbr",
+                        scores=[37, 37, 36],
+                        sha=candidate_sha,
+                    ),
+                ],
+                "excluded_technical_attempts": [],
+            }
+            analysis = research_micro.recompute_analysis(
+                data,
+                prereg,
+                root / "result.json",
+            )
+            self.assertEqual(
+                analysis["selected_minimal_candidate"]["id"],
+                "c1",
+            )
+            self.assertTrue(
+                analysis["factor_results"][0]["samples"][0][
+                    "cross_family_success"
+                ]
+            )
+
 
 class ResearchVariantTests(unittest.TestCase):
+    def test_builder_binds_source_evidence_to_reference(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            original_text = "The last remaining witness spoke."
+            reference_text = "The oldest living witness spoke at the event."
+            original = root / "original.txt"
+            reference = root / "reference.txt"
+            original.write_text(original_text, encoding="utf-8")
+            reference.write_text(reference_text, encoding="utf-8")
+            plan = root / "plan.json"
+            plan.write_text(
+                json.dumps(
+                    {
+                        "original_sha256": digest(original_text),
+                        "reference_sha256": digest(reference_text),
+                        "operations": [
+                            {
+                                "id": "restore-title",
+                                "factor": "factual_title_restoration",
+                                "old": "last remaining",
+                                "new": "oldest living",
+                                "source_evidence": {
+                                    "relation": "restores the source title",
+                                    "reference_excerpt": "The oldest living witness spoke",
+                                },
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            result = research_variants.build(
+                original,
+                plan,
+                root / "variants",
+                reference,
+            )
+            self.assertEqual(result["reference_sha256"], digest(reference_text))
+
+    def test_builder_rejects_forged_reference_excerpt(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            original_text = "The last remaining witness spoke."
+            reference_text = "The oldest living witness spoke at the event."
+            original = root / "original.txt"
+            reference = root / "reference.txt"
+            original.write_text(original_text, encoding="utf-8")
+            reference.write_text(reference_text, encoding="utf-8")
+            plan = root / "plan.json"
+            plan.write_text(
+                json.dumps(
+                    {
+                        "original_sha256": digest(original_text),
+                        "reference_sha256": digest(reference_text),
+                        "operations": [
+                            {
+                                "id": "restore-title",
+                                "factor": "factual_title_restoration",
+                                "old": "last remaining",
+                                "new": "oldest living",
+                                "source_evidence": {
+                                    "relation": "restores the source title",
+                                    "reference_excerpt": "A fabricated source excerpt",
+                                },
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "bound reference excerpt"):
+                research_variants.build(
+                    original,
+                    plan,
+                    root / "variants",
+                    reference,
+                )
+
     def test_exact_one_factor_builder_is_hash_bound(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

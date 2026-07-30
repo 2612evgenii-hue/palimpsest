@@ -60,11 +60,42 @@ def _operation_replacements(operation: dict) -> list[dict[str, str]]:
     return [{"old": operation["old"], "new": operation["new"]}]
 
 
-def build(original_path: Path, plan_path: Path, out_dir: Path) -> dict:
+def _validate_reference_evidence(plan: dict, reference: str) -> None:
+    expected = plan.get("reference_sha256")
+    if not isinstance(expected, str) or digest(reference) != expected:
+        raise ValueError("reference hash does not match plan")
+    for operation in plan["operations"]:
+        evidence = operation.get("source_evidence")
+        if not isinstance(evidence, dict):
+            raise ValueError(f"{operation['id']}: source_evidence is required")
+        relation = evidence.get("relation")
+        excerpt = evidence.get("reference_excerpt")
+        if not isinstance(relation, str) or len(relation.strip()) < 12:
+            raise ValueError(f"{operation['id']}: source evidence relation is too weak")
+        if not isinstance(excerpt, str) or not excerpt:
+            raise ValueError(f"{operation['id']}: reference excerpt is required")
+        count = reference.count(excerpt)
+        if count != 1:
+            raise ValueError(
+                f"{operation['id']}: expected one bound reference excerpt, found {count}"
+            )
+
+
+def build(
+    original_path: Path,
+    plan_path: Path,
+    out_dir: Path,
+    reference_path: Path | None = None,
+) -> dict:
     original = original_path.read_text(encoding="utf-8")
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
     if digest(original) != plan["original_sha256"]:
         raise ValueError("original hash does not match plan")
+    if reference_path is not None:
+        _validate_reference_evidence(
+            plan,
+            reference_path.read_text(encoding="utf-8"),
+        )
     out_dir.mkdir(parents=True, exist_ok=True)
     rows = []
     for operation in plan["operations"]:
@@ -82,6 +113,12 @@ def build(original_path: Path, plan_path: Path, out_dir: Path) -> dict:
             candidate = candidate.replace(old, new, 1)
         destination = out_dir / f"{operation['id']}.txt"
         destination.write_text(candidate, encoding="utf-8")
+        expected_candidate = operation.get("candidate_sha256")
+        if (
+            expected_candidate is not None
+            and digest(candidate) != expected_candidate
+        ):
+            raise ValueError(f"{operation['id']}: candidate hash does not match plan")
         metrics = minimality.analyze(original, candidate, 1.0, 1.0)
         character_metrics = character_change_metrics(original, candidate)
         rows.append(
@@ -100,16 +137,26 @@ def build(original_path: Path, plan_path: Path, out_dir: Path) -> dict:
                 "words": metrics["words"],
             }
         )
-    return {"original_sha256": digest(original), "variants": rows}
+    result = {"original_sha256": digest(original), "variants": rows}
+    if reference_path is not None:
+        result["reference_sha256"] = plan["reference_sha256"]
+    return result
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--original", type=Path, required=True)
+    parser.add_argument("--reference", type=Path)
     parser.add_argument("--plan", type=Path, required=True)
     parser.add_argument("--out-dir", type=Path, required=True)
     args = parser.parse_args()
-    print(json.dumps(build(args.original, args.plan, args.out_dir), ensure_ascii=False, indent=2))
+    print(
+        json.dumps(
+            build(args.original, args.plan, args.out_dir, args.reference),
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
     return 0
 
 

@@ -237,8 +237,11 @@ def number_records(text: str, sentences: list[dict]) -> list[dict]:
         if not numeric:
             continue
         value = numeric.group(0).replace(",", ".")
-        unit = raw[numeric.end():].strip().lower().rstrip(".,;:")
-        unit = UNIT_ALIASES.get(unit, unit)
+        raw_unit = raw[numeric.end():].strip().lower().rstrip(".,;:")
+        unit = UNIT_ALIASES.get(
+            raw_unit,
+            raw_unit if raw_unit in set(UNIT_ALIASES.values()) | {"%"} else "",
+        )
         sent = next((s for s in sentences if s["start"] <= m.start() < s["end"]), None)
         out.append(
             {

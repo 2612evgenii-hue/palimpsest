@@ -1,0 +1,293 @@
+{
+  "schema": "palimpsest.micro-edit-preregistration.v2",
+  "experiment_id": "micro-02-source-grounded-news-edits",
+  "status": "frozen_before_live_scores",
+  "frozen_at": "2026-07-30T21:34:57+03:00",
+  "purpose": "Measure the smallest source-grounded factual or editorial correction that produces a repeatable reduction in both ZeroGPT and Scribbr on the stable formal-news calibration window.",
+  "baseline_binding": {
+    "path": "baseline-scout-02-result.json",
+    "sha256": "d53e60460f75d7e85881190ca6f07da5d7a6f2d9515c54e6e7b4a6501c205255",
+    "git_commit": "a81786c22f192d493b24dada2217913dcec2645a",
+    "selected_pairs": ["news-polish-04"]
+  },
+  "corpus_binding": {
+    "path": "scout-02-corpus-manifest.json",
+    "sha256": "fcad6456ccc8ccbd703e673766e056ed2375bb77dc52076dede0c1bcecaaf924",
+    "sample": "news-polish-04",
+    "original_sha256": "f5c0cd5c83d96ea141adcb3998448c3ca70d56577aa959f3db2b405e1bb36159",
+    "reference_sha256": "cbe30469b6e1fff0c65961e7d5dcaeb6b8f7d5f53fb92209a285604d6f3de5b1"
+  },
+  "plans": [
+    {
+      "sample": "news-polish-04",
+      "path": "news-polish-04-micro-plan.json",
+      "sha256": "74199d337e7d164f893d6dbc9af83b2add359a817d56328a96509ae995267ba9",
+      "original_sha256": "f5c0cd5c83d96ea141adcb3998448c3ca70d56577aa959f3db2b405e1bb36159",
+      "reference_sha256": "cbe30469b6e1fff0c65961e7d5dcaeb6b8f7d5f53fb92209a285604d6f3de5b1"
+    }
+  ],
+  "factors": [
+    {
+      "id": "factual_title_restoration",
+      "hypothesis": "A tiny correction of an AI-polish title error may change a local classifier response while improving factual fidelity.",
+      "not_a_recipe": "Use only when a bound source proves that the title is wrong; never replace titles merely to affect a detector."
+    },
+    {
+      "id": "unsupported_evaluative_frame_removal",
+      "hypothesis": "Removing one optional interpretive lead clause absent from the source may change a local classifier response.",
+      "not_a_recipe": "The clause must be unsupported and dispensable; source claims, qualifications and authorial evaluation are protected."
+    },
+    {
+      "id": "unsupported_metaphor_removal",
+      "hypothesis": "Removing one AI-added metaphor absent from the source may change a local classifier response.",
+      "not_a_recipe": "The candidate is quality-screened before scanning and is excluded if it moves farther from the bound style reference."
+    },
+    {
+      "id": "record_claim_restoration",
+      "hypothesis": "Restoring two misreported record titles and their attribution may produce a measurable cross-family response.",
+      "not_a_recipe": "The replacement must be recoverable from the bound source and may not broaden the record claim."
+    },
+    {
+      "id": "event_status_restoration",
+      "hypothesis": "Restoring planned-event status where AI polish falsely reported completion may produce a measurable cross-family response.",
+      "not_a_recipe": "Do not alter tense or modality unless the bound source establishes the event status."
+    },
+    {
+      "id": "unsupported_date_removal",
+      "hypothesis": "Removing one AI-invented year may produce a measurable response at very low edit cost.",
+      "not_a_recipe": "A number may be removed only after exact source binding and source rebaseline; detector score is never authority for a factual change."
+    },
+    {
+      "id": "quote_integrity_restoration",
+      "hypothesis": "Restoring a materially altered direct quote and removing its invented year may produce a measurable cross-family response.",
+      "not_a_recipe": "Quoted text is restored from the exact bound source, not paraphrased for a classifier."
+    }
+  ],
+  "candidates": [
+    {
+      "sample": "news-polish-04",
+      "id": "f1-title-accuracy",
+      "factor": "factual_title_restoration",
+      "sha256": "73d1d9cc2417a8bf8768afbb4827a9405eee1d0ddcb0b3fbaa98f7b4bf0d4faf",
+      "edit_cost": 0.0108,
+      "doc_change_ratio": 0.0108,
+      "char_change_ratio": 0.006576,
+      "changed_spans": 5,
+      "eligible_for_live": true,
+      "quality": {
+        "english_level": "pass_C2",
+        "reading_grade_delta": 0.0,
+        "fidelity_screen": "pass",
+        "semantic_review": "pass_bound_source_title_restoration",
+        "style_distance": 66.7,
+        "style_improvement": 0.3,
+        "style_reliability": "low_short_reference"
+      }
+    },
+    {
+      "sample": "news-polish-04",
+      "id": "f2-lead-frame-removal",
+      "factor": "unsupported_evaluative_frame_removal",
+      "sha256": "a8f9cd209ec8738786ff88c2e1f8bd43e412ac3a34124c826df37650f123ebea",
+      "edit_cost": 0.010926,
+      "doc_change_ratio": 0.0078,
+      "char_change_ratio": 0.010926,
+      "changed_spans": 1,
+      "eligible_for_live": true,
+      "quality": {
+        "english_level": "pass_C2",
+        "reading_grade_delta": -0.256,
+        "fidelity_screen": "pass",
+        "semantic_review": "pass_optional_source_absent_clause_only",
+        "style_distance": 66.5,
+        "style_improvement": 0.5,
+        "style_reliability": "low_short_reference"
+      }
+    },
+    {
+      "sample": "news-polish-04",
+      "id": "f3-metaphor-removal",
+      "factor": "unsupported_metaphor_removal",
+      "sha256": "3655123b5a090c4584baf15a5f1bc5178f207cd94c19bf7deef9cb6cbab6d21a",
+      "edit_cost": 0.011,
+      "doc_change_ratio": 0.011,
+      "char_change_ratio": 0.009488,
+      "changed_spans": 1,
+      "eligible_for_live": false,
+      "exclusion_reason": "quality_first_style_non_improvement",
+      "quality": {
+        "english_level": "pass_C2",
+        "reading_grade_delta": -0.18,
+        "fidelity_screen": "pass",
+        "semantic_review": "pass_optional_source_absent_metaphor_only",
+        "style_distance": 67.7,
+        "style_improvement": -0.7,
+        "style_reliability": "low_short_reference"
+      }
+    },
+    {
+      "sample": "news-polish-04",
+      "id": "f4-record-accuracy",
+      "factor": "record_claim_restoration",
+      "sha256": "816c670a17590ae20e0497c25350850c724cc131451d42890d71bcb88cc190d1",
+      "edit_cost": 0.046747,
+      "doc_change_ratio": 0.0431,
+      "char_change_ratio": 0.046747,
+      "changed_spans": 2,
+      "eligible_for_live": true,
+      "quality": {
+        "english_level": "pass_C2",
+        "reading_grade_delta": -0.216,
+        "fidelity_screen": "pass",
+        "semantic_review": "pass_two_bound_record_titles_and_attribution",
+        "style_distance": 64.0,
+        "style_improvement": 3.0,
+        "style_reliability": "low_short_reference"
+      }
+    },
+    {
+      "sample": "news-polish-04",
+      "id": "f5-event-status",
+      "factor": "event_status_restoration",
+      "sha256": "92b970d8a63d7008cbf4198ed47304b2e9732b7ffb24879650c3bd0cc36de427",
+      "edit_cost": 0.0417,
+      "doc_change_ratio": 0.0417,
+      "char_change_ratio": 0.032532,
+      "changed_spans": 16,
+      "eligible_for_live": true,
+      "quality": {
+        "english_level": "pass_C2",
+        "reading_grade_delta": -0.291,
+        "fidelity_screen": "pass",
+        "semantic_review": "pass_planned_status_teams_and_card_preserved",
+        "style_distance": 65.5,
+        "style_improvement": 1.5,
+        "style_reliability": "low_short_reference"
+      }
+    },
+    {
+      "sample": "news-polish-04",
+      "id": "f6-armistice-date",
+      "factor": "unsupported_date_removal",
+      "sha256": "31c4c6d3702f3188c0b31fc5f77950208cc2fed202e3a4da735f0556b24e1cc1",
+      "edit_cost": 0.006619,
+      "doc_change_ratio": 0.0062,
+      "char_change_ratio": 0.006619,
+      "changed_spans": 3,
+      "eligible_for_live": true,
+      "quality": {
+        "english_level": "pass_C2",
+        "reading_grade_delta": -0.182,
+        "fidelity_screen": "source_reconciled_NUMBER_SET_CHANGED",
+        "semantic_review": "pass_bound_source_removes_invented_2023",
+        "style_distance": 67.0,
+        "style_improvement": 0.0,
+        "style_reliability": "low_short_reference"
+      }
+    },
+    {
+      "sample": "news-polish-04",
+      "id": "f7-quote-date",
+      "factor": "unsupported_date_removal",
+      "sha256": "90aa7f42af556a85c691862311313e02280b0a7235c1c6ea79120ecfbb0dc2d3",
+      "edit_cost": 0.001883,
+      "doc_change_ratio": 0.0016,
+      "char_change_ratio": 0.001883,
+      "changed_spans": 1,
+      "eligible_for_live": true,
+      "quality": {
+        "english_level": "pass_C2",
+        "reading_grade_delta": 0.001,
+        "fidelity_screen": "source_reconciled_NUMBER_SET_CHANGED",
+        "semantic_review": "pass_bound_source_removes_invented_2022",
+        "style_distance": 67.1,
+        "style_improvement": -0.1,
+        "style_reliability": "low_short_reference_within_0.5_noise"
+      }
+    },
+    {
+      "sample": "news-polish-04",
+      "id": "f8-quote-integrity",
+      "factor": "quote_integrity_restoration",
+      "sha256": "b5090bdea7300fb29531e5df3bcffc1eb2cf3cb5e6b89258e29aade1f212469b",
+      "edit_cost": 0.0661,
+      "doc_change_ratio": 0.0661,
+      "char_change_ratio": 0.046593,
+      "changed_spans": 7,
+      "eligible_for_live": true,
+      "quality": {
+        "english_level": "pass_C2",
+        "reading_grade_delta": -0.644,
+        "fidelity_screen": "source_reconciled_NUMBER_SET_CHANGED",
+        "semantic_review": "pass_exact_bound_quote_and_attribution_restoration",
+        "style_distance": 60.5,
+        "style_improvement": 6.5,
+        "style_reliability": "low_short_reference"
+      }
+    }
+  ],
+  "live_order": [
+    "f7-quote-date",
+    "f6-armistice-date",
+    "f1-title-accuracy",
+    "f2-lead-frame-removal",
+    "f5-event-status",
+    "f4-record-accuracy",
+    "f8-quote-integrity"
+  ],
+  "services": {
+    "primary_screen": [
+      {
+        "id": "zerogpt",
+        "baseline_median_pct": {"news-polish-04": 46.7},
+        "minimum_effect_pct": 2.0,
+        "maximum_same_sha_range_pct": 5.0
+      },
+      {
+        "id": "scribbr",
+        "model_version": "v7.1.0_at_scout",
+        "baseline_median_pct": {"news-polish-04": 29.0},
+        "minimum_effect_pct": 2.0,
+        "maximum_same_sha_range_pct": 5.0
+      }
+    ],
+    "start_controls": {
+      "roles": ["human", "ai"],
+      "repeats": 1,
+      "maximum_drift_from_frozen_median_pct": 5.0,
+      "on_excess_drift": "stop_before_candidates"
+    }
+  },
+  "screen_policy": {
+    "repeat_eligibility": "at_least_one_primary_service_improves_by_more_than_its_minimum_effect_and_no_primary_service_worsens_by_more_than_its_minimum_effect",
+    "required_repeats_for_advancing_candidate": 3,
+    "cross_family_success": "both_primary_service_medians_improve_by_more_than_their_minimum_effect_and_each_same_sha_range_is_at_most_5_points",
+    "candidate_ranking": "among_cross_family_successes_choose_lowest_edit_cost_then_largest_worst_service_reduction",
+    "style_noise_exception": "only_bound_factual_corrections_with_low_reliability_and_style_improvement_not_below_minus_0.5"
+  },
+  "procedure": [
+    "Rebuild all candidates from the exact original, bound reference and frozen plan; reject any source excerpt, plan SHA or candidate SHA mismatch.",
+    "Before candidate scans, recheck the unchanged human and AI controls once in both services with exact visible SHA and transition signal.",
+    "If any start control differs from its frozen median by more than 5 points, stop before candidates and record baseline drift.",
+    "Do not scan f3-metaphor-removal: it was excluded before scores because source-relative style distance worsened by 0.7.",
+    "Scan each eligible candidate once in both services in frozen live_order.",
+    "After every submit, require loading, disabled-state, changed result text or another explicit transition before accepting terminal DOM state.",
+    "Repeat an eligible candidate in both services to n=3 only under repeat_eligibility; do not repeat a failed candidate.",
+    "Do not create, combine, reorder or alter candidates after the preregistration commit.",
+    "Treat source-reconciled number removals as factual corrections bound to the human source, never as permission to remove numbers for a detector.",
+    "No service result may override fidelity, quote integrity, formal-news genre or C2 preservation."
+  ],
+  "success_criteria": {
+    "candidate_success": "The candidate satisfies cross_family_success after required repeats.",
+    "minimality_result": "Report every candidate separately and select the lowest-edit-cost cross-family success; never substitute a deeper rewrite when a smaller complete success exists.",
+    "hard_threshold_context": "This experiment measures local causal response. Remaining scores may exceed 20%; production F1 remains red until every mandatory service is strictly below 20%.",
+    "rule_admission": "No candidate or factor enters production from this selected calibration text; any signal requires a new preregistered holdout and an additional independent detector group."
+  },
+  "stopping_rules": [
+    "Stop before candidate scans on control drift, source-evidence mismatch or inability to obtain transition-bound results.",
+    "Do not scan a candidate excluded by the frozen quality-first screen.",
+    "Do not add punctuation-only, synonym-only or detector-highlight-driven variants.",
+    "Do not expand the 6.61% edit-cost ceiling in micro-02.",
+    "Blocked or timed-out UI is recorded as blocked/error, never converted into a score."
+  ]
+}

@@ -80,6 +80,20 @@ resolvability замораживаются до первого score. Отбор
 пройти заранее замороженный AI-range, human-control и AI−human gap. Окно
 только одной семьи остаётся диагностикой и не разрешает подбирать правку.
 
+Micro-edit v2 перед кандидатами повторяет неизменённые human/AI controls обоих
+сервисов. Сдвиг любой control-ячейки больше `5 п.п.` останавливает эксперимент:
+старый baseline нельзя использовать как текущую шкалу. Кандидаты публикуются
+в minimal-first порядке; один сервис может инициировать repeats только при
+эффекте больше заранее заданного пола и отсутствии регрессии во втором.
+Confirmatory success требует улучшения больше пола в обеих семьях, `n=3` и
+same-SHA range не больше `5 п.п.` в каждой.
+
+Source-grounded correction с изменением числа или цитаты не становится
+`authorized_change` по свободному тексту агента. План обязан связать original,
+reference, candidate и literal reference excerpt отдельными SHA; builder
+проверяет excerpt в самом reference. Detector score никогда не является
+основанием удалить число, модальность или атрибуцию.
+
 До первого live-score holdout обязан иметь отдельный preregistration-файл:
 закреплённые sample/plan SHA, confirmatory factor, quality-first порядок,
 primary services, repeat policy и критерий успеха. Preregistration публикуется

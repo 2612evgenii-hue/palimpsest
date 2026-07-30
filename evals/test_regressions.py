@@ -371,6 +371,13 @@ class StyleTests(unittest.TestCase):
 
 
 class FidelityRegressionTests(unittest.TestCase):
+    def test_word_after_year_is_not_invented_unit(self) -> None:
+        _rc, codes = self.fidelity(
+            "Allingham was discharged in 1919 but remained active.",
+            "Allingham was discharged in 1919.",
+        )
+        self.assertNotIn("UNIT_CHANGED", codes)
+
     def fidelity(self, original: str, edited: str) -> tuple[int, set[str]]:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)

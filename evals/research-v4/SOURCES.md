@@ -143,3 +143,12 @@ same-SHA scores не менялись. Technical pair `qa_007837` не допу�
 редактированию из-за диапазона ZeroGPT `6,6 п.п.`. Все 48 включённых
 наблюдений имеют exact-SHA и transition signal, но не screenshot-capture;
 это ограничивает результат ролью калибровки.
+
+Micro-02 использует только stable pair `news_003652`. Сопоставление AI-polish
+с его связанным human source выявило содержательные искажения, внесённые самой
+полировкой: `last surviving` вместо `oldest living`, completed вместо planned,
+изменённые record titles, изменённую прямую цитату и годы `2022/2023`,
+отсутствующие в source. Поэтому варианты являются source-grounded factual или
+editorial corrections, а не произвольными detector perturbations. Каждая
+операция хранит буквальный source excerpt и проверяется против canonical
+reference SHA.

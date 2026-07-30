@@ -47,6 +47,17 @@
   `6,6 п.п.`, хотя первичный двухсервисный baseline прошёл;
 - scout v2 требует transition signal, повторяет полную двухсервисную матрицу,
   заново вычисляет стабильный scope и отклоняет его подделку;
+- до новых scores заморожен `micro-02` на стабильном formal-news окне: восемь
+  source-grounded факторов с edit cost `0,188–6,61%`, один заранее исключён
+  quality-first style screen;
+- micro v2 требует свежие human/AI start controls, transition-bound evidence,
+  эффект больше `2 п.п.`, cross-family success после `n=3` и автоматически
+  выбирает самый дешёвый полный успех;
+- variant builder связывает editorial justification с exact reference SHA,
+  буквальным source excerpt и заранее вычисленным candidate SHA;
+- исправлен false positive fidelity screen: союз после года (`1919 but`) больше
+  не принимается за единицу измерения, при этом известные unit changes остаются
+  hard findings;
 - skill запрещает blanket split/merge по vendor-подсказке и требует
   quality-first screening до live recheck;
 - полный selftest расширен новыми holdout/scout/anti-forgery слоями.

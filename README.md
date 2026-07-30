@@ -90,6 +90,16 @@ detector-рецепт: такая правка остаётся только р�
 Итоговый следующий scope — только стабильный formal-news текст; правил
 редактирования scout не проверял и не допустил.
 
+На этом окне до новых scores заморожен `micro-02`: восемь отдельных
+source-grounded правок стоимостью от `0,188%` до `6,61%`. Семь допущены к
+live-проверке; удаление метафоры исключено заранее из-за ухудшения
+source-relative style distance. План идёт строго от меньшей правки к большей,
+повторяет только эффект больше `2 п.п.` без cross-family regression и считает
+успехом лишь повторяемое улучшение одновременно в ZeroGPT и Scribbr.
+Исправления выдуманных годов и изменённой цитаты разрешены только через
+exact-SHA reference и буквальный source excerpt. Live-результатов micro-02
+пока нет, production-правил он не содержит.
+
 См.
 [протокол](evals/research-v4/PROTOCOL.md),
 [текущие результаты](evals/research-v4/FINDINGS.md) и
@@ -100,7 +110,8 @@ detector-рецепт: такая правка остаётся только р�
 [baseline scout-01](evals/research-v4/baseline-scout-01-result.json) /
 [micro-01](evals/research-v4/micro-01-result.json) /
 [holdout-02](evals/research-v4/holdout-02-result.json) /
-[baseline scout-02](evals/research-v4/baseline-scout-02-result.json).
+[baseline scout-02](evals/research-v4/baseline-scout-02-result.json) /
+[micro-02 preregistration](evals/research-v4/micro-02-preregistration.json).
 
 Воспроизвести закреплённый corpus, варианты pilot-05 и проверку Pareto:
 
@@ -129,6 +140,8 @@ python3 scripts/research_corpus.py \
   --out-dir work/research-corpus-scout02
 python3 scripts/research_scout.py \
   --result evals/research-v4/baseline-scout-02-result.json
+python3 scripts/research_micro.py \
+  --preregistration evals/research-v4/micro-02-preregistration.json
 ```
 
 ## Для чего нужен Palimpsest

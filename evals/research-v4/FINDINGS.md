@@ -294,3 +294,32 @@ transition signal отклоняется.
 content, formal-news genre, current C2 envelope и source-as-reference style.
 Полный результат:
 [`baseline-scout-02-result.json`](baseline-scout-02-result.json).
+
+## Micro-02: замороженный план source-grounded минимальных правок
+
+До любого candidate score на единственном стабильном cross-family окне
+заморожены восемь независимых правок:
+
+| Candidate | Edit cost | Содержательная причина | Quality-first status |
+|---|---:|---|---|
+| f7-quote-date | 0,188% | удалить выдуманный `2022` из атрибуции | live eligible; source-reconciled |
+| f6-armistice-date | 0,662% | удалить выдуманный `2023` | live eligible; source-reconciled |
+| f1-title-accuracy | 1,08% | `last surviving` → source `oldest living` | live eligible |
+| f2-lead-frame-removal | 1,093% | убрать добавленную оценочную рамку | live eligible |
+| f3-metaphor-removal | 1,10% | убрать добавленную метафору | **excluded:** style −0,7 |
+| f5-event-status | 4,17% | вернуть planned вместо ложного completed | live eligible |
+| f4-record-accuracy | 4,675% | вернуть два record title и attribution | live eligible |
+| f8-quote-integrity | 6,61% | восстановить цитату и убрать выдуманный год | live eligible |
+
+Все кандидаты восстанавливаются только из exact replacement plan. Для каждой
+операции plan хранит заранее вычисленный candidate SHA, reference SHA и
+literal reference excerpt; builder отклоняет подделку любого из них. CEFR
+остаётся C2, genre — formal news. Style reference короткий и поэтому имеет
+low reliability; это явно записано, а не выдаётся за точную стилометрию.
+
+Перед вариантами обязательны четыре свежих start controls
+(human/AI × ZeroGPT/Scribbr). Любой drift больше `5 п.п.` останавливает run.
+Первичный эффект должен быть больше `2 п.п.`; repeats идут до `n=3`, а полный
+успех требует снижения в обеих семьях и range не больше `5 п.п.`. Среди
+полных успехов валидатор выбирает минимальный edit cost. Это preregistration,
+live scores ещё не получены и ни один фактор в production не допущен.
