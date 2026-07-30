@@ -19,6 +19,16 @@
   расходится до противоположных `100%` и `0%`;
 - новый `research_scout.py` заново вычисляет frozen selection, repeat policy,
   SHA binding и отклоняет подделанное решение scout;
+- завершён preregistered `micro-01`: шесть source-preserving EN-правок на двух
+  AI-polish текстах, первичный screen и обязательные повторы;
+- `direct_subject_restoration` и `direct_claim_restoration` формально прошли
+  calibration screen ZeroGPT, но не допущены в skill: Scribbr не дал
+  подтверждающего движения, а одна same-SHA ячейка ZeroGPT имела диапазон
+  `0–76,2%`;
+- новый `research_micro.py` проверяет preregistration/commit binding, SHA
+  кандидатов, frozen repeat policy, Copyleaks scope и заново вычисляет эффекты;
+- Copyleaks micro-диагностика снова записана как `scan_limit_reached`, без
+  выдуманного score;
 - skill запрещает blanket split/merge по vendor-подсказке и требует
   quality-first screening до live recheck;
 - полный selftest расширен новыми holdout/scout/anti-forgery слоями.

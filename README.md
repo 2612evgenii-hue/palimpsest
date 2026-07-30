@@ -60,14 +60,26 @@ reading-grade envelope. Оба AI baseline затем дали 100% ×3 в ZeroG
 несатурированных AI-polish кейса для следующего микроэксперимента: ZeroGPT
 стабилен на `63,7–63,8%` для scientific abstract и `76,3%` для formal news,
 тогда как Scribbr дал тем же SHA соответственно `100%` и `0%`. Это
-инструментальный отбор, не доказательство правила. См.
+инструментальный отбор, не доказательство правила.
+
+Preregistered `micro-01` затем проверил шесть естественных правок с edit cost
+`0,30–4,29%`. Простое удаление оценочного маркера не перенеслось между двумя
+текстами. Прямой субъект и прямое, source-supported утверждение формально
+прошли calibration screen ZeroGPT без regression в Scribbr, однако cross-family
+подтверждения нет: Scribbr остался на своих исходных крайних `100%`/`0%`, а
+одна same-SHA ячейка ZeroGPT дала диапазон `0–76,2%`. Поэтому ни одно правило
+не добавлено в production skill; следующий шаг — transition-safe rerun и новый
+holdout. Copyleaks снова честно записан как `scan_limit_reached`.
+
+См.
 [протокол](evals/research-v4/PROTOCOL.md),
 [текущие результаты](evals/research-v4/FINDINGS.md) и
 [машиночитаемые pilot-03](evals/research-v4/pilot-03-canonical.json) /
 [pilot-04](evals/research-v4/pilot-04-b1-canonical.json) /
 [pilot-05](evals/research-v4/pilot-05-tech-canonical.json) /
 [holdout-01](evals/research-v4/holdout-01-pubmed-canonical.json) /
-[baseline scout-01](evals/research-v4/baseline-scout-01-result.json).
+[baseline scout-01](evals/research-v4/baseline-scout-01-result.json) /
+[micro-01](evals/research-v4/micro-01-result.json).
 
 Воспроизвести закреплённый corpus, варианты pilot-05 и проверку Pareto:
 
@@ -87,6 +99,8 @@ python3 scripts/research_pilot.py \
   --pilot evals/research-v4/pilot-05-tech-canonical.json
 python3 scripts/research_scout.py \
   --result evals/research-v4/baseline-scout-01-result.json
+python3 scripts/research_micro.py \
+  --result evals/research-v4/micro-01-result.json
 ```
 
 ## Для чего нужен Palimpsest

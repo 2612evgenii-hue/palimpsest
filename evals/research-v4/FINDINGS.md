@@ -196,3 +196,39 @@ ZeroGPT-повторы выбранных ячеек были почти дет�
 Scribbr поставил тем же AI-polish текстам противоположные крайние оценки
 `100%` и `0%`. Следующий вариантный план должен быть снова опубликован до
 scores, а результат обязан сохранить fidelity, source-relative C2 и жанр.
+
+## Micro-01: source directness на несатурированных AI-polish текстах
+
+План шести однофакторных вариантов был опубликован commit `e61d817` до первого
+micro-score. Во всех вариантах сохранены C2, исходный строгий жанр, claims и
+source-as-reference style; edit cost составил `0,30–4,29%`.
+
+| Фактор / sample | Edit cost | ZeroGPT baseline → вариант | Scribbr baseline → вариант | Экран |
+|---|---:|---:|---:|---|
+| remove evaluative frame / arxiv | 0,30% | 63,7% → 64,0% | 100% → 100% | fail |
+| remove evaluative frame / news | 0,50% | 76,3% → 76,2% ×3 | 0% → 0% ×3 | local only |
+| direct subject / arxiv | 1,28% | 63,7% → 63,5% ×3 | 100% → 100% ×3 | formal pass |
+| direct subject / news | 1,14% | 76,3% → 76,2 / 0 / 0% | 0% → 0% ×3 | unstable |
+| direct claim / arxiv | 4,29% | 63,7% → 62,7 / 61,3 / 61,3% | 100% → 100% ×3 | formal pass |
+| direct claim / news | 4,11% | 76,3% → 0% ×3 | 0% → 0% ×3 | formal pass |
+
+По заранее замороженному критерию `direct_subject_restoration` и
+`direct_claim_restoration` являются calibration screen successes: первый
+ZeroGPT score улучшился сверх baseline noise на обоих текстах, Scribbr не
+ухудшился, обязательные повторы завершены. Это всё ещё не cross-detector
+эффект: Scribbr был насыщен на arxiv и находился на полу для news, поэтому не
+подтверждает величину ZeroGPT response.
+
+Same-SHA диапазон `0–76,2` у news/direct-subject нельзя маскировать медианой.
+Он помечен как severe instability и делает «−76,3 пункта при 1,14% правок»
+непригодным для продуктового обещания. Следующий эксперимент обязан дождаться
+явного перехода UI от предыдущего результата к loading/terminal state и
+повторить этот фактор на новом holdout. Даже более стабильный direct-claim
+пока остаётся гипотезой: два calibration-текста из одного AI-polish режима и
+движение только одной detector family недостаточны для admission.
+
+Один технический timeout дал восстановимые UI scores, но потерял структурную
+запись события; он сохранён отдельно и исключён из анализа. Copyleaks получил
+точный SHA самого дешёвого advancing-кандидата и вернул
+`scan_limit_reached`; score отсутствует. Screenshot capture также отсутствует.
+Итог: `rule_admission = none_holdout_required`.

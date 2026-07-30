@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 import research_matrix  # noqa: E402
+import research_micro  # noqa: E402
 import research_corpus  # noqa: E402
 import research_pilot  # noqa: E402
 import research_scout  # noqa: E402
@@ -405,6 +406,20 @@ class ResearchScoutTests(unittest.TestCase):
 
 
 class ResearchMicroEditTests(unittest.TestCase):
+    def result_path(self) -> Path:
+        return ROOT / "evals/research-v4/micro-01-result.json"
+
+    def copied_result(self, root: Path, data: dict) -> Path:
+        research_dir = ROOT / "evals/research-v4"
+        for name in (
+            "micro-01-preregistration.json",
+            "baseline-scout-01-result.json",
+        ):
+            (root / name).write_bytes((research_dir / name).read_bytes())
+        result = root / "result.json"
+        result.write_text(json.dumps(data), encoding="utf-8")
+        return result
+
     def test_micro_edit_experiment_is_frozen_and_rebuilds_exact_candidates(
         self,
     ) -> None:
@@ -470,6 +485,74 @@ class ResearchMicroEditTests(unittest.TestCase):
                 self.assertTrue(
                     candidate["quality"]["semantic_review"].startswith("pass_")
                 )
+
+    def test_micro_result_recomputes_screen_without_admitting_rule(self) -> None:
+        data = research_micro.load_result(self.result_path())
+        results = {
+            row["factor"]: row for row in data["analysis"]["factor_results"]
+        }
+        self.assertFalse(
+            results["evaluative_framing_removal"]["screen_success"]
+        )
+        self.assertTrue(results["direct_subject_restoration"]["screen_success"])
+        self.assertTrue(results["direct_claim_restoration"]["screen_success"])
+        news_subject = next(
+            sample
+            for sample in results["direct_subject_restoration"]["samples"]
+            if sample["sample"] == "news-polish-01"
+        )
+        zero = next(
+            service
+            for service in news_subject["services"]
+            if service["service"] == "zerogpt"
+        )
+        self.assertEqual(zero["scores_pct"], [76.2, 0, 0])
+        self.assertEqual(zero["range_pct"], 76.2)
+        self.assertEqual(
+            data["analysis"]["rule_admission"],
+            "none_holdout_required",
+        )
+
+    def test_micro_result_rejects_forged_candidate_binding(self) -> None:
+        data = json.loads(self.result_path().read_text(encoding="utf-8"))
+        data["observations"][0]["candidate_sha256"] = "0" * 64
+        with tempfile.TemporaryDirectory() as directory:
+            path = self.copied_result(Path(directory), data)
+            with self.assertRaisesRegex(ValueError, "not bound"):
+                research_micro.load_result(path)
+
+    def test_micro_result_rejects_unfrozen_extra_repeat(self) -> None:
+        data = json.loads(self.result_path().read_text(encoding="utf-8"))
+        observation = next(
+            item
+            for item in data["observations"]
+            if item["sample"] == "arxiv-polish-01"
+            and item["id"] == "f1-evaluative-framing"
+            and item["service"] == "zerogpt"
+        )
+        observation["scores_pct"].append(64.0)
+        observation["terminal_states"].append("complete")
+        observation["observed_at"].append("2026-07-30T18:00:00Z")
+        with tempfile.TemporaryDirectory() as directory:
+            path = self.copied_result(Path(directory), data)
+            with self.assertRaisesRegex(ValueError, "repeat policy"):
+                research_micro.load_result(path)
+
+    def test_micro_result_rejects_score_summary_theater(self) -> None:
+        data = json.loads(self.result_path().read_text(encoding="utf-8"))
+        data["analysis"]["factor_results"][0]["screen_success"] = True
+        with tempfile.TemporaryDirectory() as directory:
+            path = self.copied_result(Path(directory), data)
+            with self.assertRaisesRegex(ValueError, "does not recompute"):
+                research_micro.load_result(path)
+
+    def test_micro_result_rejects_included_timeout_attempt(self) -> None:
+        data = json.loads(self.result_path().read_text(encoding="utf-8"))
+        data["excluded_technical_attempts"][0]["included_in_analysis"] = True
+        with tempfile.TemporaryDirectory() as directory:
+            path = self.copied_result(Path(directory), data)
+            with self.assertRaisesRegex(ValueError, "excluded"):
+                research_micro.load_result(path)
 
 
 class ResearchVariantTests(unittest.TestCase):

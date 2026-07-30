@@ -84,12 +84,15 @@ primary services, repeat policy и критерий успеха. Preregistratio
 
 Один и тот же полный текст проверить три раза без изменений. Для сервиса
 зафиксировать median, min/max и модель/дату, если они видимы. После каждой
-смены варианта дождаться завершения disabled/loading-состояния и проверить,
-что видимое поле после terminal state всё ещё содержит полный кандидат с
-ожидаемым canonical SHA-256. Первый
-процент, появившийся до этой проверки, считать потенциально stale. Если разброс
-больше 5 процентных пунктов, единичный score не использовать для принятия
-правила.
+смены варианта сначала зафиксировать exact visible SHA, затем обязательно
+увидеть переход от предыдущего результата: loading/disabled-state, новый
+result id/URL или изменившийся result text. Старый terminal score, который
+остаётся на странице сразу после submit, не является новым наблюдением.
+После terminal state проверить полный кандидат повторно либо записать отдельно
+документированную DOM-нормализацию сервиса. Первый процент, появившийся до
+transition check, считать потенциально stale. Если same-SHA разброс больше
+5 процентных пунктов, вся ячейка получает instrumentation/stability flag и не
+может поддерживать admission до чистого rerun.
 
 ### 2. Однофакторные естественные редакции
 
@@ -182,10 +185,14 @@ CEFR-метки недостаточно: source-relative reading grade, sentenc
 - raw capture с SHA-256 либо честному `capture_status=missing`;
 - точному id операции и родительского варианта.
 
-Для contenteditable-полей pre-scan SHA недостаточен: некоторые сервисы
-временно добавляют или удаляют переносы при fill. Binding вычисляется заново
-после terminal result. Если сервис создаёт новый result/share URL, его смена
-используется как дополнительный transition signal.
+Для contenteditable-полей SHA вычисляется по реально видимому тексту сразу
+после fill и до submit. После terminal result binding вычисляется повторно,
+если DOM сохраняет исходный текст. Если сервис оборачивает предложения в spans
+или нормализует переносы, сохраняются оба значения:
+`post_visible_text_sha256` до submit и `post_result_dom_text_sha256` после
+result; преобразование описывается явно и не должно менять содержательные
+символы. Новый result/share URL или доказанный loading-state используется как
+обязательный transition signal, а не как необязательная деталь.
 
 Отсутствующий capture не превращается в доказательство. Такой результат можно
 использовать для навигации исследования, но не для release claim.
@@ -193,3 +200,7 @@ CEFR-метки недостаточно: source-relative reading grade, sentenc
 Pilot с объявленным Pareto обязан проходить
 `python3 scripts/research_pilot.py --pilot <pilot.json>`: валидатор заново
 проверяет binding, повторы, quality exclusions, medians, hard pass и frontier.
+Micro-edit result обязан проходить
+`python3 scripts/research_micro.py --result <result.json>`: валидатор заново
+проверяет frozen commit/SHA, первый score, repeat policy, diagnostic scope и
+declared effect summary.
