@@ -3,9 +3,9 @@
 Palimpsest treats a dissertation, thesis, assessed essay, assignment, marking
 brief, or comparable student submission as `academic_assessment`.
 
-## Hard boundary
+## Default hard boundary
 
-For assessed academic work:
+For assessed academic work without explicit permission:
 
 - F1 detector-score optimisation is disabled;
 - do not rewrite to conceal AI authorship or obtain a lower detector score;
@@ -64,3 +64,40 @@ signals. When present, it:
 
 Use F2, F3, and F4 for structure, fact/source, originality/attribution,
 fidelity, style, and proofreading evidence.
+
+## Explicit authorised academic revision
+
+F1 may be enabled only through `academic_authorized_ai_revision` when all of
+the following are present:
+
+1. the user supplies an image or PDF authorisation artifact;
+2. the recorded scope specifically covers AI-assisted rewriting and the
+   requested detector-related work;
+3. the artifact is structurally valid and its SHA-256 is bound into state;
+4. disclosure review remains required;
+5. meaning, evidence, citations, English level, genre and format remain hard
+   gates.
+
+```bash
+python3 scripts/state.py --state workspace/STATE.json init \
+  --original workspace/original.txt --working workspace/working.txt \
+  --flags F1,F2,F3,F4 \
+  --content-context academic_authorized_ai_revision \
+  --authorization-evidence workspace/permission.pdf \
+  --authorization-scope \
+  "Permission covers AI-assisted paraphrasing, stylistic revision, detector checks, and reduction of false-positive text-origin scores."
+```
+
+This mode records `trust: user_supplied_unverified_external_document`,
+`independently_authenticated: false`, the evidence path, SHA-256 and structural
+validation result. The validator proves that the same structurally valid file
+is still present. It does not authenticate a signature, confirm the issuer,
+OCR the legal meaning, or prove that the user did not create the artifact.
+Never describe it as institution-verified permission unless a separate trusted
+channel established that fact.
+
+Authorisation never permits fabricated sources, plagiarism, removed
+attribution, invisible characters, homoglyphs, deliberate language errors, or
+semantic drift. Fixed bibliography metadata is not rewritten to influence a
+classifier. Results remain noisy current service measurements, not proof of
+authorship.

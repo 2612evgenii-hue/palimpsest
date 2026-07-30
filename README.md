@@ -44,6 +44,14 @@ assignment и аналогичную студенческую работу к `a
 режиме F1 недоступен: skill не переписывает работу ради сокрытия AI-авторства
 и не оптимизирует её под детекторы.
 
+Если пользователь предоставляет image/PDF разрешения с конкретным scope на
+AI-assisted revision и detector work, можно явно выбрать
+`academic_authorized_ai_revision`. State связывает artifact с SHA-256,
+проверяет его структуру и оставляет disclosure review обязательным. При этом
+artifact честно помечается как
+`user_supplied_unverified_external_document`: подпись и issuer не
+аутентифицируются автоматически.
+
 Доступны F2/F3/F4: сохранение авторского почерка и уровня английского,
 структурная диагностика, проверка фактов и библиографии, ограниченная проверка
 совпадений, fidelity, форматирование и минимальная допустимая корректура.
@@ -58,6 +66,12 @@ AI-detector score не считается доказательством авт�
 отдельное воспроизводимое исследование минимальных правок: hash-pinned
 human/AI corpus, calibration/holdout split, однофакторные варианты, повторы,
 human controls, CEFR/fidelity/style screens и Pareto-отбор.
+
+Отдельный
+[анонимизированный authorised academic case](docs/ACADEMIC_AUTHORIZED_CASE.md)
+проверил full prose workflow на длинном DOCX и привёл к исправлению
+paragraph-minimality и bibliography segmentation. Raw document и permission
+artifact в репозиторий не публикуются.
 
 Исследование публикует и отрицательные результаты. Scientific pilot нашёл
 вариант с edit cost 0,73%, который прошёл ZeroGPT и Scribbr, но остался 99,6%
@@ -192,15 +206,15 @@ python3 scripts/research_holdout.py \
 | Маршрут | Результат |
 |---|---|
 | Базовая редактура | Полное понимание, diagnosis, минимальные moves, fidelity, style и proofread |
-| `F1` | Только для разрешённого неоцениваемого контекста: итеративная проверка текущих detector scores |
+| `F1` | Для общего или явно авторизованного academic-контекста: итеративная проверка текущих detector scores |
 | `F2` | Менее механическая структура без разрушения жанра |
 | `F3` | Глубокий факт-чек по первичным и официальным источникам |
 | `F4` | Проверка close paraphrase, цитат, ссылок и атрибуции |
 | Long-form | Полное сегментное покрытие и память между context resets |
 
 Подходит для статей, отчётов, рукописей, технической и академической прозы.
-Для оцениваемых студенческих работ применяется отдельный quality-only режим
-без F1.
+Оцениваемая работа по умолчанию остаётся quality-only; F1 открывается только
+в evidence-bound авторизованном режиме.
 
 ## Что изменилось в v3.5
 
@@ -224,7 +238,13 @@ python3 scripts/research_holdout.py \
 - сохранены SHA binding, semantic reconciliation, fidelity, CEFR, style,
   capability integrity, anti-forgery и bounded memory.
 - добавлено определение `academic_assessment`: F1 блокируется при init и Q2,
-  а по умолчанию действует консервативный edit envelope 10%/25%.
+  а по умолчанию действует консервативный edit envelope 10%/25%;
+- добавлен `academic_authorized_ai_revision`: structurally valid image/PDF,
+  digest-bound scope, неизменяемый G0 и обязательный disclosure review;
+- DOCX single-newline extraction больше не схлопывает 146 абзацев в один при
+  расчёте minimality;
+- библиография отделяется от prose boundaries, остаётся exact-mapped и
+  fidelity-protected, но не переписывается ради detector score.
 
 Подробности: [CHANGELOG.md](CHANGELOG.md).
 
@@ -272,8 +292,9 @@ Palimpsest не повышает B2 до «идеального академич
 основных вопроса:
 
 1. Есть ли style-reference и какой English level сохранить?
-2. Какие функции включить? В `academic_assessment` доступны F2–F4. В
-   разрешённом общем контексте можно также выбрать F1 и обязательные
+2. Какие функции включить? В `academic_assessment` доступны F2–F4. В общем
+   контексте или после evidence-bound выбора
+   `academic_authorized_ai_revision` можно также выбрать F1 и обязательные
    детекторы.
 3. Какие требования к структуре, письму и запретам соблюдать?
 
@@ -282,8 +303,9 @@ Palimpsest не повышает B2 до «идеального академич
 
 ## F1 и детекторы
 
-Этот раздел действует только в разрешённом неоцениваемом контексте. Он не
-является инструкцией по сокрытию AI-авторства в учебной работе.
+Этот раздел действует в общем контексте или в
+`academic_authorized_ai_revision`. Во втором случае авторизация,
+meaning/fidelity gates и disclosure review обязательны.
 
 No-account EN candidate profile:
 
@@ -389,6 +411,19 @@ python3 scripts/state.py --state workspace/STATE.json init \
   --content-context auto
 ```
 
+Для документированно разрешённой академической revision:
+
+```bash
+python3 scripts/state.py --state workspace/STATE.json init \
+  --original workspace/original.md \
+  --working workspace/working.md \
+  --flags F1,F2,F3,F4 \
+  --content-context academic_authorized_ai_revision \
+  --authorization-evidence workspace/permission.png \
+  --authorization-scope \
+  "Permission covers AI-assisted paraphrasing, detector checks, and reduction of false-positive text-origin scores."
+```
+
 Ответы intake:
 
 ```bash
@@ -474,8 +509,12 @@ text.
 ## Честные ограничения
 
 - Детектор не доказывает авторство.
-- F1 отключён для оцениваемых академических работ; detector score нельзя
-  использовать как цель сокрытия происхождения текста.
+- F1 по умолчанию отключён для оцениваемых работ. Авторизованный режим зависит
+  от предоставленного пользователем, но не независимо аутентифицированного
+  evidence.
+- Full detector coverage означает full **editable prose** coverage.
+  Библиография остаётся exact-mapped и проверяется на точность, но не
+  переписывается ради classifier score.
 - Score и доступность могут измениться после обновления сервиса.
 - Структурно валидный challenge-bound screenshot всё ещё можно подделать локально.
 - CEFR и style metrics — экраны drift, а не сертификация.

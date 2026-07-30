@@ -37,6 +37,11 @@ def change_ratio(a: list[str], b: list[str]) -> float:
 
 def align(orig_paras, cur_paras) -> list[tuple]:
     """Greedy alignment original→current by similarity; unmatched = added/removed."""
+    # DOCX paragraph-preserving revision is the dominant case.  Positional
+    # alignment avoids a changed paragraph being paired with a later duplicate
+    # while its real counterpart is reported as removed/added.
+    if len(orig_paras) == len(cur_paras):
+        return list(zip(orig_paras, cur_paras))
     pairs = []
     used = set()
     for op in orig_paras:
@@ -63,8 +68,8 @@ def align(orig_paras, cur_paras) -> list[tuple]:
 def analyze(original: str, current: str, budget: float, para_budget: float) -> dict:
     ow, cw = wordlist(original), wordlist(current)
     doc_ratio = change_ratio(ow, cw)
-    op = [p for p in T.paragraphs(original) if p.kind != "code"]
-    cp = [p for p in T.paragraphs(current) if p.kind != "code"]
+    op = T.editorial_paragraphs(original)
+    cp = T.editorial_paragraphs(current)
     rows = []
     for o, c in align(op, cp):
         if o is None:

@@ -1,6 +1,6 @@
 ---
 name: palimpsest
-description: Professional RU/EN editing, rewriting, and copywriting with an iterative diagnose→minimal edit→verify workflow, optional external or source-as-reference handwriting control, preserved English proficiency, fact-checking, bounded originality review, semantic fidelity, and lossless long-document memory. For permitted non-assessed contexts it can also run user-selected AI-detector measurements; for dissertations, theses, assignments, and other assessed work it disables detector-score optimisation and limits itself to quality, source, attribution, formatting, and minimal-proofreading support.
+description: Professional RU/EN editing, rewriting, and copywriting with an iterative diagnose→minimal edit→verify workflow, optional external or source-as-reference handwriting control, preserved English proficiency, fact-checking, bounded originality review, semantic fidelity, and lossless long-document memory. User-selected AI-detector measurement is available in general contexts and in an explicit evidence-bound authorised academic-revision mode; assessed work otherwise stays quality-only.
 ---
 
 # Palimpsest v3.5
@@ -34,12 +34,15 @@ while pursuing the exact functions and detector scope selected by the user.
    deliberate errors, citation laundering, or cosmetic synonym spinning.
 9. Detector scores are current external measurements, not proof of authorship
    and not a promise about future detector versions.
-10. Classify the content context before offering F1. For a dissertation,
-    thesis, assessed essay, assignment, or comparable student submission,
-    disable F1 and do not rewrite to conceal AI authorship or lower an
-    AI-detector score. Use only quality-first F2/F3/F4 support and flag the
-    applicable AI-use/disclosure rules for confirmation.
-11. With F1 enabled in a permitted non-assessed context, every mandatory detector result must be **strictly below
+10. Classify the content context before offering F1. A dissertation, thesis,
+    assessed essay, assignment, or comparable student submission defaults to
+    quality-only `academic_assessment`. F1 is permitted only when the user
+    supplies a structurally valid image/PDF authorisation artifact and a
+    specific scope for `academic_authorized_ai_revision`. Treat that artifact
+    as user-supplied, unverified external evidence; bind it to SHA-256, never
+    claim independent authentication, and require disclosure review.
+11. With F1 enabled in a permitted general or explicitly authorised context,
+    every mandatory detector result must be **strictly below
     20% AI** on every full-coverage target. Aim for **strictly below 15%**.
     Exactly 20% fails.
 12. A high score, missing/stale evidence, blocked service, sampled coverage,
@@ -71,16 +74,18 @@ reference when its phase becomes active:
 
 Ask one question at a time. Do not repeat information already explicit, but
 always obtain the reference decision. First infer `content_context`. If the
-source is assessed academic work, state briefly that F1 is unavailable and
-offer only F2–F4. Never accept a `general` label that conflicts with strong
-assessment signals.
+source is assessed academic work, default to F2–F4. Offer F1 only after the
+user supplies an authorisation image/PDF whose recorded scope explicitly
+covers the requested AI-assisted revision and detector work. Never relabel
+strong assessment signals as `general`.
 
 1. **Style reference and English level.** Ask whether style-reference files
    exist. Select `external_reference` or `source_as_reference`. For English,
    record A1–C2/native or `infer_from_source`.
 2. **Functions.** Ask which functions to enable:
-   - `F1`: in permitted non-assessed contexts only, measure and reduce current
-     AI-detector scores through `score_mandatory`;
+   - `F1`: in general contexts or evidence-bound
+     `academic_authorized_ai_revision`, measure and reduce current AI-detector
+     scores through `score_mandatory`;
    - `F2`: make structure less mechanical while preserving genre clarity;
    - `F3`: deeply verify claims against primary/official sources;
    - `F4`: resolve close paraphrase, quotation, citation, and attribution risk.
@@ -124,8 +129,8 @@ python3 scripts/state.py --state workspace/STATE.json intake \
 ```
 
 `--language` is only an assertion and cannot relabel Russian as English.
-With F1, auto-routing starts stable chunking at 1,000 words so the full text can
-fit the smallest common public limits. `risk_sampled` is forbidden in
+With F1, auto-routing starts stable chunking at 1,000 words so every editable
+prose target can fit the smallest common public limits. `risk_sampled` is forbidden in
 `score_mandatory`.
 
 ## Evidence and editor roles
@@ -173,8 +178,11 @@ conversational phrasing into academic prose.
 
 ## Core F1 loop: check → mark → edit → recheck
 
-Use this section only when the content context is permitted and non-assessed.
-It must never be used to conceal AI authorship in assessed academic work.
+Use this section only for `general` or
+`academic_authorized_ai_revision`. The academic mode requires the unchanged
+authorisation artifact, its exact scope, quality-first safeguards, and an
+AI-use/disclosure review; it is not evidence that the institution itself was
+independently contacted.
 
 Repeat the following cycle until every mandatory service is below the hard
 threshold:
@@ -182,9 +190,12 @@ threshold:
 1. **Check every mandatory service.** Use its live browser UI, lawful existing
    institutional access, or a user-supplied institutional report. Do not
    purchase accounts or bypass access controls.
-2. **Cover the entire text.** For long text, check every stable target/chunk.
-   Respect the current service limit and aggregate conservatively: the
-   worst target controls that service's pass.
+2. **Cover the entire editable prose.** For long text, check every stable
+   detector-eligible target/chunk. A bibliography remains in the exact segment
+   map and fidelity audit but is protected from rewriting and excluded from
+   editable-prose detector targets. Never call this a whole-file pass; report
+   it as full prose coverage. Respect the current service limit and aggregate
+   conservatively: the worst prose target controls that service's pass.
 3. **Capture evidence.** Prepare a one-use challenge and record the exact
    current digest, score, URL, time, visible excerpt, and screenshot/PDF/API
    artifact.
@@ -350,7 +361,8 @@ directly with reconciliation:
 2. Repair any loss of meaning, facts, logic, modality, chronology, purpose,
    style handwriting, or English level.
 3. Complete F2/F3/F4 if selected.
-4. If F1 is enabled, run every mandatory detector again on the final full text.
+4. If F1 is enabled, run every mandatory detector again on every final
+   detector-eligible prose target.
 5. If F1 is enabled, register the final passing `detector_round` after all
    optional-function artifacts.
 6. Remove working annotations; complete constraints review and proofreading.

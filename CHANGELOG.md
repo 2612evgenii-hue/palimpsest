@@ -2,6 +2,18 @@
 
 ## Research 4.0 — в работе, версия skill не повышена
 
+- добавлен evidence-bound `academic_authorized_ai_revision`: F1 разрешается
+  только с structurally valid image/PDF, конкретным scope, SHA binding и
+  честной меткой `user_supplied_unverified_external_document`;
+- mutation или исчезновение authorisation artifact делает G0 красным;
+- реальный authorized long-form case выявил и исправил DOCX single-newline
+  minimality bug: 146 абзацев больше не считаются одним;
+- segment map отделяет protected bibliography от editable prose без потери
+  символов; detector gate покрывает все prose targets, а reference metadata не
+  переписывается ради score;
+- anonymized live case дал strict `<20%` на пяти prose segments в ZeroGPT,
+  Scribbr и GPTinf при 19,53% word-diff; Copyleaks остался blocked по guest
+  quota, поэтому universal/all-service pass не заявлен;
 - реальный dissertation-case выявил отсутствующую границу академической
   добросовестности: `academic_assessment` теперь определяется до intake;
 - F1 отклоняется при init и при попытке включить его через Q2 для оцениваемой

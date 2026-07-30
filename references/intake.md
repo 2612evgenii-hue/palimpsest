@@ -19,7 +19,9 @@
 
 ### Q2 — функции
 
-- `F1`: humanization + `score_mandatory`;
+- `F1`: humanization + `score_mandatory`; для оцениваемой работы только после
+  выбора `academic_authorized_ai_revision` с image/PDF evidence и конкретным
+  scope;
 - `F2`: менее механическая структура без разрушения жанра;
 - `F3`: deep fact-check по первичным/официальным источникам;
 - `F4`: originality, close paraphrase и атрибуция;
@@ -49,6 +51,11 @@ guest-прогонов. Если свежий capability review блокируе
 текст ради access-проблемы; показать blocker и получить новый Q3.
 
 В state этот follow-up записывается как Q3.
+
+Для длинной академической работы заранее объяснить scope: F1 покрывает всю
+редактируемую прозу; библиография и фиксированные metadata остаются в полной
+карте, проверяются на точность, но не переписываются и не считаются
+detector-eligible.
 
 ### Q3 — требования
 

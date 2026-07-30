@@ -39,6 +39,24 @@ Challenge связывает capture с текущей задачей и обн�
 Локальный JSON не аутентифицирует цитату. Поэтому blocked mandatory service
 нельзя снять `waive`; реальный пользователь должен изменить Q3 scope.
 
+### Academic authorisation
+
+`academic_authorized_ai_revision` проверяет структуру предоставленного
+image/PDF, его SHA-256 и конкретность записанного scope. Это не OCR, не
+проверка подписи и не связь с issuer. State намеренно хранит
+`trust: user_supplied_unverified_external_document` и
+`independently_authenticated: false`. Исчезновение или изменение artifact
+делает G0 красным, но неизменный файл не становится от этого независимо
+подлинным.
+
+### Full prose, не whole-file
+
+Список литературы и иные фиксированные metadata остаются в точной 100%-ной
+segment map, но исключаются из editable-prose detector targets. Их
+перефразирование ради score исказило бы источники. Поэтому успешная матрица
+означает full prose coverage, а не обещание результата на буквальном
+whole-file paste.
+
 ### Точный CEFR и полный голос
 
 Readability/style metrics — экраны drift. Короткие тексты шумны, поэтому style
