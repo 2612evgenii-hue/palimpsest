@@ -108,7 +108,20 @@ Freeze связывает original, все candidate SHA, hypotheses, quality ev
 detector scope, privacy и repeat policy одним digest. После этого нельзя
 добавлять кандидатов. Новый адаптивный раунд требует нового case.
 
-### 4. Записывать только terminal observations
+### 4. Подготовить и записывать только terminal observations
+
+Сначала создать SHA-prefilled template для конкретной замороженной ячейки:
+
+```bash
+python3 scripts/shadow_case.py prepare-observation \
+  --case workspace/shadow/case.json \
+  --candidate-id C001 --service zerogpt --repeat 1 \
+  --out workspace/shadow/observations/C001-zerogpt-1.json
+```
+
+Команда не создаёт score и не делает evidence валидным. Она только фиксирует
+candidate/service/repeat, candidate SHA и registry URL, чтобы не перепутать
+ячейку. После live result заполнить terminal поля:
 
 Каждый observation — отдельный JSON:
 
@@ -149,7 +162,7 @@ python3 scripts/shadow_case.py record \
   --observation workspace/shadow/observations/C001-zerogpt-1.json
 ```
 
-### 5. Сравнить Pareto
+### 5. Сравнить Pareto и запечатать case
 
 ```bash
 python3 scripts/shadow_case.py summary \
@@ -159,6 +172,25 @@ python3 scripts/shadow_case.py summary \
 В frontier входят только quality-pass кандидаты с полной mandatory matrix и
 требуемым числом повторов. `least_changed_hard_pass` — самый дешёвый из
 кандидатов, которые реально прошли scope, а не обещание, что правка мала.
+
+После проверки terminal matrix:
+
+```bash
+python3 scripts/shadow_case.py seal \
+  --case workspace/shadow/case.json --outcome completed
+```
+
+`completed` принимается только при полной matrix всех quality-pass кандидатов.
+Если сервис blocked или исследование осознанно остановлено:
+
+```bash
+python3 scripts/shadow_case.py seal \
+  --case workspace/shadow/case.json --outcome stopped \
+  --reason "Copyleaks reached its guest scan limit before the matrix completed."
+```
+
+Seal связывает digest всех observations и вычисленного summary. После него
+нельзя записать новую observation; изменение score/evidence делает seal stale.
 
 ## Что можно вынести в skill
 

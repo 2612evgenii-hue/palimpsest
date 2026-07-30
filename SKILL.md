@@ -285,9 +285,12 @@ python3 scripts/shadow_case.py add-candidate \
 python3 scripts/shadow_case.py freeze --case workspace/shadow/case.json
 ```
 
-After freeze, record only exact-SHA terminal observations; blocked/error is not
-a score. Use `shadow_case.py summary` to compute the complete-case Pareto
-frontier and least-changed hard pass. A one-shot delivery case is diagnostic.
+After freeze, use `shadow_case.py prepare-observation`, then record only
+exact-SHA terminal observations; blocked/error is not a score. Use
+`shadow_case.py summary` to compute the complete-case Pareto frontier and
+least-changed hard pass, then `shadow_case.py seal --outcome completed` or
+`stopped`. The seal binds the observation matrix and summary digest. A
+one-shot delivery case is diagnostic.
 Even a three-repeat consented case can only enter aggregate review; it cannot
 admit a production detector recipe without multi-text calibration and a new
 preregistered holdout.

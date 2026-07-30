@@ -1728,6 +1728,7 @@ class ShadowCaseTests(unittest.TestCase):
         *,
         privacy_mode: str = "delivery_only",
         evidence_tier: str = "delivery_diagnostic",
+        record_observations: bool = True,
     ) -> Path:
         original = root / "original.md"
         candidate = root / "candidate.md"
@@ -1787,6 +1788,8 @@ class ShadowCaseTests(unittest.TestCase):
             "baseline": digest(original.read_text(encoding="utf-8")),
             "C001": digest(candidate.read_text(encoding="utf-8")),
         }
+        if not record_observations:
+            return case
         scores = {
             ("baseline", "zerogpt"): 80,
             ("baseline", "scribbr"): 70,
@@ -1889,6 +1892,74 @@ class ShadowCaseTests(unittest.TestCase):
             self.assertFalse(
                 result["research_admission"]["production_rule_admitted"]
             )
+
+    def test_shadow_prepare_observation_and_terminal_seal(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            case = self.build_case(root, record_observations=False)
+            template_path = root / "prepared.json"
+            template = shadow_case.prepare_observation(
+                SimpleNamespace(
+                    case=case,
+                    candidate_id="baseline",
+                    service="zerogpt",
+                    repeat=1,
+                    out=template_path,
+                )
+            )
+            data = json.loads(case.read_text(encoding="utf-8"))
+            self.assertEqual(
+                template["candidate_sha256"],
+                data["original"]["sha256"],
+            )
+            self.assertEqual(template["result_url"], "https://www.zerogpt.com/")
+            evidence = root / "source-evidence.json"
+            evidence.write_text('{"visible_result":"80% AI"}', encoding="utf-8")
+            template.update(
+                {
+                    "status": "scored",
+                    "post_visible_text_sha256": template["candidate_sha256"],
+                    "score_pct": 80,
+                    "terminal_state": "complete",
+                    "transition_signal": "loading_or_disabled_observed",
+                    "observed_at": data["freeze"]["frozen_at"],
+                    "visible_result_excerpt": "Visible result: 80% AI.",
+                    "evidence": {
+                        "kind": "browser_session_record",
+                        "path": shadow_case.relative_path(evidence, case.parent),
+                        "sha256": shadow_case.file_sha256(evidence),
+                    },
+                    "capture_status": "missing",
+                    "capture_limitation": (
+                        "DOM result was preserved but screenshot capture timed out."
+                    ),
+                }
+            )
+            template_path.write_text(json.dumps(template), encoding="utf-8")
+            shadow_case.record_observation(case, template_path)
+            with self.assertRaisesRegex(ValueError, "full quality-pass matrix"):
+                shadow_case.seal_case(case, "completed", "")
+            sealed = shadow_case.seal_case(
+                case,
+                "stopped",
+                "The selected detector matrix was intentionally stopped early.",
+            )
+            self.assertEqual(sealed["status"], "stopped")
+            result = shadow_case.summarize(case)
+            self.assertTrue(result["lifecycle"]["sealed"])
+            self.assertEqual(result["lifecycle"]["outcome"], "stopped")
+
+    def test_shadow_completed_seal_detects_post_seal_tampering(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            case = self.build_case(Path(directory))
+            shadow_case.seal_case(case, "completed", "")
+            result = shadow_case.summarize(case)
+            self.assertEqual(result["lifecycle"]["outcome"], "completed")
+            data = json.loads(case.read_text(encoding="utf-8"))
+            data["observations"][0]["score_pct"] = 0
+            case.write_text(json.dumps(data), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "seal is missing or stale"):
+                shadow_case.summarize(case)
 
     def test_shadow_case_rejects_tampered_source_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

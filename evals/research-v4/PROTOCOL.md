@@ -258,4 +258,7 @@ quality evidence, service scope, repeat policy и privacy до новых scores
 Один `delivery_diagnostic` case помогает выбрать вариант в текущем проекте.
 `research_candidate` требует три повтора и может попасть лишь в aggregate
 review; production admission всё равно требует calibration/holdout по
-критериям выше.
+критериям выше. Observation сначала создаётся как SHA-prefilled frozen cell,
+а terminal seal связывает digest всей matrix и пересчитанного summary.
+`completed` требует полного quality-pass coverage; `stopped` хранит конкретную
+причину. После seal mutation отклоняется.

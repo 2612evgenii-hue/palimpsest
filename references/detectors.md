@@ -231,6 +231,7 @@ source-relative minimality, но она не должна становиться
 - quality-rejected кандидаты не сканировать;
 - blocked/error не превращать в score;
 - Pareto считать только по полной mandatory matrix;
+- после matrix ставить terminal seal; `completed` запрещён при missing/blocked;
 - один case не допускает production-правило.
 
 `delivery_diagnostic` помогает выбрать наименее изменённый проходящий вариант

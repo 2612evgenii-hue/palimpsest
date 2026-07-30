@@ -92,10 +92,13 @@ stateDiagram-v2
     DRAFT --> FROZEN: candidates + quality evidence + plan digest
     FROZEN --> OBSERVING: first terminal observation
     OBSERVING --> OBSERVING: exact-SHA scored / blocked / error
-    OBSERVING --> SUMMARY: complete-case Pareto
+    OBSERVING --> SEALED_COMPLETED: full quality-pass matrix
+    OBSERVING --> SEALED_STOPPED: explicit incomplete reason
 ```
 
 `delivery_only` запрещает aggregate research. `private_research` требует
 отдельного consent hash и три повтора. Freeze не доказывает внешнее время, но
 делает последующую подмену candidate/hypothesis заметной. Shadow-layer не
-заменяет F1 gates `state.py` и никогда не публикует raw client text.
+заменяет F1 gates `state.py` и никогда не публикует raw client text. Terminal
+seal связывает observations и пересчитанный summary; post-seal mutation
+отклоняется.

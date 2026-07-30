@@ -81,6 +81,9 @@
   complete-case Pareto;
 - один real-work case не допускает detector-рецепт; raw client text, captures
   и shadow JSON запрещено коммитить;
+- shadow workflow готовит SHA-prefilled observation templates и terminal seal:
+  `completed` требует полную quality-pass matrix, `stopped` — конкретную
+  причину; post-seal score/evidence mutation отклоняется;
 - variant builder связывает editorial justification с exact reference SHA,
   буквальным source excerpt и заранее вычисленным candidate SHA;
 - исправлен false positive fidelity screen: союз после года (`1919 but`) больше

@@ -433,7 +433,8 @@ optional sign-up blockers и границу DOM/screenshot evidence.
 Для следующих реальных проектов предусмотрен
 [приватный shadow-протокол](references/shadow-validation.md). Он отделяет
 практический выбор кандидата от research admission, требует freeze до scores
-и запрещает коммитить raw client text.
+и terminal evidence seal после matrix, а также запрещает коммитить raw client
+text.
 
 ## Честные ограничения
 

@@ -46,6 +46,8 @@
     evidence подменяется.
 38. private research включается без отдельного consent или без двух
     независимых detector groups.
+39. incomplete shadow matrix получает `completed` seal или observation
+    меняется после terminal seal.
 
 ## Автоматический набор
 

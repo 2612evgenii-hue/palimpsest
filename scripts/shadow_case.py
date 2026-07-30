@@ -51,6 +51,12 @@ def canonical_digest(value: object) -> str:
     return sha256_bytes(payload)
 
 
+def summary_digest(summary: dict) -> str:
+    return canonical_digest(
+        {key: value for key, value in summary.items() if key != "lifecycle"}
+    )
+
+
 def registry() -> dict:
     return json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
 
@@ -256,12 +262,61 @@ def validate_plan(case_path: Path, data: dict, *, require_frozen: bool) -> dict:
             or not isinstance(frozen.get("frozen_at"), str)
         ):
             raise ValueError("shadow candidate plan is not digest-frozen")
-        if data.get("status") not in {"frozen_before_scores", "observing"}:
+        if data.get("status") not in {
+            "frozen_before_scores",
+            "observing",
+            "completed",
+            "stopped",
+        }:
             raise ValueError("shadow case has an invalid frozen lifecycle state")
         if data["status"] == "frozen_before_scores" and data.get("observations"):
             raise ValueError("frozen_before_scores cannot already contain observations")
         if data["status"] == "observing" and not data.get("observations"):
             raise ValueError("observing shadow case has no observations")
+        seal = data.get("seal")
+        if data["status"] in {"frozen_before_scores", "observing"}:
+            if seal not in (None, {}):
+                raise ValueError("open shadow case has unexpected seal metadata")
+        elif (
+            not isinstance(seal, dict)
+            or seal.get("outcome") != data["status"]
+            or seal.get("observations_digest")
+            != canonical_digest(data.get("observations"))
+            or not isinstance(seal.get("summary_digest"), str)
+            or len(seal["summary_digest"]) != 64
+            or not isinstance(seal.get("sealed_at"), str)
+            or (
+                data["status"] == "stopped"
+                and len(str(seal.get("reason", "")).strip()) < 20
+            )
+        ):
+            raise ValueError("shadow terminal seal is missing or stale")
+        if data["status"] in {"completed", "stopped"}:
+            try:
+                frozen_time = datetime.fromisoformat(
+                    frozen["frozen_at"].replace("Z", "+00:00")
+                )
+                sealed_time = datetime.fromisoformat(
+                    seal["sealed_at"].replace("Z", "+00:00")
+                )
+                observation_times = [
+                    datetime.fromisoformat(
+                        row["observed_at"].replace("Z", "+00:00")
+                    )
+                    for row in data.get("observations", [])
+                ]
+                if (
+                    frozen_time.tzinfo is None
+                    or sealed_time.tzinfo is None
+                    or sealed_time < frozen_time
+                    or any(
+                        observed.tzinfo is None or sealed_time < observed
+                        for observed in observation_times
+                    )
+                ):
+                    raise ValueError
+            except (KeyError, TypeError, ValueError) as exc:
+                raise ValueError("shadow terminal seal time is invalid") from exc
     elif frozen not in (None, {}):
         raise ValueError("unfrozen shadow draft has unexpected freeze metadata")
     return {"hashes": hashes, "services": services}
@@ -502,7 +557,7 @@ def summarize(case_path: Path) -> dict:
     full_quality_pass_matrix = (
         len(quality_pass_ids) >= 2 and comparable_ids == quality_pass_ids
     )
-    return {
+    result = {
         "case_id": data["case_id"],
         "privacy_mode": data["privacy"]["mode"],
         "evidence_tier": data["policy"]["evidence_tier"],
@@ -519,6 +574,19 @@ def summarize(case_path: Path) -> dict:
             "reason": "a single real-work case cannot admit a detector recipe",
         },
     }
+    if data["status"] in {"completed", "stopped"}:
+        if data["seal"]["summary_digest"] != summary_digest(result):
+            raise ValueError("shadow sealed summary digest is stale")
+    result["lifecycle"] = {
+        "status": data["status"],
+        "sealed": data["status"] in {"completed", "stopped"},
+        "outcome": (
+            data["seal"]["outcome"]
+            if data["status"] in {"completed", "stopped"}
+            else None
+        ),
+    }
+    return result
 
 
 def init_case(args: argparse.Namespace) -> dict:
@@ -587,6 +655,7 @@ def init_case(args: argparse.Namespace) -> dict:
             }
         ],
         "freeze": {},
+        "seal": {},
         "observations": [],
     }
     validate_plan(case_path, data, require_frozen=False)
@@ -650,6 +719,8 @@ def freeze_case(case_path: Path) -> dict:
 def record_observation(case_path: Path, observation_path: Path) -> dict:
     data = json.loads(case_path.read_text(encoding="utf-8"))
     scope = validate_plan(case_path, data, require_frozen=True)
+    if data["status"] in {"completed", "stopped"}:
+        raise ValueError("cannot record after the shadow case is sealed")
     observation = json.loads(observation_path.read_text(encoding="utf-8"))
     if observation.get("schema") != OBSERVATION_SCHEMA:
         raise ValueError("unsupported shadow observation schema")
@@ -666,6 +737,110 @@ def record_observation(case_path: Path, observation_path: Path) -> dict:
         json.dumps(data, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
+    return data
+
+
+def prepare_observation(args: argparse.Namespace) -> dict:
+    case_path = args.case.resolve()
+    output = args.out.resolve()
+    if output.exists():
+        raise ValueError("shadow observation template already exists")
+    data = json.loads(case_path.read_text(encoding="utf-8"))
+    scope = validate_plan(case_path, data, require_frozen=True)
+    if data["status"] in {"completed", "stopped"}:
+        raise ValueError("cannot prepare an observation after seal")
+    if args.candidate_id not in scope["hashes"]:
+        raise ValueError("unknown shadow candidate")
+    candidate = next(
+        row for row in data["candidates"] if row["id"] == args.candidate_id
+    )
+    if candidate["quality"]["status"] != "pass":
+        raise ValueError("cannot prepare a quality-rejected shadow candidate")
+    if args.service not in scope["services"]:
+        raise ValueError("service is outside the frozen shadow scope")
+    repeat_limit = data["policy"]["minimum_repeats"]
+    if not 1 <= args.repeat <= repeat_limit:
+        raise ValueError("repeat is outside the frozen shadow policy")
+    existing = {
+        (row["candidate_id"], row["service"], row["repeat"])
+        for row in data["observations"]
+    }
+    if (args.candidate_id, args.service, args.repeat) in existing:
+        raise ValueError("shadow observation cell is already recorded")
+    template = {
+        "schema": OBSERVATION_SCHEMA,
+        "candidate_id": args.candidate_id,
+        "service": args.service,
+        "repeat": args.repeat,
+        "status": "",
+        "candidate_sha256": scope["hashes"][args.candidate_id],
+        "post_visible_text_sha256": "",
+        "score_pct": None,
+        "terminal_state": "",
+        "transition_signal": "",
+        "observed_at": "",
+        "result_url": registry()["services"][args.service]["url"],
+        "visible_result_excerpt": "",
+        "visible_terminal_message": "",
+        "evidence": {
+            "kind": "",
+            "path": "",
+            "sha256": "",
+        },
+        "capture_status": "",
+        "capture_limitation": "",
+    }
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(
+        json.dumps(template, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    return template
+
+
+def seal_case(case_path: Path, outcome: str, reason: str) -> dict:
+    data = json.loads(case_path.read_text(encoding="utf-8"))
+    scope = validate_plan(case_path, data, require_frozen=True)
+    if data["status"] != "observing":
+        raise ValueError("only an observing shadow case can be sealed")
+    validate_observations(case_path, data, scope)
+    summary = summarize(case_path)
+    quality_rows = [
+        row for row in summary["rows"] if row["quality_status"] == "pass"
+    ]
+    complete = bool(quality_rows) and all(
+        not row["missing"]
+        and not row["blocked"]
+        and not row["insufficient_repeats"]
+        for row in quality_rows
+    )
+    if outcome == "completed":
+        if not complete:
+            raise ValueError("completed seal requires the full quality-pass matrix")
+        terminal_reason = (
+            reason.strip()
+            or "All preregistered quality-pass service cells are complete."
+        )
+    elif outcome == "stopped":
+        if len(reason.strip()) < 20:
+            raise ValueError("stopped seal needs a specific 20+ character reason")
+        terminal_reason = reason.strip()
+    else:
+        raise ValueError("shadow seal outcome must be completed or stopped")
+    data["status"] = outcome
+    data["seal"] = {
+        "outcome": outcome,
+        "sealed_at": now(),
+        "reason": terminal_reason,
+        "observations_digest": canonical_digest(data["observations"]),
+        "summary_digest": summary_digest(summary),
+        "rule": "No observation, candidate or verdict may change after seal.",
+    }
+    case_path.write_text(
+        json.dumps(data, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    summarize(case_path)
     return data
 
 
@@ -711,6 +886,18 @@ def main() -> int:
     record.add_argument("--case", type=Path, required=True)
     record.add_argument("--observation", type=Path, required=True)
 
+    prepare = sub.add_parser("prepare-observation")
+    prepare.add_argument("--case", type=Path, required=True)
+    prepare.add_argument("--candidate-id", required=True)
+    prepare.add_argument("--service", required=True)
+    prepare.add_argument("--repeat", type=int, required=True)
+    prepare.add_argument("--out", type=Path, required=True)
+
+    seal = sub.add_parser("seal")
+    seal.add_argument("--case", type=Path, required=True)
+    seal.add_argument("--outcome", choices=["completed", "stopped"], required=True)
+    seal.add_argument("--reason", default="")
+
     validate = sub.add_parser("validate")
     validate.add_argument("--case", type=Path, required=True)
 
@@ -728,6 +915,14 @@ def main() -> int:
         result = record_observation(
             args.case.resolve(),
             args.observation.resolve(),
+        )
+    elif args.command == "prepare-observation":
+        result = prepare_observation(args)
+    elif args.command == "seal":
+        result = seal_case(
+            args.case.resolve(),
+            args.outcome,
+            args.reason,
         )
     elif args.command == "validate":
         result = summarize(args.case.resolve())
