@@ -1,0 +1,6 @@
+interface:
+  display_name: "Palimpsest"
+  short_description: "Доказательная RU/EN-редактура с сохранением голоса"
+  default_prompt: "Используй $palimpsest: сначала пойми весь текст, уточни стилевой baseline, уровень английского, функции и набор детекторов, затем внеси минимальные смыслобезопасные правки и проверь каждый активный маршрут по текущим evidence."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,199 @@
+{
+  "schema": "palimpsest.service-registry.v3.2",
+  "reviewed_at": "2026-07-30",
+  "refresh_after_days": 30,
+  "pilot_id": "palimpsest-v3-english-pilot-2026-07-30",
+  "policy": {
+    "pilot_validated_languages": ["en"],
+    "zero_gpt_required": true,
+    "default_english_guest_services": ["zerogpt", "copyleaks"],
+    "default_russian_guest_services": ["zerogpt", "copyleaks"],
+    "language_policy": {
+      "en": "pilot_selected_core",
+      "ru": "provisional_candidate_pair_until_full_ru_release_corpus"
+    },
+    "minimum_independent_services": 2,
+    "optional_institutional_services": ["gptzero", "turnitin"],
+    "audit_pool": ["quillbot", "sapling", "gptinf"],
+    "notes": [
+      "ZeroGPT remains mandatory because the user explicitly requires it.",
+      "The default core is the smallest independent pair that completed the English pilot without login: ZeroGPT plus Copyleaks.",
+      "Russian uses the same pair only as a provisional candidate workflow and remains a yellow limitation until a full Russian release corpus is recorded.",
+      "A service brand is not automatically an independent detector. Scribbr visibly used QuillBot v7.1.0 and duplicated its tested scores.",
+      "GPTinf is an aggregator and cannot satisfy the independent-service minimum.",
+      "Live access, limits, model versions, languages, and result formats must be reconfirmed for each project.",
+      "Scores are noisy review signals, never proof of authorship or a guarantee of undetectability."
+    ]
+  },
+  "services": {
+    "zerogpt": {
+      "display_name": "ZeroGPT",
+      "url": "https://www.zerogpt.com/",
+      "kind": "direct",
+      "independence_group": "zerogpt",
+      "guest_access": true,
+      "access_class": "guest_repeatable",
+      "languages": ["*"],
+      "public_limit": {"unit": "characters", "value": 15000},
+      "result": ["ai_percentage", "highlighted_spans"],
+      "recommended_role": "mandatory_core",
+      "required_by_user": true,
+      "pilot": {
+        "english_completed": 6,
+        "ai_recall_at_20_pct": 1.0,
+        "human_false_positive_rate_at_20_pct": 0.3333,
+        "observed_scores": [100, 100, 71.4, 59.7, 0, 0]
+      },
+      "live_recheck": {
+        "checked_at": "2026-07-30",
+        "guest_form_visible": true,
+        "limit_characters": 15000,
+        "english_fixture_score_pct": 63.1,
+        "russian_fixture_score_pct": 100,
+        "consecutive_guest_results_completed": 2
+      }
+    },
+    "copyleaks": {
+      "display_name": "Copyleaks AI Detector",
+      "url": "https://copyleaks.com/ai-detector",
+      "kind": "direct",
+      "independence_group": "copyleaks",
+      "guest_access": true,
+      "access_class": "guest_repeatable",
+      "languages": ["en", "ru", "de", "fr", "es", "it", "pt", "ja", "zh", "nl"],
+      "public_limit": {"unit": "characters", "value": 25000},
+      "result": ["ai_percentage"],
+      "recommended_role": "independent_core",
+      "education_signal": "Official LMS integrations include Canvas, Brightspace, Google Classroom, Moodle, Blackboard, Edsby, Sakai, and Schoology.",
+      "pilot": {
+        "english_completed": 6,
+        "ai_recall_at_20_pct": 1.0,
+        "human_false_positive_rate_at_20_pct": 0.0,
+        "observed_scores": [100, 100, 100, 0, 0, 0]
+      },
+      "live_recheck": {
+        "checked_at": "2026-07-30",
+        "guest_form_visible": true,
+        "limit_characters": 25000,
+        "page_explicitly_states_without_login": true,
+        "custom_result_repeated": false,
+        "limitation": "The embedded editor exposed its form and no-login claim, but browser automation did not complete a new custom submission during this recheck."
+      }
+    },
+    "gptzero": {
+      "display_name": "GPTZero",
+      "url": "https://gptzero.me/",
+      "kind": "institutional",
+      "independence_group": "gptzero",
+      "guest_access": false,
+      "access_class": "one_guest_scan_then_signup",
+      "languages": ["en"],
+      "public_limit": {"unit": "characters", "value": 10000},
+      "result": ["classification", "score", "highlighted_spans"],
+      "recommended_role": "optional_institutional_or_user_supplied",
+      "education_signal": "Educator-focused product with Canvas integration and public university-system case studies.",
+      "pilot": {
+        "english_completed": 1,
+        "observed_scores": [100],
+        "blocker": "Sign-up modal appeared after the first guest result."
+      },
+      "live_recheck": {
+        "checked_at": "2026-07-30",
+        "english_fixture_score_pct": 100,
+        "guest_result_completed": true,
+        "post_result_signup_modal": true,
+        "repeatable_without_registration": false
+      }
+    },
+    "quillbot": {
+      "display_name": "QuillBot AI Detector",
+      "url": "https://quillbot.com/ai-content-detector",
+      "kind": "direct",
+      "independence_group": "quillbot-family",
+      "guest_access": false,
+      "access_class": "limited_guest_then_signup",
+      "languages": ["en", "ru", "de", "fr", "es", "it", "pt", "pl", "uk", "tr", "ja", "zh"],
+      "public_limit": {"unit": "words", "value": 1200},
+      "daily_guest_scans_claimed": 6,
+      "minimum_input": {"unit": "words", "value": 80},
+      "result": ["ai_percentage", "human_percentage", "model_version"],
+      "recommended_role": "rotating_audit_only",
+      "pilot": {
+        "model": "v7.1.0",
+        "english_completed": 4,
+        "observed_scores": [100, 100, 19, 19],
+        "notable_failure": "AI technical sample scored 19%, below the 20% review threshold.",
+        "blocker": "Sign-up modal interrupted the common six-sample run."
+      }
+    },
+    "scribbr": {
+      "display_name": "Scribbr AI Detector",
+      "url": "https://www.scribbr.com/ai-detector/",
+      "kind": "direct",
+      "independence_group": "quillbot-family",
+      "guest_access": true,
+      "access_class": "guest_repeatable",
+      "languages": ["en", "de", "fr", "es"],
+      "public_limit": {"unit": "words", "value": 1200},
+      "result": ["ai_percentage", "paragraph_feedback", "model_version"],
+      "recommended_role": "replacement_ui_for_quillbot_not_independent_evidence",
+      "pilot": {
+        "model": "QuillBot v7.1.0",
+        "english_completed": 2,
+        "observed_scores": [100, 19],
+        "duplicate_evidence": "The page named QuillBot and reproduced QuillBot's two tested scores exactly."
+      }
+    },
+    "sapling": {
+      "display_name": "Sapling AI Detector",
+      "url": "https://sapling.ai/ai-content-detector",
+      "kind": "direct",
+      "independence_group": "sapling",
+      "guest_access": true,
+      "access_class": "guest_repeatable",
+      "languages": ["en"],
+      "public_limit": {"unit": "characters", "value": 2000},
+      "result": ["ai_probability", "sentence_scores"],
+      "recommended_role": "diagnostic_audit_only",
+      "pilot": {
+        "english_completed": 6,
+        "ai_recall_at_20_pct": 1.0,
+        "human_false_positive_rate_at_20_pct": 0.6667,
+        "observed_scores": [100, 100, 100, 60.5, 0.3, 99.8],
+        "exclusion_reason": "Two of three public-domain human controls exceeded 20%."
+      }
+    },
+    "gptinf": {
+      "display_name": "GPTinf Detector",
+      "url": "https://gptinf.com/detector",
+      "kind": "aggregator",
+      "independence_group": "aggregator:gptinf",
+      "guest_access": true,
+      "access_class": "guest_repeatable",
+      "languages": ["en", "ru"],
+      "minimum_input": {"unit": "words", "value": 30},
+      "result": ["ai_percentage"],
+      "recommended_role": "contradiction_sensor_only",
+      "pilot": {
+        "english_ai_completed": 3,
+        "observed_scores": [66, 80, 52],
+        "human_result_failure": "The Austen control returned to waiting state after two submissions.",
+        "independence_warning": "The UI claims cross-checking Turnitin, Copyleaks, OriginalityAI, GPTZero, Crossplag, Sapling, Winston, and ZeroGPT."
+      }
+    },
+    "turnitin": {
+      "display_name": "Turnitin AI Writing Detection",
+      "url": "https://www.turnitin.com/",
+      "kind": "institutional",
+      "independence_group": "turnitin",
+      "guest_access": false,
+      "access_class": "institution_license",
+      "languages": ["en", "es", "ja"],
+      "recommended_role": "optional_user_supplied_result",
+      "notes": [
+        "Do not purchase access or create an account for the user.",
+        "Record only evidence supplied through a lawful existing institutional account."
+      ]
+    }
+  }
+}

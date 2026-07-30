@@ -1,0 +1,17 @@
+{
+  "schema": "palimpsest.detector-observation.v1",
+  "challenge_id": "<copy from detector challenge>",
+  "challenge_nonce": "<copy from detector challenge>",
+  "service": "<registry service id>",
+  "target": "DOCUMENT",
+  "content_sha256": "<copy from detector challenge>",
+  "capture_mode": "browser_observed",
+  "score_pct": 0,
+  "label": "<visible service label>",
+  "result_url": "https://<exact service result page>",
+  "observed_at": "<ISO-8601 timestamp>",
+  "visible_result_excerpt": "<15+ chars copied from the visible result, including the score>",
+  "raw_artifact": "<relative or absolute screenshot/PDF path>",
+  "raw_artifact_sha256": "<SHA-256 of the raw capture>",
+  "note": "<limits, highlights, model/version, or blank>"
+}

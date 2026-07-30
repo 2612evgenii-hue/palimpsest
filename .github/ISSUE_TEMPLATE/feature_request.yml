@@ -1,0 +1,32 @@
+name: Предложить улучшение
+description: Новый маршрут, проверка или улучшение UX
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: use_case
+    attributes:
+      label: Практический сценарий
+      description: Какую реальную проблему должно решить изменение?
+    validations:
+      required: true
+
+  - type: textarea
+    id: current
+    attributes:
+      label: Что происходит сейчас
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Предлагаемое поведение
+    validations:
+      required: true
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: Риски и false positives
+      description: Как изменение может повредить смыслу, голосу или fail-closed поведению?

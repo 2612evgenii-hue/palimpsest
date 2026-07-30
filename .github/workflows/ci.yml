@@ -1,0 +1,35 @@
+name: Проверка skill
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.13"]
+
+    steps:
+      - name: Получить репозиторий
+        uses: actions/checkout@v4
+
+      - name: Настроить Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Проверить синтаксис
+        run: python -m compileall -q scripts evals
+
+      - name: Выполнить полный selftest
+        run: python evals/selftest.py
