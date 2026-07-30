@@ -1,0 +1,175 @@
+{
+  "schema": "palimpsest.holdout-preregistration.v3",
+  "experiment_id": "holdout-03-quote-integrity-transfer",
+  "status": "frozen_before_live_scores",
+  "frozen_at": "2026-07-30T22:18:18+03:00",
+  "purpose": "Test whether the micro-02 quote-integrity calibration signal transfers to three untouched formal-news AI-polish texts when only an exact source quote and its attribution are restored.",
+  "calibration_binding": {
+    "path": "micro-02-result.json",
+    "sha256": "48ed8ef791a9d698f253523f26dcc584be3240ad2d06150211bac973e5407547",
+    "git_commit": "49dc39eb4cc5ba426c88b740e2d2f06811fffb09",
+    "factor": "quote_integrity_restoration",
+    "calibration_sample": "news-polish-04",
+    "calibration_candidate": "f8-quote-integrity",
+    "calibration_edit_cost": 0.0661
+  },
+  "corpus_binding": {
+    "path": "holdout-03-corpus-manifest.json",
+    "sha256": "2463f12c8b6738794ed14c5cc018e8f9582707efa55684642f1cb00bcd7ac722",
+    "dataset_revision": "38d3e0e23fc9997d26929f1fecf9b46eeae567be",
+    "selection_basis": "Previously unscanned formal-news pairs containing a materially altered direct quote with a unique exact source excerpt; no detector score was consulted."
+  },
+  "hypothesis": {
+    "factor": "quote_integrity_restoration",
+    "confirmatory": "Restoring one materially altered direct quote and its source-proven attribution will reduce the median score by more than measured same-SHA noise and 2 percentage points in both ZeroGPT and Copyleaks on every eligible holdout sample.",
+    "cross_service_guardrail": "The Scribbr/QuillBot-family score may not worsen by more than 2 percentage points on any eligible sample.",
+    "human_control": "A detector response is interpretable only beside the untouched human source score for the same article.",
+    "not_a_recipe": "Quoted language is copied from the exact bound source because the AI-polish version changed the quotation. The factor does not authorize inventing quotes, changing an author's own prose into a quotation, or editing an accurate quote for a detector."
+  },
+  "plans": [
+    {
+      "sample": "news-quote-01",
+      "genre": "formal_news",
+      "path": "news-quote-01-holdout-plan.json",
+      "sha256": "8a5d7a90aee18e6d276c7e55429813e644e287d6cfeaf7c6a3a46b6d1351e02a",
+      "human_sha256": "420224f24c38443a86b260a96fe53b5ced8b575b6cffd43a9c5aa3c059c5e198",
+      "ai_sha256": "29a5935f71c3de89241b45664099aa79af931ce6fb39d1448aed25cdd2bdceb3",
+      "candidate_sha256": "2a0953ed8d4bf8dae8ed5d8a62497d966be172cae2220025274a0046d50f7f29",
+      "edit_cost": 0.0586,
+      "doc_change_ratio": 0.0586,
+      "char_change_ratio": 0.049153,
+      "changed_spans": 14,
+      "quality": {
+        "english_level": "pass_C2",
+        "reading_grade_delta": 0.094,
+        "fidelity_screen": "pass",
+        "semantic_review": "pass_exact_bound_quote_and_unchanged_named_speaker",
+        "style_distance": 40.0,
+        "style_baseline_distance": 38.8,
+        "style_improvement": -1.2,
+        "style_reliability": "low_short_text",
+        "style_exception": "Exact quotations are fidelity-protected and may not be adapted to optimize a noisy short-text style metric."
+      }
+    },
+    {
+      "sample": "news-quote-02",
+      "genre": "formal_news",
+      "path": "news-quote-02-holdout-plan.json",
+      "sha256": "8aca5f624d844573e1e352e0467a1b702873c1070f5abfa0d549e56005be8bff",
+      "human_sha256": "d43be99d347369f058521f2d94db984f501d4a56a5083bbd90364478bf51e1b9",
+      "ai_sha256": "c1e57cc175248abfdf3fdfe89f162e08c2597edbf71f8af7a7064c2a35d66e1a",
+      "candidate_sha256": "25b438cefc9d2240464e0ec3470de47bc0afa075937e1a26bdbe6be84c50ed4d",
+      "edit_cost": 0.0397,
+      "doc_change_ratio": 0.0397,
+      "char_change_ratio": 0.03355,
+      "changed_spans": 11,
+      "quality": {
+        "english_level": "pass_C2",
+        "reading_grade_delta": -0.211,
+        "fidelity_screen": "pass",
+        "semantic_review": "pass_exact_bound_quote_and_source_proven_speaker_title",
+        "style_distance": 46.3,
+        "style_baseline_distance": 47.5,
+        "style_improvement": 1.2,
+        "style_reliability": "low_short_text"
+      }
+    },
+    {
+      "sample": "news-quote-03",
+      "genre": "formal_news",
+      "path": "news-quote-03-holdout-plan.json",
+      "sha256": "7536f8b7cbfb00dfba89b7b0d9c5c249b369ac212671d6ffba061f6a2c449142",
+      "human_sha256": "bb36bf1d2fbb881b6ab2e7cffea9aaab6991894130e7c305da60b62ae8599def",
+      "ai_sha256": "2498ccc627e1018e9248460c8f37b5e5470497e5d361423e916d9ad19c440df7",
+      "candidate_sha256": "17b02fb1edabfbd660e4787a9c9de2179ea285ef1ea9a3d1c318995367106157",
+      "edit_cost": 0.0726,
+      "doc_change_ratio": 0.0726,
+      "char_change_ratio": 0.036081,
+      "changed_spans": 29,
+      "quality": {
+        "english_level": "pass_C2",
+        "reading_grade_delta": -0.123,
+        "fidelity_screen": "source_reconciled_NUMBER_CONTEXT_CHANGED",
+        "semantic_review": "pass_exact_bound_quote_restores_source_wording_and_attribution",
+        "source_rebaseline_reason": "The AI-polish quote introduced a permission formulation absent from the source; the candidate restores the unique literal source quote while retaining the same vessel, 68,000-ton anchor and named speaker.",
+        "style_distance": 43.6,
+        "style_baseline_distance": 48.1,
+        "style_improvement": 4.5,
+        "style_reliability": "low_short_text"
+      }
+    }
+  ],
+  "services": {
+    "primary_effect": [
+      {
+        "id": "zerogpt",
+        "independence_group": "zerogpt",
+        "minimum_effect_pct": 2.0,
+        "maximum_same_sha_range_pct": 5.0
+      },
+      {
+        "id": "copyleaks",
+        "independence_group": "copyleaks",
+        "minimum_effect_pct": 2.0,
+        "maximum_same_sha_range_pct": 5.0,
+        "access_rule": "guest result only; do not register, pay or infer a score from loading"
+      }
+    ],
+    "guardrail": [
+      {
+        "id": "scribbr",
+        "independence_group": "quillbot-family",
+        "model_version_at_calibration": "v7.1.0",
+        "maximum_regression_pct": 2.0
+      }
+    ],
+    "diagnostic": [
+      {
+        "id": "sapling",
+        "independence_group": "sapling",
+        "reason": "No-sign-up independent family with severe observed formal/scientific human false positives; it cannot substitute for Copyleaks and must include the human control."
+      }
+    ]
+  },
+  "repeat_policy": {
+    "primary_effect": {
+      "human": 1,
+      "ai": 3,
+      "candidate": 3
+    },
+    "guardrail": {
+      "human": 1,
+      "ai": 3,
+      "candidate": 3
+    },
+    "diagnostic": {
+      "human": 1,
+      "ai": 1,
+      "candidate": 1
+    },
+    "no_adaptive_repeats": "Do not add repeats or stop a complete cell early because of a favorable or unfavorable score."
+  },
+  "procedure": [
+    "Rebuild all three candidates from the exact AI text, bound human reference and frozen plan; reject any plan, source excerpt, original, reference or candidate SHA mismatch.",
+    "Use fresh service tabs. Within each service, scan samples in order news-quote-01, news-quote-02, news-quote-03; within each sample scan human, AI, candidate.",
+    "Before every submit, compute the exact visible-text SHA-256. Every included scan must match the frozen role SHA.",
+    "After every submit, require loading, disabled-state, changed result text or another explicit transition before accepting terminal DOM state. first_scan_no_prior_result is allowed only once per fresh service tab.",
+    "Record complete, blocked or error honestly. A guest limit, registration wall, timeout or non-terminal loader is not a percentage and does not permit service substitution.",
+    "Do not create, alter, combine, reorder or replace candidates after this preregistration is committed.",
+    "No detector result may override quote fidelity, actor, number, modality, formal-news genre or C2 preservation."
+  ],
+  "success_criteria": {
+    "sample_eligible": "For each primary service, the AI baseline median is at least 20%, all required AI/candidate repeats are complete and exact-SHA, and both same-SHA ranges are at most 5 points.",
+    "primary_service_effect": "Candidate median is lower than AI baseline by more than max(2.0 points, baseline range, candidate range).",
+    "sample_success": "Both ZeroGPT and Copyleaks satisfy primary_service_effect and Scribbr median does not worsen by more than 2 points.",
+    "transfer_signal": "All three holdout samples satisfy sample_success; two of three is reported as partial 66.7%, not rounded up to the protocol's 70% requirement.",
+    "hard_threshold_context": "This holdout tests transfer of one source-correction factor. Remaining scores may exceed 20%; production F1 remains red until every mandatory project service is strictly below 20%.",
+    "production_admission": "Holdout success alone cannot admit a rule: the calibration requirement of four texts, human-control aggregate, capture limitations and all PROTOCOL.md thresholds still apply."
+  },
+  "stopping_rules": [
+    "If a frozen candidate fails exact source, fidelity, CEFR or plan reinspection, do not scan it and record quality rejection.",
+    "If a service is blocked or non-terminal, record the terminal limitation and continue only with already preregistered services; never substitute a new detector after scores are visible.",
+    "If transition-safe instrumentation cannot distinguish a new result from the prior result, exclude that attempt and stop the affected cell rather than guessing.",
+    "Do not expand the edit budget, add punctuation or synonym variants, or use detector highlights to alter these holdout candidates."
+  ]
+}

@@ -101,6 +101,16 @@ quality-first допуск, 34 live scans имели exact-SHA и transition sig
 подняло ZeroGPT до `71,3%`. Это location-specific calibration signal, а не
 production-рецепт; требуется новый holdout и дополнительная detector family.
 
+До новых detector scores уже заморожен `holdout-03`: три ранее не
+сканированные formal-news пары, в каждой меняется только искажённая
+AI-polish прямая цитата и её source-proven attribution. Edit cost кандидатов —
+`3,97–7,26%`; все сохраняют C2 и exact reference binding. Confirmatory
+независимая пара — ZeroGPT + Copyleaks, Scribbr служит guardrail, Sapling —
+только диагностикой с обязательным human control из-за известных false
+positives. Ни одного результата holdout пока нет; scope нельзя менять после
+первых scores, а блокировка Copyleaks не разрешает подменить его другим
+сервисом.
+
 См.
 [протокол](evals/research-v4/PROTOCOL.md),
 [текущие результаты](evals/research-v4/FINDINGS.md) и
@@ -112,7 +122,8 @@ production-рецепт; требуется новый holdout и дополни
 [micro-01](evals/research-v4/micro-01-result.json) /
 [holdout-02](evals/research-v4/holdout-02-result.json) /
 [baseline scout-02](evals/research-v4/baseline-scout-02-result.json) /
-[micro-02](evals/research-v4/micro-02-result.json).
+[micro-02](evals/research-v4/micro-02-result.json) /
+[holdout-03 preregistration](evals/research-v4/holdout-03-preregistration.json).
 
 Воспроизвести закреплённый corpus, варианты pilot-05 и проверку Pareto:
 
@@ -145,6 +156,8 @@ python3 scripts/research_micro.py \
   --preregistration evals/research-v4/micro-02-preregistration.json
 python3 scripts/research_micro.py \
   --result evals/research-v4/micro-02-result.json
+python3 scripts/research_holdout.py \
+  --preregistration evals/research-v4/holdout-03-preregistration.json
 ```
 
 ## Для чего нужен Palimpsest

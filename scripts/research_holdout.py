@@ -21,6 +21,174 @@ def file_sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _bound_path(
+    preregistration_path: Path,
+    binding: dict,
+    *,
+    label: str,
+) -> Path:
+    relative = binding.get("path")
+    expected_sha = binding.get("sha256")
+    if not isinstance(relative, str) or not relative:
+        raise ValueError(f"{label} path is required")
+    if not isinstance(expected_sha, str) or len(expected_sha) != 64:
+        raise ValueError(f"{label} sha256 is required")
+    root = preregistration_path.parent.resolve()
+    path = (preregistration_path.parent / relative).resolve()
+    if root != path.parent and root not in path.parents:
+        raise ValueError(f"{label} path escapes preregistration directory")
+    if not path.is_file() or file_sha256(path) != expected_sha:
+        raise ValueError(f"{label} hash mismatch")
+    return path
+
+
+def validate_preregistration(path: Path) -> dict:
+    """Validate the frozen v3 holdout before any detector score is collected."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if data.get("schema") != "palimpsest.holdout-preregistration.v3":
+        raise ValueError("unsupported standalone holdout preregistration schema")
+    if data.get("status") != "frozen_before_live_scores":
+        raise ValueError("holdout preregistration is not frozen")
+    if data.get("hypothesis", {}).get("factor") != "quote_integrity_restoration":
+        raise ValueError("holdout-03 factor is not quote integrity restoration")
+
+    calibration_binding = data.get("calibration_binding")
+    corpus_binding = data.get("corpus_binding")
+    if not isinstance(calibration_binding, dict) or not isinstance(
+        corpus_binding,
+        dict,
+    ):
+        raise ValueError("holdout preregistration bindings are incomplete")
+    calibration_path = _bound_path(
+        path,
+        calibration_binding,
+        label="calibration result",
+    )
+    corpus_path = _bound_path(path, corpus_binding, label="corpus manifest")
+
+    calibration = json.loads(calibration_path.read_text(encoding="utf-8"))
+    if calibration.get("schema") != "palimpsest.micro-edit-result.v1":
+        raise ValueError("holdout calibration result schema mismatch")
+    if calibration.get("analysis", {}).get("rule_admission") != (
+        "none_holdout_required"
+    ):
+        raise ValueError("holdout calibration did not require a holdout")
+    factors = {
+        item.get("factor"): item
+        for item in calibration.get("analysis", {}).get("factor_results", [])
+    }
+    factor = factors.get(calibration_binding.get("factor"))
+    if not factor or factor.get("screen_success") is not True:
+        raise ValueError("bound calibration factor did not pass its screen")
+    commit = calibration_binding.get("git_commit")
+    if not isinstance(commit, str) or len(commit) != 40:
+        raise ValueError("calibration binding needs a full pre-holdout commit")
+
+    manifest = json.loads(corpus_path.read_text(encoding="utf-8"))
+    if manifest.get("schema") != "palimpsest.research-corpus.v3":
+        raise ValueError("holdout corpus schema mismatch")
+    dataset_revision = corpus_binding.get("dataset_revision")
+    if dataset_revision not in {
+        item.get("revision") for item in manifest.get("datasets", {}).values()
+    }:
+        raise ValueError("holdout dataset revision is not in the manifest")
+    samples = {sample.get("id"): sample for sample in manifest.get("samples", [])}
+
+    plans = data.get("plans")
+    if not isinstance(plans, list) or len(plans) != 3:
+        raise ValueError("holdout-03 requires exactly three frozen plans")
+    if len({plan.get("sample") for plan in plans}) != len(plans):
+        raise ValueError("holdout-03 sample ids must be unique")
+    for frozen in plans:
+        sample = frozen.get("sample")
+        human = samples.get(f"{sample}-human")
+        ai = samples.get(f"{sample}-ai")
+        if not human or not ai:
+            raise ValueError(f"{sample}: missing balanced corpus pair")
+        if human.get("partition") != "holdout" or ai.get("partition") != "holdout":
+            raise ValueError(f"{sample}: corpus pair is not holdout")
+        human_sha = human.get("canonical_sha256", human.get("sha256"))
+        ai_sha = ai.get("canonical_sha256", ai.get("sha256"))
+        if (
+            frozen.get("human_sha256") != human_sha
+            or frozen.get("ai_sha256") != ai_sha
+        ):
+            raise ValueError(f"{sample}: corpus hashes do not match the frozen plan")
+        plan_path = _bound_path(path, frozen, label=f"{sample} plan")
+        plan = json.loads(plan_path.read_text(encoding="utf-8"))
+        if (
+            plan.get("schema") != "palimpsest.variant-plan.v1"
+            or plan.get("sample_id") != f"{sample}-ai"
+            or plan.get("original_sha256") != ai_sha
+            or plan.get("reference_sha256") != human_sha
+        ):
+            raise ValueError(f"{sample}: variant plan binding mismatch")
+        operations = plan.get("operations")
+        if not isinstance(operations, list) or len(operations) != 1:
+            raise ValueError(f"{sample}: holdout plan must have one operation")
+        operation = operations[0]
+        evidence = operation.get("source_evidence")
+        if (
+            operation.get("id") != "quote-integrity"
+            or operation.get("factor") != "quote_integrity_restoration"
+            or operation.get("candidate_sha256") != frozen.get("candidate_sha256")
+            or not isinstance(evidence, dict)
+            or not isinstance(evidence.get("reference_excerpt"), str)
+            or not evidence["reference_excerpt"]
+            or not isinstance(evidence.get("relation"), str)
+            or len(evidence["relation"]) < 12
+        ):
+            raise ValueError(f"{sample}: source-bound quote operation mismatch")
+        quality = frozen.get("quality")
+        if (
+            not isinstance(quality, dict)
+            or quality.get("english_level") != "pass_C2"
+            or not str(quality.get("fidelity_screen", "")).startswith(
+                ("pass", "source_reconciled_")
+            )
+            or not 0 < float(frozen.get("edit_cost", 0)) <= 0.08
+        ):
+            raise ValueError(f"{sample}: frozen quality screen is not eligible")
+
+    repo_root = path.resolve().parents[2]
+    registry_path = repo_root / "assets/service-registry.json"
+    registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    services = data.get("services", {})
+    declared = []
+    for role in ("primary_effect", "guardrail", "diagnostic"):
+        rows = services.get(role)
+        if not isinstance(rows, list) or not rows:
+            raise ValueError(f"holdout service role {role} is empty")
+        for row in rows:
+            service_id = row.get("id")
+            facts = registry.get("services", {}).get(service_id)
+            if not facts:
+                raise ValueError(f"unknown holdout service: {service_id}")
+            if row.get("independence_group") != facts.get("independence_group"):
+                raise ValueError(f"{service_id}: forged independence group")
+            if facts.get("guest_access") is not True or "en" not in facts.get(
+                "languages",
+                [],
+            ) and "*" not in facts.get("languages", []):
+                raise ValueError(f"{service_id}: not an EN guest service")
+            declared.append(service_id)
+    if set(declared) != {"zerogpt", "copyleaks", "scribbr", "sapling"}:
+        raise ValueError("holdout-03 detector scope changed")
+    if {
+        row["id"] for row in services["primary_effect"]
+    } != {"zerogpt", "copyleaks"}:
+        raise ValueError("holdout-03 primary independent pair changed")
+
+    repeats = data.get("repeat_policy", {})
+    if repeats.get("primary_effect") != {"human": 1, "ai": 3, "candidate": 3}:
+        raise ValueError("holdout-03 primary repeat policy changed")
+    if repeats.get("guardrail") != {"human": 1, "ai": 3, "candidate": 3}:
+        raise ValueError("holdout-03 guardrail repeat policy changed")
+    if repeats.get("diagnostic") != {"human": 1, "ai": 1, "candidate": 1}:
+        raise ValueError("holdout-03 diagnostic repeat policy changed")
+    return data
+
+
 def load_preregistration(result_path: Path, data: dict) -> dict:
     binding = data.get("preregistration")
     if not isinstance(binding, dict):
@@ -236,8 +404,28 @@ def load_result(path: Path) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--result", required=True, type=Path)
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--result", type=Path)
+    group.add_argument("--preregistration", type=Path)
     args = parser.parse_args()
+    if args.preregistration:
+        data = validate_preregistration(args.preregistration)
+        print(
+            json.dumps(
+                {
+                    "experiment_id": data["experiment_id"],
+                    "status": data["status"],
+                    "samples": [plan["sample"] for plan in data["plans"]],
+                    "primary_services": [
+                        service["id"]
+                        for service in data["services"]["primary_effect"]
+                    ],
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return 0
     data = load_result(args.result)
     print(
         json.dumps(

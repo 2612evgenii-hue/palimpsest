@@ -1,0 +1,19 @@
+{
+  "schema": "palimpsest.variant-plan.v1",
+  "sample_id": "news-quote-03-ai",
+  "original_sha256": "2498ccc627e1018e9248460c8f37b5e5470497e5d361423e916d9ad19c440df7",
+  "reference_sha256": "bb36bf1d2fbb881b6ab2e7cffea9aaab6991894130e7c305da60b62ae8599def",
+  "operations": [
+    {
+      "id": "quote-integrity",
+      "factor": "quote_integrity_restoration",
+      "candidate_sha256": "17b02fb1edabfbd660e4787a9c9de2179ea285ef1ea9a3d1c318995367106157",
+      "old": "“How a man taking six impairing medications was permitted to navigate a 68,000-ton vessel through dense fog beneath one of America’s busiest bridges is deeply alarming,” stated then-acting NTSB Chairman Mark V. Rosenker.",
+      "new": "“How a man who was taking a half-dozen impairing prescription medications got to stand on the bridge of a 68,000-ton ship and give directions to guide the vessel through a foggy bay and under a busy highway bridge is very troubling,” said acting NTSB Chairman Mark V. Rosenker.",
+      "source_evidence": {
+        "relation": "restores_the_exact_source_quote_and_source_attribution_without_new_claims",
+        "reference_excerpt": "\"How a man who was taking a half-dozen impairing prescription medications got to stand on the bridge of a 68,000-ton ship and give directions to guide the vessel through a foggy bay and under a busy highway bridge is very troubling,\" said acting NTSB Chairman Mark V. Rosenker."
+      }
+    }
+  ]
+}

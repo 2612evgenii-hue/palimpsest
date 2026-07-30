@@ -59,6 +59,12 @@
 - более глубокое восстановление цитаты (`6,61%`) дало `38,1%/15%` и проиграло
   минимальному кандидату; другой date-removal повысил ZeroGPT до `71,3%`,
   поэтому общий date-removal factor отклонён;
+- до новых scores заморожен `holdout-03` на трёх untouched formal-news парах:
+  только exact source quote restoration, edit cost `3,97–7,26%`, C2 и
+  source/plan/candidate SHA binding;
+- confirmatory scope holdout-03 использует ZeroGPT + Copyleaks, Scribbr как
+  guardrail и Sapling только как human-controlled diagnostic; registry group,
+  guest access и repeat policy проверяются отдельным prereg validator;
 - variant builder связывает editorial justification с exact reference SHA,
   буквальным source excerpt и заранее вычисленным candidate SHA;
 - исправлен false positive fidelity screen: союз после года (`1919 but`) больше

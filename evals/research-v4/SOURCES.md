@@ -159,3 +159,10 @@ reference SHA.
 response нельзя смешивать: исправление факта оправдывает редакцию, но один
 локальный score effect не создаёт переносимого языкового правила. Результат
 остаётся calibration-only до нового holdout.
+
+Holdout-03 заранее закрепляет ещё три ранее не сканированные formal-news
+строки того же pinned AI-polish revision: `news_001729`, `news_001021` и
+`news_003239`. В каждой human source содержит уникальную прямую цитату, а
+AI-polish меняет её слова либо attribution. Кандидат восстанавливает только
+буквальный source span; human/AI/candidate и plan связаны SHA до первого
+score. Отбор основан на quote fidelity, а не на detector baseline.

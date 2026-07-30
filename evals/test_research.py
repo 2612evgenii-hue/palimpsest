@@ -1234,6 +1234,72 @@ class ResearchHoldoutTests(unittest.TestCase):
         result.write_text(json.dumps(data), encoding="utf-8")
         return result
 
+    def copied_holdout_three_prereg(self, root: Path, data: dict) -> Path:
+        source = ROOT / "evals/research-v4"
+        research_dir = root / "evals/research-v4"
+        assets_dir = root / "assets"
+        research_dir.mkdir(parents=True)
+        assets_dir.mkdir(parents=True)
+        (assets_dir / "service-registry.json").write_bytes(
+            (ROOT / "assets/service-registry.json").read_bytes()
+        )
+        for name in (
+            "micro-02-result.json",
+            "holdout-03-corpus-manifest.json",
+            "news-quote-01-holdout-plan.json",
+            "news-quote-02-holdout-plan.json",
+            "news-quote-03-holdout-plan.json",
+        ):
+            (research_dir / name).write_bytes((source / name).read_bytes())
+        prereg = research_dir / "holdout-03-preregistration.json"
+        prereg.write_text(json.dumps(data), encoding="utf-8")
+        return prereg
+
+    def test_quote_integrity_holdout_three_is_frozen_and_registry_bound(
+        self,
+    ) -> None:
+        path = ROOT / "evals/research-v4/holdout-03-preregistration.json"
+        data = research_holdout.validate_preregistration(path)
+        self.assertEqual(
+            [plan["sample"] for plan in data["plans"]],
+            ["news-quote-01", "news-quote-02", "news-quote-03"],
+        )
+        self.assertEqual(
+            {service["id"] for service in data["services"]["primary_effect"]},
+            {"zerogpt", "copyleaks"},
+        )
+        self.assertEqual(
+            data["success_criteria"]["transfer_signal"],
+            (
+                "All three holdout samples satisfy sample_success; two of three "
+                "is reported as partial 66.7%, not rounded up to the protocol's "
+                "70% requirement."
+            ),
+        )
+        self.assertTrue(all(plan["edit_cost"] <= 0.08 for plan in data["plans"]))
+
+    def test_quote_integrity_holdout_three_rejects_forged_service_group(
+        self,
+    ) -> None:
+        source = ROOT / "evals/research-v4/holdout-03-preregistration.json"
+        data = json.loads(source.read_text(encoding="utf-8"))
+        data["services"]["primary_effect"][1]["independence_group"] = "zerogpt"
+        with tempfile.TemporaryDirectory() as directory:
+            path = self.copied_holdout_three_prereg(Path(directory), data)
+            with self.assertRaisesRegex(ValueError, "forged independence group"):
+                research_holdout.validate_preregistration(path)
+
+    def test_quote_integrity_holdout_three_rejects_forged_candidate_binding(
+        self,
+    ) -> None:
+        source = ROOT / "evals/research-v4/holdout-03-preregistration.json"
+        data = json.loads(source.read_text(encoding="utf-8"))
+        data["plans"][0]["candidate_sha256"] = "f" * 64
+        with tempfile.TemporaryDirectory() as directory:
+            path = self.copied_holdout_three_prereg(Path(directory), data)
+            with self.assertRaisesRegex(ValueError, "quote operation mismatch"):
+                research_holdout.validate_preregistration(path)
+
     def test_direct_claim_holdout_is_frozen_on_new_strict_texts(self) -> None:
         research_dir = ROOT / "evals/research-v4"
         prereg = json.loads(

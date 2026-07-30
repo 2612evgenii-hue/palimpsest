@@ -1,0 +1,19 @@
+{
+  "schema": "palimpsest.variant-plan.v1",
+  "sample_id": "news-quote-02-ai",
+  "original_sha256": "c1e57cc175248abfdf3fdfe89f162e08c2597edbf71f8af7a7064c2a35d66e1a",
+  "reference_sha256": "d43be99d347369f058521f2d94db984f501d4a56a5083bbd90364478bf51e1b9",
+  "operations": [
+    {
+      "id": "quote-integrity",
+      "factor": "quote_integrity_restoration",
+      "candidate_sha256": "25b438cefc9d2240464e0ec3470de47bc0afa075937e1a26bdbe6be84c50ed4d",
+      "old": "\"Unusually active warm air currents this year created perfect conditions for sustained snowfall,\" explained Li Weijing of China's National Climate Center.",
+      "new": "\"The warm air is very active this year,\" said Li Weijing, deputy director-general of the National Climate Center of China.",
+      "source_evidence": {
+        "relation": "restores_the_exact_source_quote_and_the_source_proven_speaker_title",
+        "reference_excerpt": "\"The warm air is very active this year,\" said Li Weijing, deputy director-general of the National Climate Center of China."
+      }
+    }
+  ]
+}

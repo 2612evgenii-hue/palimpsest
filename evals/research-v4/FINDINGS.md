@@ -348,3 +348,28 @@ exact-SHA наблюдения. Четыре технические попытк
 он остаётся calibration signal на выбранном тексте. Production admission —
 `none_holdout_required`. Полный машиночитаемый результат:
 [`micro-02-result.json`](micro-02-result.json).
+
+## Holdout-03: замороженная проверка quote-integrity transfer
+
+До любого нового detector score выбраны три ранее не проверенные пары
+`news_001729`, `news_001021` и `news_003239`. Критерий отбора содержательный:
+formal news, уникальная прямая цитата, которую AI-polish материально изменил,
+и буквальный source excerpt. Scores при выборе не использовались.
+
+| Sample | Edit cost | Правка | Quality screen |
+|---|---:|---|---|
+| news-quote-01 | 5,86% | вернуть точную цитату Alice Fisher | C2, fidelity pass; style −1,2 при low reliability |
+| news-quote-02 | 3,97% | вернуть цитату Li Weijing и должность | C2, fidelity pass; style +1,2 |
+| news-quote-03 | 7,26% | вернуть точную цитату NTSB Chairman | C2; source-reconciled fidelity finding; style +4,5 |
+
+Каждый кандидат строится одной exact replacement operation; plan,
+human/AI/candidate и literal reference excerpt связаны SHA. Confirmatory
+сервисы — ZeroGPT и Copyleaks как разные registry groups. Scribbr проверяет
+cross-family regression; Sapling остаётся диагностикой и не заменяет
+Copyleaks, поскольку ранее давал тяжёлые human false positives.
+
+Для transfer нужны `3/3` eligible successes. `2/3 = 66,7%` не округляется до
+протокольных 70%. Даже полный успех не допускает production-правило:
+калибровка пока содержит один текст, а evidence без capture остаётся
+ограниченным. Live scores ещё не получены. Frozen scope:
+[`holdout-03-preregistration.json`](holdout-03-preregistration.json).

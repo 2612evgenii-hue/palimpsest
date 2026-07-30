@@ -59,6 +59,9 @@ AI/AI-polish записью.
 только отдельным supplemental manifest. Holdout-02 закрепляет так две ранее
 непроверенные AI-polish пары (`arxiv_001213`, `news_004384`) и не переписывает
 корпус, на который уже ссылаются прежние preregistration-файлы.
+Holdout-03 тем же способом закрепляет три новые formal-news пары с
+материально изменёнными прямыми цитатами. Они выбраны по source fidelity до
+любого score и не использовались в calibration.
 
 Перед экспериментом source text проходит только `plain_text_v1`: NFC, LF и
 удаление хвостовых пробелов/табов на строках. Абзацы, видимые символы и
@@ -232,3 +235,7 @@ Transition-bound holdout обязан проходить
 проверяет preregistration/commit binding, полную exact-SHA матрицу, три
 повтора, transition signals, исключённые технические попытки и вычисленный
 verdict.
+До live run standalone holdout v3 обязан проходить
+`python3 scripts/research_holdout.py --preregistration <prereg.json>`:
+валидатор сверяет calibration/corpus/plan SHA, holdout partition, candidate
+binding, quality ceiling, registry independence groups и repeat policy.
