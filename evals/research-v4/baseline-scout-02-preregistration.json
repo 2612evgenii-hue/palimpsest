@@ -1,0 +1,126 @@
+{
+  "schema": "palimpsest.baseline-scout-preregistration.v2",
+  "experiment_id": "baseline-scout-02-cross-family-window",
+  "status": "frozen_before_live_scores",
+  "frozen_at": "2026-07-30T20:57:42+03:00",
+  "purpose": "Find new strict English AI-polish texts on which a minimal score response is measurable in both accessible detector families; this scout cannot test or admit an editing rule.",
+  "corpus_binding": {
+    "path": "scout-02-corpus-manifest.json",
+    "sha256": "fcad6456ccc8ccbd703e673766e056ed2375bb77dc52076dede0c1bcecaaf924",
+    "dataset_revision": "38d3e0e23fc9997d26929f1fecf9b46eeae567be",
+    "canonicalization": "plain_text_v1"
+  },
+  "ordered_pairs": [
+    {
+      "pair": "arxiv-polish-03",
+      "reason": "Untouched 258-word strict scientific AI-polish sample with an exact human control.",
+      "human_sha256": "ab2f15947c79b57860758930a6eb432b573d09df24b78bd84f9403e08a23aac7",
+      "ai_sha256": "66dfb3c5625296c9d336e268be0c323e8b605c370aba5957949e1abf79bb4137",
+      "genre": "scientific_abstract",
+      "generation_mode": "ai_polish"
+    },
+    {
+      "pair": "arxiv-polish-04",
+      "reason": "Untouched 149-word strict scientific AI-polish sample with an exact human control.",
+      "human_sha256": "b9f69aa591e918a9e0ef304336d3cc1f0f491a382ded61cc784a972a40f198ae",
+      "ai_sha256": "bb9cddad56dfe4ed2e93351f734070b9574e448d8b66dbe987ff7dbbc21ee93f",
+      "genre": "scientific_abstract",
+      "generation_mode": "ai_polish"
+    },
+    {
+      "pair": "news-polish-03",
+      "reason": "Untouched 176-word formal-news AI-polish sample with an exact human control.",
+      "human_sha256": "9c2e7a9feffcf5873d87004f384d1776c1850eff5ff992e883a2047a8fb4184a",
+      "ai_sha256": "c684c7ad4903eb12e776d20b5e89c5e0f8d149bb9c7d38a0bd082a59acc85712",
+      "genre": "formal_news",
+      "generation_mode": "ai_polish"
+    },
+    {
+      "pair": "news-polish-04",
+      "reason": "Untouched 328-word formal-news AI-polish sample with an exact human control.",
+      "human_sha256": "cbe30469b6e1fff0c65961e7d5dcaeb6b8f7d5f53fb92209a285604d6f3de5b1",
+      "ai_sha256": "f5c0cd5c83d96ea141adcb3998448c3ca70d56577aa959f3db2b405e1bb36159",
+      "genre": "formal_news",
+      "generation_mode": "ai_polish"
+    },
+    {
+      "pair": "essay-b1-polish-02",
+      "reason": "Untouched learner-essay AI-polish sample plus a declared B1 human control; retained to measure genre and English-level sensitivity.",
+      "human_sha256": "a1d726f75fc5713e3948bcdddec54446d7776faf95b3a96e385c6845cca94901",
+      "ai_sha256": "bf1e853b235780e30154d12e846db31120ac74b3319257fd367ebbf7f5c1a8b0",
+      "genre": "nonnative_essay",
+      "declared_human_level": "B1",
+      "generation_mode": "ai_polish"
+    },
+    {
+      "pair": "qa-polish-02",
+      "reason": "Untouched technical-explanation AI-polish sample with an exact human control.",
+      "human_sha256": "dd973e2fb232ed083bb3253a73b1bb8f9f74681638c581e54dbd1a4cbc67e479",
+      "ai_sha256": "2199aedfa1a6090656fecb43ba9c3951462e37aca9acc32d9f3d560db26338fc",
+      "genre": "technical_explanation",
+      "generation_mode": "ai_polish"
+    }
+  ],
+  "services": {
+    "primary_accessible": [
+      {
+        "id": "zerogpt",
+        "independence_group": "zerogpt"
+      },
+      {
+        "id": "scribbr",
+        "independence_group": "quillbot-learneo"
+      }
+    ],
+    "excluded": [
+      {
+        "id": "copyleaks",
+        "reason": "The public guest path returned scan_limit_reached in repeated prior attempts."
+      },
+      {
+        "id": "gptzero",
+        "reason": "The current public path is signup-gated."
+      },
+      {
+        "id": "quillbot",
+        "reason": "The current public path is signup-gated and its engine family is not independent of Scribbr."
+      },
+      {
+        "id": "gptinf",
+        "reason": "It is an aggregator rather than an independent primary family."
+      }
+    ]
+  },
+  "procedure": [
+    "Open a fresh tab for each primary service and scan every frozen human/AI pair once in ordered_pairs order.",
+    "Before every submit, bind the visible full text to its frozen SHA-256.",
+    "Accept a repeat only after a first-scan marker, visible loading/disabled state, changed result identifier, or changed result text proves a new transition.",
+    "Do not write, alter, or scan an edit variant during this scout.",
+    "Classify each pair/service baseline with the frozen usable-cell rule.",
+    "If either service cell is usable for a pair, repeat the unchanged human and AI texts in both primary services until n=3; otherwise keep n=1.",
+    "Select only cross-family windows for a later edit experiment; single-family windows remain diagnostics."
+  ],
+  "usable_cell_rule": {
+    "ai_score_min_inclusive": 20,
+    "ai_score_max_inclusive": 90,
+    "human_score_max_inclusive": 50,
+    "minimum_ai_minus_human_gap": 10,
+    "cell_pass": "terminal complete and all numeric thresholds pass on the first scan in the same service"
+  },
+  "selection_rule": {
+    "cross_family_window": "both primary service cells pass",
+    "single_family_window": "exactly one primary service cell passes",
+    "selected_pairs": "first two cross_family_window pairs in ordered_pairs order",
+    "diagnostic_pairs": "all single_family_window pairs in ordered_pairs order",
+    "maximum_selected_pairs": 2,
+    "no_cross_family_window": "stop without edit variants and report that the current accessible detector pair cannot jointly resolve minimal effects on this frozen corpus"
+  },
+  "interpretation_limits": [
+    "This is detector-based calibration selection and therefore cannot support a detector-generalization or authorship claim.",
+    "A score at 0 or 100 is a floor/ceiling observation and cannot rank local edits.",
+    "A human false positive is evidence about detector validity on that genre; the human control is never edited.",
+    "An AI-polish row is a measurement target, not an endorsed upstream rewriting method.",
+    "A single-family window cannot launch an edit experiment under this preregistration.",
+    "Any later edit experiment requires a new frozen preregistration with exact operations, fidelity, source-as-reference style, and English-level envelopes."
+  ]
+}

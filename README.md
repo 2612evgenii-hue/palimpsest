@@ -13,7 +13,8 @@
 
 [Установка](#установка) · [Быстрый старт](#быстрый-старт) ·
 [Функции](#функции) · [F1 и детекторы](#f1-и-детекторы) ·
-[Ограничения](#честные-ограничения)
+[Академическая добросовестность](#академическая-добросовестность) ·
+[Исследование 4.0](#исследование-40) · [Ограничения](#честные-ограничения)
 
 </div>
 
@@ -36,26 +37,191 @@ rewrite, расширение edit envelope фиксируется отдель�
 Plateau, waiver, средний score, один прошедший сервис или
 `READY_WITH_LIMITS` не считаются успехом при высоком AI-score.
 
+## Академическая добросовестность
+
+Palimpsest автоматически относит диссертацию, диплом, оцениваемое эссе,
+assignment и аналогичную студенческую работу к `academic_assessment`. В этом
+режиме F1 недоступен: skill не переписывает работу ради сокрытия AI-авторства
+и не оптимизирует её под детекторы.
+
+Если пользователь предоставляет image/PDF разрешения с конкретным scope на
+AI-assisted revision и detector work, можно явно выбрать
+`academic_authorized_ai_revision`. State связывает artifact с SHA-256,
+проверяет его структуру и оставляет disclosure review обязательным. При этом
+artifact честно помечается как
+`user_supplied_unverified_external_document`: подпись и issuer не
+аутентифицируются автоматически.
+
+Доступны F2/F3/F4: сохранение авторского почерка и уровня английского,
+структурная диагностика, проверка фактов и библиографии, ограниченная проверка
+совпадений, fidelity, форматирование и минимальная допустимая корректура.
+AI-detector score не считается доказательством авторства. Требования к
+раскрытию использования AI студент подтверждает по assessment brief или у
+руководителя. Полная политика:
+[references/academic-integrity.md](references/academic-integrity.md).
+
+## Исследование 4.0
+
+Версия skill по-прежнему `3.5.0`. Ветка `research/v4-minimal-edits` содержит
+отдельное воспроизводимое исследование минимальных правок: hash-pinned
+human/AI corpus, calibration/holdout split, однофакторные варианты, повторы,
+human controls, CEFR/fidelity/style screens и Pareto-отбор.
+
+Отдельный
+[анонимизированный authorised academic case](docs/ACADEMIC_AUTHORIZED_CASE.md)
+проверил full prose workflow на длинном DOCX и привёл к исправлению
+paragraph-minimality и bibliography segmentation. Raw document и permission
+artifact в репозиторий не публикуются.
+
+Исследование публикует и отрицательные результаты. Scientific pilot нашёл
+вариант с edit cost 0,73%, который прошёл ZeroGPT и Scribbr, но остался 99,6%
+в Sapling. Новый canonical B1 pilot проверил десять однофакторных правок:
+единственный повторяемый cross-service эффект составил лишь −0,9…−1 п.п.,
+остался далеко выше порога, а правки в подсвеченных ZeroGPT зонах чаще
+ухудшали score. Technical C1 pilot добавил ещё десять однофакторных вариантов
+и прогрессивные пакеты: edit cost до 7,32% не сдвинул насыщенные 100% в
+ZeroGPT/Scribbr, а уже четыре объединённые правки нарушили CEFR-envelope.
+Human control при этом получил 38% в ZeroGPT, 0% в Scribbr и 99,1% в Sapling.
+Первый preregistered PubMed holdout отверг перенос `split mechanism` ещё до
+live-score: оба кандидата сохранили грубую метку C2, но вышли за допустимый
+reading-grade envelope. Оба AI baseline затем дали 100% ×3 в ZeroGPT/Scribbr,
+а четыре прошедших quality screen компаратора остались на 100%. Ни один вариант
+не превращён в «рецепт». Новый preregistered baseline scout выбрал два
+несатурированных AI-polish кейса для следующего микроэксперимента: ZeroGPT
+стабилен на `63,7–63,8%` для scientific abstract и `76,3%` для formal news,
+тогда как Scribbr дал тем же SHA соответственно `100%` и `0%`. Это
+инструментальный отбор, не доказательство правила.
+
+Preregistered `micro-01` затем проверил шесть естественных правок с edit cost
+`0,30–4,29%`. Простое удаление оценочного маркера не перенеслось между двумя
+текстами. Прямой субъект и прямое, source-supported утверждение формально
+прошли calibration screen ZeroGPT без regression в Scribbr, однако cross-family
+подтверждения нет: Scribbr остался на своих исходных крайних `100%`/`0%`, а
+одна same-SHA ячейка ZeroGPT дала диапазон `0–76,2%`. Поэтому ни одно правило
+не было добавлено в production skill. Copyleaks снова честно записан как
+`scan_limit_reached`.
+
+Transition-safe `holdout-02` затем отверг перенос
+`direct_claim_restoration` на двух новых строгих EN-текстах. На scientific
+образце ZeroGPT дал `0%` baseline и кандидату, поэтому эффект был
+неизмерим; Scribbr изменился лишь `27% → 25%`. На formal-news human control и
+AI baseline получили одинаковые `41,6%` ZeroGPT, а кандидат — `41,7%`;
+Scribbr остался на полу `0%`. Результат — `0/2`, правило не допущено.
+Это также запрещает трактовать «сделать claim прямее» как универсальный
+detector-рецепт: такая правка остаётся только редакторским инструментом.
+
+`Baseline-scout-02` затем проверил шесть новых AI-polish/human EN-пар и
+впервые нашёл стабильное измерительное окно сразу в двух семьях. На
+`news-polish-04` ZeroGPT дал human `30,3%` и AI `46,7%`, Scribbr — `0%` и
+`29%`; все четыре ячейки повторились без шума. Technical pair формально прошёл
+первичный отбор, но ZeroGPT AI same-SHA range составил `6,6 п.п.`, поэтому
+исключён из следующего experiment scope. Scientific-03 остался
+одно-сервисной диагностикой, а B1 AI-polish упёрся в `100%` обоих сервисов.
+Итоговый следующий scope — только стабильный formal-news текст; правил
+редактирования scout не проверял и не допустил.
+
+На этом окне завершён preregistered `micro-02`: восемь отдельных
+source-grounded правок стоимостью от `0,188%` до `6,61%`. Семь прошли
+quality-first допуск, 34 live scans имели exact-SHA и transition signal.
+Минимальный кандидат удалил только выдуманный `2022` из attribution
+(`0,188%`) и стабильно снизил ZeroGPT `46,7 → 39%`, Scribbr `29 → 15%`
+(`n=3`, range `0`). Полное восстановление цитаты за `6,61%` дало почти тот же
+результат (`38,1% / 15%`), поэтому проиграло по minimality. Но общий фактор
+«удалять неподтверждённые даты» провалился: удаление другого выдуманного года
+подняло ZeroGPT до `71,3%`. Это location-specific calibration signal, а не
+production-рецепт; требуется новый holdout и дополнительная detector family.
+
+`Holdout-03` затем проверил перенос точного восстановления цитаты на трёх
+ранее не сканированных formal-news парах. ZeroGPT не подтвердил эффект ни
+разу: median `100→100`, `49,8→51,5` и `50→50,5`. Copyleaks остановился на
+`scan limit reached` до первого score; Scribbr и Sapling не запускались после
+смены приоритета на реальные проекты. Поэтому multi-service holdout честно
+помечен incomplete, timestamps/captures не восстановлены задним числом, а
+production rule не допущено. Поскольку preregistered sample success требовал
+эффект ZeroGPT **и** Copyleaks, провал ZeroGPT на всех `3/3` уже отвергает
+перенос фактора. Точную цитату всё равно нужно восстанавливать ради fidelity,
+но не как detector-рецепт.
+
+Следующий этап — optional privacy-first shadow-validation на реальной работе.
+Original и все hypotheses замораживаются до новых scores; raw text остаётся
+только в private workspace. `delivery_only` не разрешает research reuse,
+`private_research` требует отдельного согласия и три повтора. Один реальный
+case может выбрать наименее изменённый проходящий вариант для этой работы, но
+никогда не допускает универсальное правило.
+
+См.
+[протокол](evals/research-v4/PROTOCOL.md),
+[текущие результаты](evals/research-v4/FINDINGS.md) и
+[машиночитаемые pilot-03](evals/research-v4/pilot-03-canonical.json) /
+[pilot-04](evals/research-v4/pilot-04-b1-canonical.json) /
+[pilot-05](evals/research-v4/pilot-05-tech-canonical.json) /
+[holdout-01](evals/research-v4/holdout-01-pubmed-canonical.json) /
+[baseline scout-01](evals/research-v4/baseline-scout-01-result.json) /
+[micro-01](evals/research-v4/micro-01-result.json) /
+[holdout-02](evals/research-v4/holdout-02-result.json) /
+[baseline scout-02](evals/research-v4/baseline-scout-02-result.json) /
+[micro-02](evals/research-v4/micro-02-result.json) /
+[holdout-03 preregistration](evals/research-v4/holdout-03-preregistration.json) /
+[holdout-03 partial result](evals/research-v4/holdout-03-partial-result.json).
+
+Воспроизвести закреплённый corpus, варианты pilot-05 и проверку Pareto:
+
+```bash
+python3 scripts/research_corpus.py \
+  --manifest evals/research-v4/corpus-manifest.json \
+  --out-dir work/research-corpus
+python3 scripts/research_variants.py \
+  --original work/research-corpus/qa-tech-01-ai.txt \
+  --plan evals/research-v4/qa-tech-01-variant-plan.json \
+  --out-dir work/qa-tech-01-variants
+python3 scripts/research_variants.py \
+  --original work/research-corpus/qa-tech-01-ai.txt \
+  --plan evals/research-v4/qa-tech-01-progressive-plan.json \
+  --out-dir work/qa-tech-01-progressive
+python3 scripts/research_pilot.py \
+  --pilot evals/research-v4/pilot-05-tech-canonical.json
+python3 scripts/research_scout.py \
+  --result evals/research-v4/baseline-scout-01-result.json
+python3 scripts/research_micro.py \
+  --result evals/research-v4/micro-01-result.json
+python3 scripts/research_holdout.py \
+  --result evals/research-v4/holdout-02-result.json
+python3 scripts/research_corpus.py \
+  --manifest evals/research-v4/scout-02-corpus-manifest.json \
+  --out-dir work/research-corpus-scout02
+python3 scripts/research_scout.py \
+  --result evals/research-v4/baseline-scout-02-result.json
+python3 scripts/research_micro.py \
+  --preregistration evals/research-v4/micro-02-preregistration.json
+python3 scripts/research_micro.py \
+  --result evals/research-v4/micro-02-result.json
+python3 scripts/research_holdout.py \
+  --preregistration evals/research-v4/holdout-03-preregistration.json
+python3 scripts/research_holdout.py \
+  --partial-result evals/research-v4/holdout-03-partial-result.json
+```
+
 ## Для чего нужен Palimpsest
 
 | Маршрут | Результат |
 |---|---|
 | Базовая редактура | Полное понимание, diagnosis, минимальные moves, fidelity, style и proofread |
-| `F1` | Итеративное снижение текущих detector scores по обязательному набору |
+| `F1` | Для общего или явно авторизованного academic-контекста: итеративная проверка текущих detector scores |
 | `F2` | Менее механическая структура без разрушения жанра |
 | `F3` | Глубокий факт-чек по первичным и официальным источникам |
 | `F4` | Проверка close paraphrase, цитат, ссылок и атрибуции |
 | Long-form | Полное сегментное покрытие и память между context resets |
 
-Подходит для эссе, статей, диссертаций, отчётов, рукописей, технической и
-академической прозы.
+Подходит для статей, отчётов, рукописей, технической и академической прозы.
+Оцениваемая работа по умолчанию остаётся quality-only; F1 открывается только
+в evidence-bound авторизованном режиме.
 
 ## Что изменилось в v3.5
 
 - `score_mandatory` автоматически включается с F1;
 - hard pass теперь строго `score <20%`, а не `<=20%`;
 - target `<15%` учитывается отдельно и честно отражается в отчёте;
-- repeatable EN-ядро без регистрации: ZeroGPT, Scribbr, GPTinf и Copyleaks;
+- no-account EN candidate profile: ZeroGPT, Scribbr, GPTinf и Copyleaks;
 - исходный набор из шести сервисов сохранён как явный optional profile;
 - пользователь перед работой явно включает или выключает сервисы;
 - GPTZero/QuillBot не включаются молча, когда live guest path требует sign-up;
@@ -71,6 +237,14 @@ Plateau, waiver, средний score, один прошедший сервис 
 - F1 long-form всегда имеет полное покрытие;
 - сохранены SHA binding, semantic reconciliation, fidelity, CEFR, style,
   capability integrity, anti-forgery и bounded memory.
+- добавлено определение `academic_assessment`: F1 блокируется при init и Q2,
+  а по умолчанию действует консервативный edit envelope 10%/25%;
+- добавлен `academic_authorized_ai_revision`: structurally valid image/PDF,
+  digest-bound scope, неизменяемый G0 и обязательный disclosure review;
+- DOCX single-newline extraction больше не схлопывает 146 абзацев в один при
+  расчёте minimality;
+- библиография отделяется от prose boundaries, остаётся exact-mapped и
+  fidelity-protected, но не переписывается ради detector score.
 
 Подробности: [CHANGELOG.md](CHANGELOG.md).
 
@@ -114,11 +288,14 @@ Palimpsest не повышает B2 до «идеального академич
 
 ## Intake
 
-Пользователь видит три основных вопроса:
+Перед вопросами skill определяет `content_context`. Пользователь видит три
+основных вопроса:
 
 1. Есть ли style-reference и какой English level сохранить?
-2. Какие функции F1–F4 включить? Если выбран F1 — какие детекторы оставить
-   обязательными?
+2. Какие функции включить? В `academic_assessment` доступны F2–F4. В общем
+   контексте или после evidence-bound выбора
+   `academic_authorized_ai_revision` можно также выбрать F1 и обязательные
+   детекторы.
 3. Какие требования к структуре, письму и запретам соблюдать?
 
 В state detector follow-up хранится отдельно, поэтому CLI использует Q1–Q4.
@@ -126,18 +303,24 @@ Palimpsest не повышает B2 до «идеального академич
 
 ## F1 и детекторы
 
-Repeatable EN-профиль без обязательной регистрации:
+Этот раздел действует в общем контексте или в
+`academic_authorized_ai_revision`. Во втором случае авторизация,
+meaning/fidelity gates и disclosure review обязательны.
+
+No-account EN candidate profile:
 
 | Сервис | Роль в процессе |
 |---|---|
 | [ZeroGPT](https://www.zerogpt.com/) | Обязателен по постоянному пользовательскому предпочтению |
 | [Scribbr](https://www.scribbr.com/ai-detector/) | Проверяется отдельно, но может дублировать QuillBot engine |
 | [GPTinf](https://gptinf.com/detector) | Агрегатор; не заменяет прямой сервис |
-| [Copyleaks](https://copyleaks.com/ai-content-detector) | Независимый прямой сигнал |
+| [Copyleaks](https://copyleaks.com/ai-content-detector) | Независимый прямой сигнал; guest quota-sensitive |
 
 Для RU default — ZeroGPT, GPTinf и Copyleaks. GPTZero и QuillBot остаются
 опциональными: текущий guest flow упирается в sign-up/лимит. Исходный
 six-service profile никуда не удалён и может быть выбран явно.
+Copyleaks ранее возвращал guest scores, но в holdout-03 достиг scan limit.
+Поэтому ни один стартовый список не заменяет свежий capability review.
 
 Перед началом F1 пользователь явно включает или выключает сервисы. Каждый
 оставленный сервис обязателен. Два бренда одного engine всё равно прогоняются,
@@ -214,7 +397,31 @@ cp essay.md workspace/working.md
 python3 scripts/state.py --state workspace/STATE.json init \
   --original workspace/original.md \
   --working workspace/working.md \
-  --flags F1,F2
+  --flags F1,F2 \
+  --content-context general
+```
+
+Для оцениваемой академической работы используйте, например:
+
+```bash
+python3 scripts/state.py --state workspace/STATE.json init \
+  --original workspace/original.md \
+  --working workspace/working.md \
+  --flags F2,F3,F4 \
+  --content-context auto
+```
+
+Для документированно разрешённой академической revision:
+
+```bash
+python3 scripts/state.py --state workspace/STATE.json init \
+  --original workspace/original.md \
+  --working workspace/working.md \
+  --flags F1,F2,F3,F4 \
+  --content-context academic_authorized_ai_revision \
+  --authorization-evidence workspace/permission.png \
+  --authorization-scope \
+  "Permission covers AI-assisted paraphrasing, detector checks, and reduction of false-positive text-origin scores."
 ```
 
 Ответы intake:
@@ -232,7 +439,7 @@ python3 scripts/state.py --state workspace/STATE.json intake \
 python3 scripts/state.py --state workspace/STATE.json intake \
   --question Q3 \
   --services zerogpt,scribbr,gptinf,copyleaks \
-  --answer "Use the repeatable no-sign-up English profile." --source explicit
+  --answer "Use the no-account English candidate profile." --source explicit
 
 python3 scripts/state.py --state workspace/STATE.json intake \
   --question Q4 \
@@ -289,13 +496,25 @@ Suite объединяет broad regression, adversarial acceptance и heterogen
 
 Отдельно опубликован воспроизводимый отчёт о
 [живой EN-апробации](docs/LIVE_ACCEPTANCE_3.5.md): baseline fail
-63,1/100/100/100% после реального edit-cycle стал 5,3/0/0/0% на repeatable
-no-sign-up core. Отчёт отдельно показывает большой diff, optional sign-up
-blockers и границу DOM/screenshot evidence.
+63,1/100/100/100% после реального edit-cycle стал 5,3/0/0/0% на выбранном
+no-account candidate profile. Отчёт отдельно показывает большой diff,
+optional sign-up blockers и границу DOM/screenshot evidence.
+
+Для следующих реальных проектов предусмотрен
+[приватный shadow-протокол](references/shadow-validation.md). Он отделяет
+практический выбор кандидата от research admission, требует freeze до scores
+и terminal evidence seal после matrix, а также запрещает коммитить raw client
+text.
 
 ## Честные ограничения
 
 - Детектор не доказывает авторство.
+- F1 по умолчанию отключён для оцениваемых работ. Авторизованный режим зависит
+  от предоставленного пользователем, но не независимо аутентифицированного
+  evidence.
+- Full detector coverage означает full **editable prose** coverage.
+  Библиография остаётся exact-mapped и проверяется на точность, но не
+  переписывается ради classifier score.
 - Score и доступность могут измениться после обновления сервиса.
 - Структурно валидный challenge-bound screenshot всё ещё можно подделать локально.
 - CEFR и style metrics — экраны drift, а не сертификация.
@@ -304,6 +523,8 @@ blockers и границу DOM/screenshot evidence.
   blocker и не объявляет успех.
 - Palimpsest нельзя использовать для скрытия плагиата, удаления обязательной
   атрибуции или фабрикации evidence.
+- Локальная/open-web проверка совпадений не является Turnitin или полной
+  проверкой по закрытым институциональным базам.
 
 Подробнее: [docs/LIMITATIONS.md](docs/LIMITATIONS.md) и
 [references/detectors.md](references/detectors.md).

@@ -207,6 +207,58 @@ def paragraphs(text: str, keep_annotations: bool = False) -> list[Paragraph]:
     return out
 
 
+def editorial_paragraphs(text: str, keep_annotations: bool = False) -> list[Paragraph]:
+    """Return Markdown paragraphs or complete single-newline Word paragraphs.
+
+    DOCX extraction commonly emits one Word paragraph per physical line, with
+    no blank lines. The ordinary Markdown parser correctly treats that as one
+    block, so paragraph-level review needs an explicit conservative fallback.
+    Hard-wrapped prose stays grouped unless most non-empty lines look like
+    complete paragraph or heading boundaries.
+    """
+    parsed = [
+        p for p in paragraphs(text, keep_annotations=keep_annotations)
+        if p.kind != "code"
+    ]
+    if len(parsed) > 1:
+        return parsed
+    lines: list[tuple[int, str]] = []
+    offset = 0
+    for raw in text.splitlines(keepends=True):
+        body = raw.rstrip("\r\n")
+        if body.strip():
+            leading = len(body) - len(body.lstrip())
+            lines.append((offset + leading, body.strip()))
+        offset += len(raw)
+    if len(lines) < 3:
+        return parsed
+    boundary_like = 0
+    for _, line in lines:
+        line_words = WORD.findall(line)
+        if (
+            re.search(r'[.!?…]["\')\]]?$', line)
+            or len(line_words) <= 12
+            or (line.isupper() and len(line_words) <= 20)
+        ):
+            boundary_like += 1
+    if boundary_like / len(lines) < 0.55:
+        return parsed
+    units: list[Paragraph] = []
+    for index, (start, line) in enumerate(lines, start=1):
+        probe = paragraphs(line, keep_annotations=keep_annotations)
+        kind = probe[0].kind if probe else "prose"
+        item = Paragraph(
+            index=index,
+            start=start,
+            end=start + len(line),
+            text=line,
+            kind=kind,
+        )
+        item.sentences = sentences(line) if kind in {"prose", "quote", "list"} else []
+        units.append(item)
+    return units
+
+
 def sentences(text: str) -> list[str]:
     src = mask_protected(text)
     src = MD_HEADING.sub("", src)

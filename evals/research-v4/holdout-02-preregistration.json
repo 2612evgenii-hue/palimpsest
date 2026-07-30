@@ -1,0 +1,110 @@
+{
+  "schema": "palimpsest.holdout-preregistration.v2",
+  "experiment_id": "holdout-02-direct-claim-transfer",
+  "status": "frozen_before_live_scores",
+  "frozen_at": "2026-07-30T20:32:09+03:00",
+  "purpose": "Test whether the more stable micro-01 direct-claim signal transfers to two untouched strict EN AI-polish texts under transition-safe instrumentation.",
+  "calibration_binding": {
+    "path": "micro-01-result.json",
+    "sha256": "eb9e23f6191276f654b3e0784a54921373277f0ee84840852fd4eae4d5738b1d",
+    "git_commit": "f0efab0d41781d4df28d01d22e470757a3dd8d0d",
+    "factor": "direct_claim_restoration",
+    "calibration_samples": ["arxiv-polish-01", "news-polish-01"]
+  },
+  "corpus_binding": {
+    "path": "holdout-02-corpus-manifest.json",
+    "sha256": "11f88b849d56662c60684a337f12763454b763828fb954dfbc74147809307672",
+    "dataset_revision": "38d3e0e23fc9997d26929f1fecf9b46eeae567be"
+  },
+  "hypothesis": {
+    "factor": "direct_claim_restoration",
+    "confirmatory": "A local meaning-equivalent replacement of promotional or indirect framing with a direct source-supported claim will reduce the median ZeroGPT score by more than both measured same-SHA noise and 1 percentage point on both holdout samples.",
+    "cross_service_guardrail": "The Scribbr median may not worsen by more than 5 percentage points on either sample.",
+    "not_a_recipe": "The edit is permitted only where an immutable source unit supports the same claim. It cannot delete modality, evidence, actors, numbers, or domain terminology."
+  },
+  "plans": [
+    {
+      "sample": "arxiv-polish-02",
+      "genre": "scientific_abstract",
+      "path": "arxiv-polish-02-holdout-plan.json",
+      "sha256": "da8aea6a0b02cb409404b4d7c080aa62f27c6a23251bec8965065e3fcf903dd7",
+      "human_sha256": "5fb96a2c22f5330ec3d817c43827a9db5c88844be88fe8958fdd61016f14cb54",
+      "ai_sha256": "4a235ee71c843d5bf588f0e4b1d5a9f47ee35cb976ed59c3c5252953917d660b",
+      "candidate_sha256": "687f2aafaed9e1a48a6706334ca063a502e30f803a87e1ccdeacbfcc0ea28fe0",
+      "edit_cost": 0.0781,
+      "doc_change_ratio": 0.0781,
+      "char_change_ratio": 0.049077,
+      "changed_spans": 14,
+      "quality": {
+        "english_level": "pass_C2",
+        "reading_grade_delta": 0.209,
+        "fidelity_screen": "pass",
+        "semantic_review": "pass_same_flexibility_and_scalability_claim",
+        "source_unit_excerpt": "We define global and local natural graph networks, the latter of which are as scalable as conventional message passing graph neural networks while being more flexible.",
+        "style_distance": 10.7,
+        "style_reliability": "low_short_text"
+      }
+    },
+    {
+      "sample": "news-polish-02",
+      "genre": "formal_news",
+      "path": "news-polish-02-holdout-plan.json",
+      "sha256": "27d9f5db991bde7970a95715030dc00da45bc17e7804dff37d147c7d8a810617",
+      "human_sha256": "6c60113c6362888c8625ef35595ca59aca65706dbd7d981790d81dbe471858db",
+      "ai_sha256": "ce10b72538b8c181c0dd62877bc9ab6f7641a794083d7e88b1e259b0a87033e2",
+      "candidate_sha256": "b8fd842c7951b535f661ddfab0ce80c6b90d8a7022cdded80e883ab82f15fc71",
+      "edit_cost": 0.0276,
+      "doc_change_ratio": 0.0276,
+      "char_change_ratio": 0.025064,
+      "changed_spans": 9,
+      "quality": {
+        "english_level": "pass_C2",
+        "reading_grade_delta": -0.267,
+        "fidelity_screen": "pass",
+        "semantic_review": "pass_same_interview_invitation_claim",
+        "source_unit_excerpt": "On Monday, Vanity Fair published an interview with Nancy Reagan on its Web site in which she suggested the Obama administration missed an opportunity by not inviting her to witness President Obama signing a measure in March expanding federal support for stem-cell research.",
+        "style_distance": 7.3,
+        "style_reliability": "low_short_text"
+      }
+    }
+  ],
+  "services": {
+    "primary": [
+      {
+        "id": "zerogpt",
+        "role": "confirmatory_effect"
+      },
+      {
+        "id": "scribbr",
+        "model_version": "v7.1.0",
+        "role": "cross_service_regression_guardrail"
+      }
+    ],
+    "unavailable_independent_group": {
+      "id": "copyleaks",
+      "reason": "Repeated guest trials returned scan_limit_reached or non-terminal loading; no score may be inferred."
+    }
+  },
+  "procedure": [
+    "Use fresh service tabs and scan in sample order arxiv-polish-02 then news-polish-02.",
+    "For each sample and service, scan the frozen human control three times, AI baseline three times, and candidate three times.",
+    "Before submit, compute the exact visible-text SHA-256. Every included scan must match the frozen role SHA.",
+    "After submit, require a transition signal before reading a score: loading_or_disabled_observed, result_identifier_changed, or result_text_changed. first_scan_no_prior_result is allowed only once per fresh service tab.",
+    "A terminal percentage without a transition signal is stale-risk evidence and is excluded rather than rescanned adaptively.",
+    "Record terminal state, timestamp, model version where visible, capture status, and post-result DOM normalization separately.",
+    "Do not create, alter, combine, or replace either candidate after this preregistration is committed."
+  ],
+  "success_criteria": {
+    "sample_eligible": "AI baseline median is at least 20% in ZeroGPT and every required cell has three complete, exact-SHA, transition-bound observations.",
+    "sample_success": "Candidate ZeroGPT median is lower than baseline by more than max(baseline range, candidate range, 1.0 point), both same-SHA ranges are at most 5 points, and Scribbr median regression is at most 5 points.",
+    "holdout_success": "Both holdout samples satisfy sample_success.",
+    "hard_pass_is_not_required": "This holdout tests transfer of a micro-effect; scores may remain above 20%.",
+    "production_admission": "Even holdout success cannot enter production until the effect is replicated on at least one additional independent detector group and the broader calibration/holdout thresholds in PROTOCOL.md are met."
+  },
+  "stopping_rules": [
+    "If a frozen candidate fails reinspection of fidelity, CEFR, or source support, do not scan it and report quality rejection.",
+    "If a service is blocked or non-terminal, record blocked/error without a score and do not substitute another service inside this holdout.",
+    "If transition-safe instrumentation cannot distinguish a new result from the prior result, stop that service cell.",
+    "Do not expand the edit budget or add exploratory variants after any holdout score is visible."
+  ]
+}

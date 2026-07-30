@@ -1,0 +1,26 @@
+{
+  "schema": "palimpsest.variant-plan.v1",
+  "sample_id": "pubmed-04-ai",
+  "partition": "holdout",
+  "original_sha256": "587beff7f65bd785fea713ad30ff6d423c31ff98fa7207d24ae5be4eb52684bb",
+  "operations": [
+    {
+      "id": "h1-split-result-mechanism",
+      "factor": "sentence_length_variation",
+      "old": "In a study by Song et al., it was demonstrated that restoring the miR-34 tumor suppressor could significantly inhibit the growth of p53-mutant gastric cancer tumorspheres, enhance cell cycle arrest, and promote apoptosis.",
+      "new": "In a study by Song et al., it was demonstrated that restoring the miR-34 tumor suppressor could significantly inhibit the growth of p53-mutant gastric cancer tumorspheres. It could also enhance cell cycle arrest and promote apoptosis."
+    },
+    {
+      "id": "h2-citation-first",
+      "factor": "evidence_order",
+      "old": "In a study by Song et al., it was demonstrated that restoring the miR-34 tumor suppressor could significantly inhibit the growth of p53-mutant gastric cancer tumorspheres, enhance cell cycle arrest, and promote apoptosis.",
+      "new": "Song et al. demonstrated that restoring the miR-34 tumor suppressor could significantly inhibit the growth of p53-mutant gastric cancer tumorspheres, enhance cell cycle arrest, and promote apoptosis."
+    },
+    {
+      "id": "h3-remove-synthesis-marker",
+      "factor": "synthesis_frame",
+      "old": "Overall, these findings suggest that restoration of miR-34 has potential therapeutic implications for treating p53-mutant gastric cancer.",
+      "new": "These findings suggest that restoration of miR-34 has potential therapeutic implications for treating p53-mutant gastric cancer."
+    }
+  ]
+}

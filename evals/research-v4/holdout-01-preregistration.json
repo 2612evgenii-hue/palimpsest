@@ -1,0 +1,77 @@
+{
+  "schema": "palimpsest.holdout-preregistration.v1",
+  "experiment_id": "holdout-01-pubmed-transfer",
+  "registered_date": "2026-07-30",
+  "status": "frozen_before_live_scores",
+  "source_hypothesis": {
+    "calibration_pilot": "pilot-03-canonical.json",
+    "candidate": "s2-split-mechanism",
+    "factor": "sentence_length_variation",
+    "calibration_result": {
+      "edit_cost": 0.0073,
+      "zerogpt_baseline_pct": [25.3, 26.0, 25.3],
+      "zerogpt_candidate_pct": [0, 0, 0],
+      "scribbr_baseline_pct": [20, 20, 20],
+      "scribbr_candidate_pct": [19, 19, 19],
+      "sapling_baseline_pct": [99.6],
+      "sapling_candidate_pct": [99.6]
+    },
+    "claim_before_holdout": "A local split that separates a stated mechanism from its consequence may reduce ZeroGPT and Scribbr scores on strict scientific prose, but it has not transferred across detector families or texts."
+  },
+  "holdout_samples": [
+    {
+      "sample_id": "pubmed-03-ai",
+      "human_control_id": "pubmed-03-human",
+      "plan": "pubmed-03-holdout-plan.json",
+      "target_cefr": "C2",
+      "source_as_reference": true
+    },
+    {
+      "sample_id": "pubmed-04-ai",
+      "human_control_id": "pubmed-04-human",
+      "plan": "pubmed-04-holdout-plan.json",
+      "target_cefr": "C2",
+      "source_as_reference": true
+    }
+  ],
+  "candidate_roles": {
+    "h1": "confirmatory transfer of sentence_length_variation",
+    "h2": "predeclared evidence_order comparator",
+    "h3": "predeclared frame-removal comparator"
+  },
+  "services": {
+    "primary_repeated": ["zerogpt", "scribbr"],
+    "diagnostic": ["sapling"],
+    "attempt_if_guest_quota_available": ["copyleaks"],
+    "rationale": "ZeroGPT and Scribbr have repeatable guest paths and belong to different registry groups. Sapling requires human controls because prior scientific and technical controls produced severe false positives."
+  },
+  "procedure": [
+    "Regenerate every candidate from the pinned original and exact replacement plan.",
+    "Reject candidates that fail fidelity, explicit C2, or style-distance screening before live scanning.",
+    "Scan each human control and AI baseline three times in each primary service.",
+    "Screen each quality-passing candidate once in each primary service.",
+    "Repeat H1 to n=3 only when its first result improves beyond the observed baseline noise in both primary services; otherwise retain it as screening-only.",
+    "Use Sapling only as a diagnostic cross-family observation with its paired human control.",
+    "Bind every score to the complete post-terminal visible-text SHA-256.",
+    "Do not create or alter holdout candidates in response to their detector scores."
+  ],
+  "confirmatory_success": {
+    "unit": "sample",
+    "required_holdout_samples": 2,
+    "minimum_success_rate": 0.7,
+    "effective_required_successes": 2,
+    "per_sample": [
+      "H1 passes all quality screens.",
+      "H1 lowers the displayed score beyond baseline repeat noise in both primary services.",
+      "H1 does not regress any observed independent detector group by more than 5 percentage points.",
+      "All claim, number, modality, causality, genre, C2, and source-style constraints remain satisfied."
+    ],
+    "rule_admission": "Passing this two-sample holdout is necessary but not sufficient: the global protocol still requires calibration evidence on at least four texts before production integration."
+  },
+  "failure_policy": [
+    "A saturated or already-zero baseline is not counted as confirmatory success.",
+    "A blocked service is reported as blocked and never assigned an inferred score.",
+    "A quality-rejected candidate cannot support transfer even if a detector score falls.",
+    "If H1 fails either holdout sample, the sentence-split factor remains unadmitted."
+  ]
+}

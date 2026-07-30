@@ -1,0 +1,624 @@
+{
+  "schema": "palimpsest.baseline-scout-result.v2",
+  "experiment_id": "baseline-scout-02-cross-family-window",
+  "status": "completed",
+  "completed_at": "2026-07-30T21:18:17+03:00",
+  "preregistration": {
+    "path": "baseline-scout-02-preregistration.json",
+    "sha256": "cedf82c73b7ec338fd9475dd338fec3fd4aaa6b96b0eddcca551dca117cb072c",
+    "git_commit": "c45afb3819718a9bc47e2d10d61053850fba963d"
+  },
+  "observations": [
+    {
+      "pair": "arxiv-polish-03",
+      "role": "human",
+      "service": "zerogpt",
+      "scores_pct": [0, 0, 0],
+      "candidate_sha256": "ab2f15947c79b57860758930a6eb432b573d09df24b78bd84f9403e08a23aac7",
+      "post_visible_text_sha256": "ab2f15947c79b57860758930a6eb432b573d09df24b78bd84f9403e08a23aac7",
+      "transition_signals": [
+        "first_scan_no_prior_result",
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T18:12:37.110Z",
+        "2026-07-30T18:16:23.912Z",
+        "2026-07-30T18:16:29.130Z"
+      ]
+    },
+    {
+      "pair": "arxiv-polish-03",
+      "role": "ai",
+      "service": "zerogpt",
+      "scores_pct": [25, 25, 25],
+      "candidate_sha256": "66dfb3c5625296c9d336e268be0c323e8b605c370aba5957949e1abf79bb4137",
+      "post_visible_text_sha256": "66dfb3c5625296c9d336e268be0c323e8b605c370aba5957949e1abf79bb4137",
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T18:14:37.090Z",
+        "2026-07-30T18:16:25.622Z",
+        "2026-07-30T18:16:31.135Z"
+      ]
+    },
+    {
+      "pair": "arxiv-polish-03",
+      "role": "human",
+      "service": "scribbr",
+      "scores_pct": [0, 0, 0],
+      "ai_generated_pct": [0, 0, 0],
+      "ai_refined_pct": [0, 0, 0],
+      "human_pct": [100, 100, 100],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "ab2f15947c79b57860758930a6eb432b573d09df24b78bd84f9403e08a23aac7",
+      "post_visible_text_sha256": "ab2f15947c79b57860758930a6eb432b573d09df24b78bd84f9403e08a23aac7",
+      "transition_signals": [
+        "first_scan_no_prior_result",
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T18:14:29.247Z",
+        "2026-07-30T18:17:11.769Z",
+        "2026-07-30T18:17:13.922Z"
+      ]
+    },
+    {
+      "pair": "arxiv-polish-03",
+      "role": "ai",
+      "service": "scribbr",
+      "scores_pct": [6, 6, 6],
+      "ai_generated_pct": [6, 6, 6],
+      "ai_refined_pct": [0, 0, 0],
+      "human_pct": [94, 94, 94],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "66dfb3c5625296c9d336e268be0c323e8b605c370aba5957949e1abf79bb4137",
+      "post_visible_text_sha256": "66dfb3c5625296c9d336e268be0c323e8b605c370aba5957949e1abf79bb4137",
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T18:15:37.575Z",
+        "2026-07-30T18:17:12.910Z",
+        "2026-07-30T18:17:14.912Z"
+      ]
+    },
+    {
+      "pair": "arxiv-polish-04",
+      "role": "human",
+      "service": "zerogpt",
+      "scores_pct": [0],
+      "candidate_sha256": "b9f69aa591e918a9e0ef304336d3cc1f0f491a382ded61cc784a972a40f198ae",
+      "post_visible_text_sha256": "b9f69aa591e918a9e0ef304336d3cc1f0f491a382ded61cc784a972a40f198ae",
+      "transition_signals": ["loading_or_disabled_observed"],
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T18:14:40.754Z"]
+    },
+    {
+      "pair": "arxiv-polish-04",
+      "role": "ai",
+      "service": "zerogpt",
+      "scores_pct": [0],
+      "candidate_sha256": "bb9cddad56dfe4ed2e93351f734070b9574e448d8b66dbe987ff7dbbc21ee93f",
+      "post_visible_text_sha256": "bb9cddad56dfe4ed2e93351f734070b9574e448d8b66dbe987ff7dbbc21ee93f",
+      "transition_signals": ["loading_or_disabled_observed"],
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T18:14:43.769Z"]
+    },
+    {
+      "pair": "arxiv-polish-04",
+      "role": "human",
+      "service": "scribbr",
+      "scores_pct": [0],
+      "ai_generated_pct": [0],
+      "ai_refined_pct": [0],
+      "human_pct": [100],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "b9f69aa591e918a9e0ef304336d3cc1f0f491a382ded61cc784a972a40f198ae",
+      "post_visible_text_sha256": "b9f69aa591e918a9e0ef304336d3cc1f0f491a382ded61cc784a972a40f198ae",
+      "transition_signals": ["loading_or_disabled_observed"],
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T18:15:39.142Z"]
+    },
+    {
+      "pair": "arxiv-polish-04",
+      "role": "ai",
+      "service": "scribbr",
+      "scores_pct": [0],
+      "ai_generated_pct": [0],
+      "ai_refined_pct": [0],
+      "human_pct": [100],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "bb9cddad56dfe4ed2e93351f734070b9574e448d8b66dbe987ff7dbbc21ee93f",
+      "post_visible_text_sha256": "bb9cddad56dfe4ed2e93351f734070b9574e448d8b66dbe987ff7dbbc21ee93f",
+      "transition_signals": ["loading_or_disabled_observed"],
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T18:15:40.785Z"]
+    },
+    {
+      "pair": "news-polish-03",
+      "role": "human",
+      "service": "zerogpt",
+      "scores_pct": [17.5],
+      "candidate_sha256": "9c2e7a9feffcf5873d87004f384d1776c1850eff5ff992e883a2047a8fb4184a",
+      "post_visible_text_sha256": "9c2e7a9feffcf5873d87004f384d1776c1850eff5ff992e883a2047a8fb4184a",
+      "transition_signals": ["loading_or_disabled_observed"],
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T18:15:02.349Z"]
+    },
+    {
+      "pair": "news-polish-03",
+      "role": "ai",
+      "service": "zerogpt",
+      "scores_pct": [22.3],
+      "candidate_sha256": "c684c7ad4903eb12e776d20b5e89c5e0f8d149bb9c7d38a0bd082a59acc85712",
+      "post_visible_text_sha256": "c684c7ad4903eb12e776d20b5e89c5e0f8d149bb9c7d38a0bd082a59acc85712",
+      "transition_signals": ["loading_or_disabled_observed"],
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T18:15:05.367Z"]
+    },
+    {
+      "pair": "news-polish-03",
+      "role": "human",
+      "service": "scribbr",
+      "scores_pct": [0],
+      "ai_generated_pct": [0],
+      "ai_refined_pct": [0],
+      "human_pct": [100],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "9c2e7a9feffcf5873d87004f384d1776c1850eff5ff992e883a2047a8fb4184a",
+      "post_visible_text_sha256": "9c2e7a9feffcf5873d87004f384d1776c1850eff5ff992e883a2047a8fb4184a",
+      "transition_signals": ["loading_or_disabled_observed"],
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T18:15:49.042Z"]
+    },
+    {
+      "pair": "news-polish-03",
+      "role": "ai",
+      "service": "scribbr",
+      "scores_pct": [0],
+      "ai_generated_pct": [0],
+      "ai_refined_pct": [0],
+      "human_pct": [100],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "c684c7ad4903eb12e776d20b5e89c5e0f8d149bb9c7d38a0bd082a59acc85712",
+      "post_visible_text_sha256": "c684c7ad4903eb12e776d20b5e89c5e0f8d149bb9c7d38a0bd082a59acc85712",
+      "transition_signals": ["loading_or_disabled_observed"],
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T18:15:50.803Z"]
+    },
+    {
+      "pair": "news-polish-04",
+      "role": "human",
+      "service": "zerogpt",
+      "scores_pct": [30.3, 30.3, 30.3],
+      "candidate_sha256": "cbe30469b6e1fff0c65961e7d5dcaeb6b8f7d5f53fb92209a285604d6f3de5b1",
+      "post_visible_text_sha256": "cbe30469b6e1fff0c65961e7d5dcaeb6b8f7d5f53fb92209a285604d6f3de5b1",
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T18:15:07.371Z",
+        "2026-07-30T18:16:37.649Z",
+        "2026-07-30T18:16:42.658Z"
+      ]
+    },
+    {
+      "pair": "news-polish-04",
+      "role": "ai",
+      "service": "zerogpt",
+      "scores_pct": [46.7, 46.7, 46.7],
+      "candidate_sha256": "f5c0cd5c83d96ea141adcb3998448c3ca70d56577aa959f3db2b405e1bb36159",
+      "post_visible_text_sha256": "f5c0cd5c83d96ea141adcb3998448c3ca70d56577aa959f3db2b405e1bb36159",
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T18:15:09.877Z",
+        "2026-07-30T18:16:39.861Z",
+        "2026-07-30T18:16:44.663Z"
+      ]
+    },
+    {
+      "pair": "news-polish-04",
+      "role": "human",
+      "service": "scribbr",
+      "scores_pct": [0, 0, 0],
+      "ai_generated_pct": [0, 0, 0],
+      "ai_refined_pct": [0, 0, 0],
+      "human_pct": [100, 100, 100],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "cbe30469b6e1fff0c65961e7d5dcaeb6b8f7d5f53fb92209a285604d6f3de5b1",
+      "post_visible_text_sha256": "cbe30469b6e1fff0c65961e7d5dcaeb6b8f7d5f53fb92209a285604d6f3de5b1",
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T18:15:52.352Z",
+        "2026-07-30T18:17:20.288Z",
+        "2026-07-30T18:17:22.803Z"
+      ]
+    },
+    {
+      "pair": "news-polish-04",
+      "role": "ai",
+      "service": "scribbr",
+      "scores_pct": [29, 29, 29],
+      "ai_generated_pct": [29, 29, 29],
+      "ai_refined_pct": [0, 0, 0],
+      "human_pct": [71, 71, 71],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "f5c0cd5c83d96ea141adcb3998448c3ca70d56577aa959f3db2b405e1bb36159",
+      "post_visible_text_sha256": "f5c0cd5c83d96ea141adcb3998448c3ca70d56577aa959f3db2b405e1bb36159",
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T18:15:54.563Z",
+        "2026-07-30T18:17:21.289Z",
+        "2026-07-30T18:17:24.314Z"
+      ]
+    },
+    {
+      "pair": "essay-b1-polish-02",
+      "role": "human",
+      "service": "zerogpt",
+      "scores_pct": [26.3],
+      "candidate_sha256": "a1d726f75fc5713e3948bcdddec54446d7776faf95b3a96e385c6845cca94901",
+      "post_visible_text_sha256": "a1d726f75fc5713e3948bcdddec54446d7776faf95b3a96e385c6845cca94901",
+      "transition_signals": ["loading_or_disabled_observed"],
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T18:15:16.427Z"]
+    },
+    {
+      "pair": "essay-b1-polish-02",
+      "role": "ai",
+      "service": "zerogpt",
+      "scores_pct": [100],
+      "candidate_sha256": "bf1e853b235780e30154d12e846db31120ac74b3319257fd367ebbf7f5c1a8b0",
+      "post_visible_text_sha256": "bf1e853b235780e30154d12e846db31120ac74b3319257fd367ebbf7f5c1a8b0",
+      "transition_signals": ["loading_or_disabled_observed"],
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T18:15:18.429Z"]
+    },
+    {
+      "pair": "essay-b1-polish-02",
+      "role": "human",
+      "service": "scribbr",
+      "scores_pct": [0],
+      "ai_generated_pct": [0],
+      "ai_refined_pct": [0],
+      "human_pct": [100],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "a1d726f75fc5713e3948bcdddec54446d7776faf95b3a96e385c6845cca94901",
+      "post_visible_text_sha256": "a1d726f75fc5713e3948bcdddec54446d7776faf95b3a96e385c6845cca94901",
+      "transition_signals": ["loading_or_disabled_observed"],
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T18:16:01.567Z"]
+    },
+    {
+      "pair": "essay-b1-polish-02",
+      "role": "ai",
+      "service": "scribbr",
+      "scores_pct": [100],
+      "ai_generated_pct": [100],
+      "ai_refined_pct": [0],
+      "human_pct": [0],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "bf1e853b235780e30154d12e846db31120ac74b3319257fd367ebbf7f5c1a8b0",
+      "post_visible_text_sha256": "bf1e853b235780e30154d12e846db31120ac74b3319257fd367ebbf7f5c1a8b0",
+      "transition_signals": ["loading_or_disabled_observed"],
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T18:16:04.071Z"]
+    },
+    {
+      "pair": "qa-polish-02",
+      "role": "human",
+      "service": "zerogpt",
+      "scores_pct": [0, 0, 0],
+      "candidate_sha256": "dd973e2fb232ed083bb3253a73b1bb8f9f74681638c581e54dbd1a4cbc67e479",
+      "post_visible_text_sha256": "dd973e2fb232ed083bb3253a73b1bb8f9f74681638c581e54dbd1a4cbc67e479",
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T18:15:20.436Z",
+        "2026-07-30T18:16:50.599Z",
+        "2026-07-30T18:16:54.701Z"
+      ]
+    },
+    {
+      "pair": "qa-polish-02",
+      "role": "ai",
+      "service": "zerogpt",
+      "scores_pct": [47.2, 46.3, 40.6],
+      "candidate_sha256": "2199aedfa1a6090656fecb43ba9c3951462e37aca9acc32d9f3d560db26338fc",
+      "post_visible_text_sha256": "2199aedfa1a6090656fecb43ba9c3951462e37aca9acc32d9f3d560db26338fc",
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T18:15:22.437Z",
+        "2026-07-30T18:16:52.697Z",
+        "2026-07-30T18:16:56.706Z"
+      ]
+    },
+    {
+      "pair": "qa-polish-02",
+      "role": "human",
+      "service": "scribbr",
+      "scores_pct": [0, 0, 0],
+      "ai_generated_pct": [0, 0, 0],
+      "ai_refined_pct": [0, 0, 0],
+      "human_pct": [100, 100, 100],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "dd973e2fb232ed083bb3253a73b1bb8f9f74681638c581e54dbd1a4cbc67e479",
+      "post_visible_text_sha256": "dd973e2fb232ed083bb3253a73b1bb8f9f74681638c581e54dbd1a4cbc67e479",
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T18:16:06.577Z",
+        "2026-07-30T18:17:35.330Z",
+        "2026-07-30T18:17:37.940Z"
+      ]
+    },
+    {
+      "pair": "qa-polish-02",
+      "role": "ai",
+      "service": "scribbr",
+      "scores_pct": [51, 51, 51],
+      "ai_generated_pct": [51, 51, 51],
+      "ai_refined_pct": [0, 0, 0],
+      "human_pct": [49, 49, 49],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "2199aedfa1a6090656fecb43ba9c3951462e37aca9acc32d9f3d560db26338fc",
+      "post_visible_text_sha256": "2199aedfa1a6090656fecb43ba9c3951462e37aca9acc32d9f3d560db26338fc",
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T18:16:09.105Z",
+        "2026-07-30T18:17:36.837Z",
+        "2026-07-30T18:17:39.346Z"
+      ]
+    }
+  ],
+  "instrumentation_notes": [
+    "All included scans were exact-SHA and had a first-scan or visible loading/disabled transition.",
+    "Scribbr reported model v7.1.0 and all AI-refined components were 0%.",
+    "The first Scribbr click/type attempts did not create a detector observation; the clean scan began only after exact visible SHA verification.",
+    "No screenshot capture was saved."
+  ],
+  "selection": {
+    "pair_results": [
+      {
+        "pair": "arxiv-polish-03",
+        "status": "single_family_window",
+        "cells": [
+          {
+            "service": "zerogpt",
+            "usable": true,
+            "human_scores_pct": [0, 0, 0],
+            "ai_scores_pct": [25, 25, 25],
+            "human_median_pct": 0.0,
+            "ai_median_pct": 25.0,
+            "ai_noise_range_pct": 0.0,
+            "gap_pct": 25.0
+          },
+          {
+            "service": "scribbr",
+            "usable": false,
+            "human_scores_pct": [0, 0, 0],
+            "ai_scores_pct": [6, 6, 6],
+            "human_median_pct": 0.0,
+            "ai_median_pct": 6.0,
+            "ai_noise_range_pct": 0.0,
+            "gap_pct": 6.0
+          }
+        ]
+      },
+      {
+        "pair": "arxiv-polish-04",
+        "status": "unusable",
+        "cells": [
+          {
+            "service": "zerogpt",
+            "usable": false,
+            "human_scores_pct": [0],
+            "ai_scores_pct": [0],
+            "human_median_pct": 0.0,
+            "ai_median_pct": 0.0,
+            "ai_noise_range_pct": 0.0,
+            "gap_pct": 0.0
+          },
+          {
+            "service": "scribbr",
+            "usable": false,
+            "human_scores_pct": [0],
+            "ai_scores_pct": [0],
+            "human_median_pct": 0.0,
+            "ai_median_pct": 0.0,
+            "ai_noise_range_pct": 0.0,
+            "gap_pct": 0.0
+          }
+        ]
+      },
+      {
+        "pair": "news-polish-03",
+        "status": "unusable",
+        "cells": [
+          {
+            "service": "zerogpt",
+            "usable": false,
+            "human_scores_pct": [17.5],
+            "ai_scores_pct": [22.3],
+            "human_median_pct": 17.5,
+            "ai_median_pct": 22.3,
+            "ai_noise_range_pct": 0.0,
+            "gap_pct": 4.8
+          },
+          {
+            "service": "scribbr",
+            "usable": false,
+            "human_scores_pct": [0],
+            "ai_scores_pct": [0],
+            "human_median_pct": 0.0,
+            "ai_median_pct": 0.0,
+            "ai_noise_range_pct": 0.0,
+            "gap_pct": 0.0
+          }
+        ]
+      },
+      {
+        "pair": "news-polish-04",
+        "status": "cross_family_window",
+        "cells": [
+          {
+            "service": "zerogpt",
+            "usable": true,
+            "human_scores_pct": [30.3, 30.3, 30.3],
+            "ai_scores_pct": [46.7, 46.7, 46.7],
+            "human_median_pct": 30.3,
+            "ai_median_pct": 46.7,
+            "ai_noise_range_pct": 0.0,
+            "gap_pct": 16.4
+          },
+          {
+            "service": "scribbr",
+            "usable": true,
+            "human_scores_pct": [0, 0, 0],
+            "ai_scores_pct": [29, 29, 29],
+            "human_median_pct": 0.0,
+            "ai_median_pct": 29.0,
+            "ai_noise_range_pct": 0.0,
+            "gap_pct": 29.0
+          }
+        ]
+      },
+      {
+        "pair": "essay-b1-polish-02",
+        "status": "unusable",
+        "cells": [
+          {
+            "service": "zerogpt",
+            "usable": false,
+            "human_scores_pct": [26.3],
+            "ai_scores_pct": [100],
+            "human_median_pct": 26.3,
+            "ai_median_pct": 100.0,
+            "ai_noise_range_pct": 0.0,
+            "gap_pct": 73.7
+          },
+          {
+            "service": "scribbr",
+            "usable": false,
+            "human_scores_pct": [0],
+            "ai_scores_pct": [100],
+            "human_median_pct": 0.0,
+            "ai_median_pct": 100.0,
+            "ai_noise_range_pct": 0.0,
+            "gap_pct": 100.0
+          }
+        ]
+      },
+      {
+        "pair": "qa-polish-02",
+        "status": "cross_family_window",
+        "cells": [
+          {
+            "service": "zerogpt",
+            "usable": true,
+            "human_scores_pct": [0, 0, 0],
+            "ai_scores_pct": [47.2, 46.3, 40.6],
+            "human_median_pct": 0.0,
+            "ai_median_pct": 46.3,
+            "ai_noise_range_pct": 6.6,
+            "gap_pct": 46.3
+          },
+          {
+            "service": "scribbr",
+            "usable": true,
+            "human_scores_pct": [0, 0, 0],
+            "ai_scores_pct": [51, 51, 51],
+            "human_median_pct": 0.0,
+            "ai_median_pct": 51.0,
+            "ai_noise_range_pct": 0.0,
+            "gap_pct": 51.0
+          }
+        ]
+      }
+    ],
+    "selected_pairs": ["news-polish-04", "qa-polish-02"],
+    "stable_selected_pairs": ["news-polish-04"],
+    "unstable_selected_pairs": ["qa-polish-02"],
+    "diagnostic_pairs": ["arxiv-polish-03"],
+    "maximum_selected_pairs": 2,
+    "edit_variants_allowed": true
+  },
+  "interpretation": {
+    "stable_cross_family_pair": "news-polish-04",
+    "unstable_selected_pair": "qa-polish-02",
+    "unstable_reason": "ZeroGPT same-SHA AI range is 6.6 percentage points, above the protocol's 5-point stability limit.",
+    "next_experiment_scope": ["news-polish-04"],
+    "rule_admission": "none_baseline_only"
+  }
+}

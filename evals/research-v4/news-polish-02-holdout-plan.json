@@ -1,0 +1,14 @@
+{
+  "schema": "palimpsest.variant-plan.v1",
+  "sample_id": "news-polish-02-ai",
+  "original_sha256": "ce10b72538b8c181c0dd62877bc9ab6f7641a794083d7e88b1e259b0a87033e2",
+  "reference_sha256": "6c60113c6362888c8625ef35595ca59aca65706dbd7d981790d81dbe471858db",
+  "operations": [
+    {
+      "id": "h1-direct-claim",
+      "factor": "direct_claim_restoration",
+      "old": "The clarification followed a Vanity Fair interview published Monday where Mrs. Reagan expressed disappointment about missing the stem-cell policy event.",
+      "new": "In a Vanity Fair interview published Monday, Mrs. Reagan said the administration should have invited her to the stem-cell policy event."
+    }
+  ]
+}

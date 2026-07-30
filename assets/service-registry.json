@@ -34,7 +34,7 @@
     "audit_pool": ["quillbot", "sapling", "gptinf"],
     "notes": [
       "ZeroGPT remains mandatory because the user explicitly requires it.",
-      "F1 starts from the repeatable no-sign-up profile: ZeroGPT, Scribbr, GPTinf, and Copyleaks for English; Russian uses only registry-supported repeatable services.",
+      "F1 starts from a no-account candidate profile: ZeroGPT, Scribbr, GPTinf, and Copyleaks for English. Every service still needs a fresh capability check because guest quotas can change within a session.",
       "The original six-service profile remains available for explicit Q3 selection, but GPTZero and QuillBot are not default because their current guest paths stop at sign-up limits.",
       "Every service retained by Q3 is mandatory even when two brands share an engine; duplicate engines count once only for independence analytics.",
       "Russian remains provisional and can require Q3 exclusions for services whose registry language support does not include Russian.",
@@ -80,11 +80,11 @@
       "kind": "direct",
       "independence_group": "copyleaks",
       "guest_access": true,
-      "access_class": "guest_repeatable",
+      "access_class": "guest_quota_sensitive",
       "languages": ["en", "ru", "de", "fr", "es", "it", "pt", "ja", "zh", "nl"],
       "public_limit": {"unit": "characters", "value": 25000},
       "result": ["ai_percentage"],
-      "recommended_role": "independent_core",
+      "recommended_role": "independent_core_if_live_capability_confirmed",
       "education_signal": "Official LMS integrations include Canvas, Brightspace, Google Classroom, Moodle, Blackboard, Edsby, Sakai, and Schoology.",
       "pilot": {
         "english_completed": 6,
@@ -100,7 +100,13 @@
         "custom_result_repeated": true,
         "english_fixture_score_pct": 100,
         "edited_english_fixture_score_pct": 0,
-        "successful_edit_cycle": true
+        "successful_edit_cycle": true,
+        "latest_holdout_access": {
+          "status": "blocked",
+          "message": "Oops, scan limit reached.",
+          "score_returned": false,
+          "interpretation": "The earlier no-login result path exists, but repeatable guest availability is quota-sensitive and cannot be assumed for a new project."
+        }
       }
     },
     "gptzero": {

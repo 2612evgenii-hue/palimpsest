@@ -1,0 +1,393 @@
+{
+  "schema": "palimpsest.holdout-result.v2",
+  "experiment_id": "holdout-02-direct-claim-transfer",
+  "status": "completed_holdout",
+  "completed_at": "2026-07-30T20:43:26+03:00",
+  "preregistration": {
+    "path": "holdout-02-preregistration.json",
+    "sha256": "ffa2b91cc3f9d5d871b2d36045680a7b3c6d11a59115f603f707258890039659",
+    "git_commit": "659edeae2f7d69566eb9ef163db0c2280979fa61"
+  },
+  "observations": [
+    {
+      "sample": "arxiv-polish-02",
+      "role": "human",
+      "service": "zerogpt",
+      "scores_pct": [0, 0, 0],
+      "candidate_sha256": "5fb96a2c22f5330ec3d817c43827a9db5c88844be88fe8958fdd61016f14cb54",
+      "post_visible_text_sha256": "5fb96a2c22f5330ec3d817c43827a9db5c88844be88fe8958fdd61016f14cb54",
+      "transition_signals": [
+        "first_scan_no_prior_result",
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T17:39:41.373Z",
+        "2026-07-30T17:39:48.383Z",
+        "2026-07-30T17:39:51.066Z"
+      ],
+      "included_in_analysis": true
+    },
+    {
+      "sample": "arxiv-polish-02",
+      "role": "ai",
+      "service": "zerogpt",
+      "scores_pct": [0, 0, 0],
+      "candidate_sha256": "4a235ee71c843d5bf588f0e4b1d5a9f47ee35cb976ed59c3c5252953917d660b",
+      "post_visible_text_sha256": "4a235ee71c843d5bf588f0e4b1d5a9f47ee35cb976ed59c3c5252953917d660b",
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T17:40:04.395Z",
+        "2026-07-30T17:40:06.396Z",
+        "2026-07-30T17:40:09.117Z"
+      ],
+      "included_in_analysis": true
+    },
+    {
+      "sample": "arxiv-polish-02",
+      "role": "candidate",
+      "service": "zerogpt",
+      "scores_pct": [0, 0, 0],
+      "candidate_sha256": "687f2aafaed9e1a48a6706334ca063a502e30f803a87e1ccdeacbfcc0ea28fe0",
+      "post_visible_text_sha256": "687f2aafaed9e1a48a6706334ca063a502e30f803a87e1ccdeacbfcc0ea28fe0",
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T17:40:17.156Z",
+        "2026-07-30T17:40:20.418Z",
+        "2026-07-30T17:40:22.153Z"
+      ],
+      "included_in_analysis": true
+    },
+    {
+      "sample": "arxiv-polish-02",
+      "role": "human",
+      "service": "scribbr",
+      "scores_pct": [0, 0, 0],
+      "ai_generated_pct": [0, 0, 0],
+      "ai_refined_pct": [0, 0, 0],
+      "human_pct": [100, 100, 100],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "5fb96a2c22f5330ec3d817c43827a9db5c88844be88fe8958fdd61016f14cb54",
+      "post_visible_text_sha256": "5fb96a2c22f5330ec3d817c43827a9db5c88844be88fe8958fdd61016f14cb54",
+      "post_result_dom_text_sha256": "5fb96a2c22f5330ec3d817c43827a9db5c88844be88fe8958fdd61016f14cb54",
+      "transition_signals": [
+        "first_scan_no_prior_result",
+        "result_text_changed",
+        "result_text_changed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T17:41:39.908Z",
+        "2026-07-30T17:41:44.681Z",
+        "2026-07-30T17:41:44.891Z"
+      ],
+      "included_in_analysis": true
+    },
+    {
+      "sample": "arxiv-polish-02",
+      "role": "ai",
+      "service": "scribbr",
+      "scores_pct": [27, 27, 27],
+      "ai_generated_pct": [27, 27, 27],
+      "ai_refined_pct": [0, 0, 0],
+      "human_pct": [73, 73, 73],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "4a235ee71c843d5bf588f0e4b1d5a9f47ee35cb976ed59c3c5252953917d660b",
+      "post_visible_text_sha256": "4a235ee71c843d5bf588f0e4b1d5a9f47ee35cb976ed59c3c5252953917d660b",
+      "post_result_dom_text_sha256": "4a235ee71c843d5bf588f0e4b1d5a9f47ee35cb976ed59c3c5252953917d660b",
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "result_text_changed",
+        "result_text_changed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T17:41:53.131Z",
+        "2026-07-30T17:41:53.340Z",
+        "2026-07-30T17:41:53.563Z"
+      ],
+      "included_in_analysis": true
+    },
+    {
+      "sample": "arxiv-polish-02",
+      "role": "candidate",
+      "service": "scribbr",
+      "scores_pct": [25, 25, 25],
+      "ai_generated_pct": [25, 25, 25],
+      "ai_refined_pct": [0, 0, 0],
+      "human_pct": [75, 75, 75],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "687f2aafaed9e1a48a6706334ca063a502e30f803a87e1ccdeacbfcc0ea28fe0",
+      "post_visible_text_sha256": "687f2aafaed9e1a48a6706334ca063a502e30f803a87e1ccdeacbfcc0ea28fe0",
+      "post_result_dom_text_sha256": "687f2aafaed9e1a48a6706334ca063a502e30f803a87e1ccdeacbfcc0ea28fe0",
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "result_text_changed",
+        "result_text_changed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T17:42:05.905Z",
+        "2026-07-30T17:42:06.130Z",
+        "2026-07-30T17:42:06.362Z"
+      ],
+      "included_in_analysis": true
+    },
+    {
+      "sample": "news-polish-02",
+      "role": "human",
+      "service": "zerogpt",
+      "scores_pct": [41.6, 41.6, 41.6],
+      "candidate_sha256": "6c60113c6362888c8625ef35595ca59aca65706dbd7d981790d81dbe471858db",
+      "post_visible_text_sha256": "6c60113c6362888c8625ef35595ca59aca65706dbd7d981790d81dbe471858db",
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T17:42:16.043Z",
+        "2026-07-30T17:42:18.053Z",
+        "2026-07-30T17:42:21.049Z"
+      ],
+      "included_in_analysis": true
+    },
+    {
+      "sample": "news-polish-02",
+      "role": "ai",
+      "service": "zerogpt",
+      "scores_pct": [41.6, 41.6, 41.6],
+      "candidate_sha256": "ce10b72538b8c181c0dd62877bc9ab6f7641a794083d7e88b1e259b0a87033e2",
+      "post_visible_text_sha256": "ce10b72538b8c181c0dd62877bc9ab6f7641a794083d7e88b1e259b0a87033e2",
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T17:42:29.591Z",
+        "2026-07-30T17:42:31.861Z",
+        "2026-07-30T17:42:34.092Z"
+      ],
+      "included_in_analysis": true
+    },
+    {
+      "sample": "news-polish-02",
+      "role": "candidate",
+      "service": "zerogpt",
+      "scores_pct": [41.7, 41.7, 41.7],
+      "candidate_sha256": "b8fd842c7951b535f661ddfab0ce80c6b90d8a7022cdded80e883ab82f15fc71",
+      "post_visible_text_sha256": "b8fd842c7951b535f661ddfab0ce80c6b90d8a7022cdded80e883ab82f15fc71",
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T17:42:46.124Z",
+        "2026-07-30T17:42:49.127Z",
+        "2026-07-30T17:42:52.140Z"
+      ],
+      "included_in_analysis": true
+    },
+    {
+      "sample": "news-polish-02",
+      "role": "human",
+      "service": "scribbr",
+      "scores_pct": [0, 0, 0],
+      "ai_generated_pct": [0, 0, 0],
+      "ai_refined_pct": [0, 0, 0],
+      "human_pct": [100, 100, 100],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "6c60113c6362888c8625ef35595ca59aca65706dbd7d981790d81dbe471858db",
+      "post_visible_text_sha256": "6c60113c6362888c8625ef35595ca59aca65706dbd7d981790d81dbe471858db",
+      "post_result_dom_text_sha256": "018579118bf465138f9e7d8206e95f3ed6a845ef294d93e472c00106bf73138e",
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "result_text_changed",
+        "result_text_changed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T17:42:59.754Z",
+        "2026-07-30T17:43:00.011Z",
+        "2026-07-30T17:43:00.268Z"
+      ],
+      "included_in_analysis": true
+    },
+    {
+      "sample": "news-polish-02",
+      "role": "ai",
+      "service": "scribbr",
+      "scores_pct": [0, 0, 0],
+      "ai_generated_pct": [0, 0, 0],
+      "ai_refined_pct": [0, 0, 0],
+      "human_pct": [100, 100, 100],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "ce10b72538b8c181c0dd62877bc9ab6f7641a794083d7e88b1e259b0a87033e2",
+      "post_visible_text_sha256": "ce10b72538b8c181c0dd62877bc9ab6f7641a794083d7e88b1e259b0a87033e2",
+      "post_result_dom_text_sha256": "24590d8a1f05459f65be4eb657965a449887a39d326810e6f1f457d1b6d9c485",
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "result_text_changed",
+        "result_text_changed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T17:43:16.894Z",
+        "2026-07-30T17:43:17.124Z",
+        "2026-07-30T17:43:17.375Z"
+      ],
+      "included_in_analysis": true
+    },
+    {
+      "sample": "news-polish-02",
+      "role": "candidate",
+      "service": "scribbr",
+      "scores_pct": [0, 0, 0],
+      "ai_generated_pct": [0, 0, 0],
+      "ai_refined_pct": [0, 0, 0],
+      "human_pct": [100, 100, 100],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "b8fd842c7951b535f661ddfab0ce80c6b90d8a7022cdded80e883ab82f15fc71",
+      "post_visible_text_sha256": "b8fd842c7951b535f661ddfab0ce80c6b90d8a7022cdded80e883ab82f15fc71",
+      "post_result_dom_text_sha256": "add74c295dcfa2e5c02de01073b00f96ae573ef8c85b940270ecac5fdb5eda46",
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "result_text_changed",
+        "result_text_changed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T17:43:26.308Z",
+        "2026-07-30T17:43:26.528Z",
+        "2026-07-30T17:43:26.762Z"
+      ],
+      "included_in_analysis": true
+    }
+  ],
+  "excluded_technical_attempts": [
+    {
+      "sample": "arxiv-polish-02",
+      "role": "human",
+      "service": "scribbr",
+      "reason": "click_actionability_timeout_before_submit",
+      "visible_state": "placeholder_score_double_dash",
+      "detector_observation_created": false,
+      "included_in_analysis": false,
+      "note": "The grounded Cmd+Return shortcut was used for the clean frozen scan; no percentage was visible during the failed click attempt."
+    }
+  ],
+  "instrumentation_notes": [
+    "All 36 included scans were exact-SHA and carried an allowed transition signal.",
+    "ZeroGPT repeats observed loading_or_disabled before each non-initial terminal score.",
+    "Scribbr used its visible Cmd+Return shortcut after the first button click was not actionable.",
+    "Scribbr contenteditable normalization hashes are recorded separately for the formal-news cells.",
+    "No screenshot capture was saved."
+  ],
+  "analysis": {
+    "sample_results": [
+      {
+        "sample": "arxiv-polish-02",
+        "status": "ineligible_zerogpt_baseline_below_20",
+        "eligible": false,
+        "success": false,
+        "edit_cost": 0.0781,
+        "zerogpt_human": {
+          "scores_pct": [0, 0, 0],
+          "median_pct": 0.0,
+          "range_pct": 0.0
+        },
+        "zerogpt_baseline": {
+          "scores_pct": [0, 0, 0],
+          "median_pct": 0.0,
+          "range_pct": 0.0
+        },
+        "zerogpt_candidate": {
+          "scores_pct": [0, 0, 0],
+          "median_pct": 0.0,
+          "range_pct": 0.0
+        },
+        "zerogpt_reduction_pct": 0.0,
+        "required_reduction_pct": 1.0,
+        "scribbr_baseline": {
+          "scores_pct": [27, 27, 27],
+          "median_pct": 27.0,
+          "range_pct": 0.0
+        },
+        "scribbr_candidate": {
+          "scores_pct": [25, 25, 25],
+          "median_pct": 25.0,
+          "range_pct": 0.0
+        },
+        "scribbr_regression_pct": -2.0
+      },
+      {
+        "sample": "news-polish-02",
+        "status": "failed_no_effect_above_noise",
+        "eligible": true,
+        "success": false,
+        "edit_cost": 0.0276,
+        "zerogpt_human": {
+          "scores_pct": [41.6, 41.6, 41.6],
+          "median_pct": 41.6,
+          "range_pct": 0.0
+        },
+        "zerogpt_baseline": {
+          "scores_pct": [41.6, 41.6, 41.6],
+          "median_pct": 41.6,
+          "range_pct": 0.0
+        },
+        "zerogpt_candidate": {
+          "scores_pct": [41.7, 41.7, 41.7],
+          "median_pct": 41.7,
+          "range_pct": 0.0
+        },
+        "zerogpt_reduction_pct": -0.1,
+        "required_reduction_pct": 1.0,
+        "scribbr_baseline": {
+          "scores_pct": [0, 0, 0],
+          "median_pct": 0.0,
+          "range_pct": 0.0
+        },
+        "scribbr_candidate": {
+          "scores_pct": [0, 0, 0],
+          "median_pct": 0.0,
+          "range_pct": 0.0
+        },
+        "scribbr_regression_pct": 0.0
+      }
+    ],
+    "successful_samples": 0,
+    "holdout_success": false,
+    "factor": "direct_claim_restoration",
+    "production_rule_admitted": false,
+    "admission_reason": "holdout_failed_and_independent_group_missing"
+  }
+}

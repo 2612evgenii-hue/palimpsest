@@ -1,0 +1,67 @@
+{
+  "schema": "palimpsest.variant-plan.v1",
+  "sample_id": "essay-b1-01-ai",
+  "original_sha256": "e8a5e18a2a1944171e06f0a6843ef49a802b0823eab8a4235082dd5506ed1e59",
+  "operations": [
+    {
+      "id": "s1-local-thesis-clause",
+      "factor": "local_clause_restructure",
+      "old": "Smoking in restaurants is a dangerous problem needing immediate action.",
+      "new": "Smoking in restaurants is harmful and needs immediate action."
+    },
+    {
+      "id": "s2-split-balanced-frame",
+      "factor": "sentence_length_variation",
+      "old": "This isn’t just about health—it’s about fairness.",
+      "new": "This is not only about health. It is also about fairness."
+    },
+    {
+      "id": "s3-rhetorical-to-declarative",
+      "factor": "rhetorical_question",
+      "old": "Why should non-smokers suffer because others choose to smoke?",
+      "new": "Non-smokers should not suffer because others choose to smoke."
+    },
+    {
+      "id": "s4-merge-smell-frame",
+      "factor": "sentence_length_variation",
+      "old": "Another big issue is smell. Restaurants are for enjoying food, but tobacco smoke ruins the atmosphere.",
+      "new": "Another big issue is smell: restaurants are for enjoying food, but tobacco smoke ruins the atmosphere."
+    },
+    {
+      "id": "s5-remove-agreement-frame",
+      "factor": "answer_frame",
+      "old": "Some argue smokers have rights. True, but non-smokers have rights too—to breathe clean air while eating.",
+      "new": "Some argue that smokers have rights, but non-smokers also have the right to breathe clean air while eating."
+    },
+    {
+      "id": "s6-split-health-example",
+      "factor": "sentence_length_variation",
+      "old": "Even non-smokers sitting nearby can develop illnesses like heart disease or breathing issues.",
+      "new": "Even non-smokers sitting nearby can become ill. They may develop heart disease or breathing problems."
+    },
+    {
+      "id": "s7-active-passive-smoke-claim",
+      "factor": "voice",
+      "old": "Studies show over 40,000 deaths yearly globally are caused by passive smoke.",
+      "new": "Studies show that passive smoke causes over 40,000 deaths worldwide each year."
+    },
+    {
+      "id": "s8-expand-balanced-frame",
+      "factor": "discourse_frame",
+      "old": "This isn’t just about health—it’s about fairness.",
+      "new": "This is about health, but it is also about fairness."
+    },
+    {
+      "id": "s9-expand-imagined-scene",
+      "factor": "local_clause_restructure",
+      "old": "Imagine ordering delicious pasta but only smelling cigarettes.",
+      "new": "Imagine that you order delicious pasta but can only smell cigarettes."
+    },
+    {
+      "id": "s10-unhighlighted-control",
+      "factor": "highlight_location_control",
+      "old": "Only a full ban protects everyone equally.",
+      "new": "A full ban is the only way to protect everyone equally."
+    }
+  ]
+}

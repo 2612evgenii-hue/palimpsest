@@ -91,7 +91,9 @@ DOM transcription за криптографически подписанный r
 
 - fail-closed процесс не закрывает baseline с высокими scores;
 - реальный EN edit-cycle на конкретном образце доведён до `<20%` и `<15%` на
-  всём repeatable no-sign-up core.
+  всём выбранном на тот момент no-sign-up core. Более поздний holdout-03
+  получил Copyleaks `scan limit reached`, поэтому текущий registry называет
+  этот сервис guest quota-sensitive, а список — no-account candidate profile.
 
 Она не доказывает универсальную гарантию. На другом жанре, уровне английского,
 длине или после обновления detector models цикл должен выполняться заново.

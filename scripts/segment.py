@@ -22,6 +22,10 @@ import _v3lib as V  # noqa: E402
 SCHEMA = "palimpsest.segments.v3"
 DEFAULT_MAP = Path("workspace/SEGMENTS.json")
 STATUSES = {"new", "unreviewed", "editing", "reviewed", "verified", "parked"}
+REFERENCE_HEADING = re.compile(
+    r"(?im)^[ \t]*(?:references|bibliography|список\s+литературы|"
+    r"библиография|литература)[ \t]*\r?$"
+)
 
 
 def fail(message: str, code: int = 2) -> int:
@@ -76,10 +80,57 @@ def paragraph_blocks(text: str) -> list[tuple[int, int]]:
     return blocks
 
 
-def segment_ranges(text: str, target: int, minimum: int, maximum: int) -> list[tuple[int, int]]:
+def bounded_blocks(
+    text: str,
+    blocks: list[tuple[int, int]],
+    target: int,
+    minimum: int,
+    maximum: int,
+) -> list[tuple[int, int]]:
+    """Split overlong paragraph blocks without losing a character.
+
+    DOCX/plain-text extraction often represents every Word paragraph with one
+    newline rather than a blank line.  In that case the whole document can look
+    like one paragraph to the coarse mapper.  Prefer a nearby sentence/newline
+    boundary, then fall back to an exact word boundary.
+    """
+    result: list[tuple[int, int]] = []
+    for block_start, block_end in blocks:
+        cursor = block_start
+        while word_count(text[cursor:block_end]) > maximum:
+            body = text[cursor:block_end]
+            words = list(T.WORD.finditer(body))
+            upper = min(maximum, len(words) - 1)
+            lower = min(max(1, minimum), upper)
+            preferred = min(max(lower, target), upper)
+            candidates: list[tuple[int, int, int]] = []
+            for index in range(lower, upper + 1):
+                between = body[words[index - 1].end():words[index].start()]
+                natural = 0 if (
+                    "\n" in between
+                    or re.search(r"[.!?][\"')\]]*\s", between)
+                ) else 1
+                candidates.append((natural, abs(index - preferred), index))
+            _, _, chosen = min(candidates)
+            cut = cursor + words[chosen].start()
+            if cut <= cursor or cut >= block_end:
+                raise ValueError("could not split an overlong paragraph block")
+            result.append((cursor, cut))
+            cursor = cut
+        result.append((cursor, block_end))
+    return result
+
+
+def raw_segment_ranges(text: str, target: int, minimum: int, maximum: int) -> list[tuple[int, int]]:
     if minimum <= 0 or target < minimum or maximum < target:
         raise ValueError("require 0 < minimum <= target <= maximum")
-    blocks = paragraph_blocks(text)
+    blocks = bounded_blocks(
+        text,
+        paragraph_blocks(text),
+        target,
+        minimum,
+        maximum,
+    )
     ranges: list[tuple[int, int]] = []
     start = blocks[0][0]
     end = start
@@ -106,12 +157,67 @@ def segment_ranges(text: str, target: int, minimum: int, maximum: int) -> list[t
         a, b = ranges[-1]
         if word_count(text[a:b]) < minimum:
             prev_a, _ = ranges[-2]
-            if word_count(text[prev_a:b]) <= maximum:
+            # A tiny tail is less stable for both editorial review and external
+            # classifiers. Permit a narrow merge tolerance when the combined
+            # target still fits the smallest 1,200-word public UI in registry.
+            tail_ceiling = (
+                maximum
+                if maximum >= 1200
+                else min(1200, maximum + max(1, maximum // 10))
+            )
+            if word_count(text[prev_a:b]) <= tail_ceiling:
                 ranges[-2:] = [(prev_a, b)]
     return ranges
 
 
-def make_segment(text: str, start: int, end: int, sid: str) -> dict:
+def classified_segment_ranges(
+    text: str,
+    target: int,
+    minimum: int,
+    maximum: int,
+) -> list[tuple[int, int, str, bool]]:
+    """Keep protected bibliography separate from editable prose.
+
+    Detector optimisation must not pressure an editor to paraphrase titles,
+    authors, DOI metadata, or other bibliography fields.  The map still covers
+    every character, but reference-list segments are explicitly classified and
+    excluded from editable-prose detector targets.
+    """
+    match = REFERENCE_HEADING.search(text)
+    regions = [(0, len(text), "prose", True)]
+    if match:
+        regions = []
+        if match.start() > 0:
+            regions.append((0, match.start(), "prose", True))
+        regions.append((match.start(), len(text), "bibliography", False))
+    output: list[tuple[int, int, str, bool]] = []
+    for region_start, region_end, kind, eligible in regions:
+        body = text[region_start:region_end]
+        for start, end in raw_segment_ranges(body, target, minimum, maximum):
+            output.append(
+                (region_start + start, region_start + end, kind, eligible)
+            )
+    return output
+
+
+def segment_ranges(text: str, target: int, minimum: int, maximum: int) -> list[tuple[int, int]]:
+    """Compatibility wrapper returning the exact ordered coverage ranges."""
+    return [
+        (start, end)
+        for start, end, _, _ in classified_segment_ranges(
+            text, target, minimum, maximum
+        )
+    ]
+
+
+def make_segment(
+    text: str,
+    start: int,
+    end: int,
+    sid: str,
+    content_kind: str = "prose",
+    detector_eligible: bool = True,
+) -> dict:
     body = text[start:end]
     return {
         "id": sid,
@@ -127,13 +233,20 @@ def make_segment(text: str, start: int, end: int, sid: str) -> dict:
         "status": "unreviewed",
         "changed": False,
         "new": False,
+        "content_kind": content_kind,
+        "detector_eligible": detector_eligible,
         "risk": [],
-        "notes": "",
+        "notes": (
+            "Protected bibliography: preserve exact source metadata; excluded "
+            "from editable-prose detector targets."
+            if content_kind == "bibliography"
+            else ""
+        ),
     }
 
 
 def build_map(text: str, source: Path, target: int, minimum: int, maximum: int) -> dict:
-    ranges = segment_ranges(text, target, minimum, maximum)
+    ranges = classified_segment_ranges(text, target, minimum, maximum)
     return {
         "schema": SCHEMA,
         "version": "3.0.0",
@@ -144,8 +257,16 @@ def build_map(text: str, source: Path, target: int, minimum: int, maximum: int) 
         "updated_at": V.now(),
         "parameters": {"target_words": target, "minimum_words": minimum, "maximum_words": maximum},
         "segments": [
-            make_segment(text, start, end, f"S{index:03d}")
-            for index, (start, end) in enumerate(ranges, start=1)
+            make_segment(
+                text,
+                start,
+                end,
+                f"S{index:03d}",
+                content_kind,
+                detector_eligible,
+            )
+            for index, (start, end, content_kind, detector_eligible)
+            in enumerate(ranges, start=1)
         ],
     }
 
@@ -269,6 +390,14 @@ def validation(data: dict, text: str) -> tuple[bool, list[str], dict]:
         body = text[start:end]
         if sha(body) != item.get("current_sha256"):
             problems.append(f"{sid}: stale content digest")
+        content_kind = item.get("content_kind", "prose")
+        eligible = item.get("detector_eligible", True)
+        if content_kind not in {"prose", "bibliography"}:
+            problems.append(f"{sid}: invalid content_kind {content_kind!r}")
+        if not isinstance(eligible, bool):
+            problems.append(f"{sid}: detector_eligible must be boolean")
+        if content_kind == "bibliography" and eligible:
+            problems.append(f"{sid}: bibliography cannot be detector-edit eligible")
         cursor = end
         total_chars += end - start
     if cursor != len(text):
@@ -286,6 +415,12 @@ def validation(data: dict, text: str) -> tuple[bool, list[str], dict]:
         "new": sum(bool(x.get("new")) for x in segments),
         "risk": sum(bool(x.get("risk")) for x in segments),
         "orphaned": len(data.get("orphaned_segment_ids", [])),
+        "detector_eligible_segments": sum(
+            x.get("detector_eligible", True) is True for x in segments
+        ),
+        "protected_bibliography_segments": sum(
+            x.get("content_kind") == "bibliography" for x in segments
+        ),
     }
     return not problems, problems, metrics
 

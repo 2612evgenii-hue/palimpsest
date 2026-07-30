@@ -1,0 +1,37 @@
+{
+  "schema": "palimpsest.variant-plan.v1",
+  "sample_id": "pubmed-01-ai",
+  "original_sha256": "dcab5ddecf148ef377c9161409df8af57e7324bbae076ffc22351b74d23c5bbc",
+  "operations": [
+    {
+      "id": "s1-remove-answer-frame",
+      "factor": "answer_frame",
+      "old": "Yes, prenatal ethanol exposure has been shown to reduce mGluR5 (metabotropic glutamate receptor 5) receptor number and function in the dentate gyrus of adult offspring.",
+      "new": "Prenatal ethanol exposure has been shown to reduce mGluR5 (metabotropic glutamate receptor 5) receptor number and function in the dentate gyrus of adult offspring."
+    },
+    {
+      "id": "s2-reduce-generic-frame",
+      "factor": "generic_evidence_frame",
+      "old": "Studies have shown that prenatal ethanol exposure can result in various cognitive deficits and abnormal synaptic plasticity, which might be associated with altered mGluR5 expression and function in the hippocampus.",
+      "new": "Prenatal ethanol exposure can result in cognitive deficits and abnormal synaptic plasticity, which might be associated with altered mGluR5 expression and function in the hippocampus."
+    },
+    {
+      "id": "s3-citation-first",
+      "factor": "evidence_order",
+      "old": "For example, a study by Bird et al. (2017) showed that prenatal ethanol exposure is associated with a decrease in mGluR5 expression and disruption of mGluR5-mediated synaptic plasticity in the dentate gyrus of adult rat offspring.",
+      "new": "Bird et al. (2017) associated prenatal ethanol exposure with lower mGluR5 expression and disrupted mGluR5-mediated synaptic plasticity in the dentate gyrus of adult rat offspring."
+    },
+    {
+      "id": "s4-citation-first",
+      "factor": "evidence_order",
+      "old": "Another study by Hamilton et al. (2010) found that adult rats exposed to ethanol during their prenatal period had reduced mGluR5 mRNA expression in the hippocampus.",
+      "new": "Hamilton et al. (2010) found reduced hippocampal mGluR5 mRNA expression in adult rats exposed to ethanol prenatally."
+    },
+    {
+      "id": "s5-tighten-synthesis",
+      "factor": "synthesis_frame",
+      "old": "Thus, prenatal ethanol exposure appears to have long-lasting effects on mGluR5 receptor number and function in the hippocampus, particularly in the dentate gyrus region, which could result in impaired cognitive functions in adult offspring.",
+      "new": "Taken together, these findings indicate lasting effects of prenatal ethanol exposure on hippocampal mGluR5 receptor number and function, particularly in the dentate gyrus, with possible consequences for cognition in adult offspring."
+    }
+  ]
+}

@@ -1,0 +1,275 @@
+{
+  "schema": "palimpsest.holdout-partial-result.v1",
+  "experiment_id": "holdout-03-quote-integrity-transfer",
+  "status": "stopped_incomplete_nonconfirmatory",
+  "preregistration": {
+    "path": "holdout-03-preregistration.json",
+    "sha256": "553487f2940708869086f7cecd1bae2689aa5c9e9b3500f6533e15471cbd90f4",
+    "git_commit": "e2ffe339354a5525c540023df6910a57cb0cf112"
+  },
+  "stop_reason": "The user reprioritized from artificial browser trials to real-work validation after all three preregistered ZeroGPT effect tests had already failed. Copyleaks reached its guest scan limit before returning the first score. Scribbr and Sapling were not run.",
+  "evidence_limits": {
+    "individual_timestamps_preserved": false,
+    "captures_preserved": false,
+    "multi_service_matrix_complete": false,
+    "safe_claim": "The preregistered quote-integrity factor failed all three ZeroGPT effect tests; the full confirmatory holdout was not completed."
+  },
+  "observations": [
+    {
+      "sample": "news-quote-01",
+      "role": "human",
+      "service": "zerogpt",
+      "candidate_sha256": "420224f24c38443a86b260a96fe53b5ced8b575b6cffd43a9c5aa3c059c5e198",
+      "post_visible_text_sha256": "420224f24c38443a86b260a96fe53b5ced8b575b6cffd43a9c5aa3c059c5e198",
+      "scores_pct": [45.8],
+      "terminal_states": ["complete"],
+      "transition_signals": ["loading_or_disabled_observed"],
+      "capture_status": "missing",
+      "timestamp_status": "not_preserved_after_user_interruption",
+      "included_in_analysis": true
+    },
+    {
+      "sample": "news-quote-01",
+      "role": "ai",
+      "service": "zerogpt",
+      "candidate_sha256": "29a5935f71c3de89241b45664099aa79af931ce6fb39d1448aed25cdd2bdceb3",
+      "post_visible_text_sha256": "29a5935f71c3de89241b45664099aa79af931ce6fb39d1448aed25cdd2bdceb3",
+      "scores_pct": [100, 100, 100],
+      "terminal_states": ["complete", "complete", "complete"],
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed"
+      ],
+      "capture_status": "missing",
+      "timestamp_status": "not_preserved_after_user_interruption",
+      "included_in_analysis": true
+    },
+    {
+      "sample": "news-quote-01",
+      "role": "candidate",
+      "service": "zerogpt",
+      "candidate_sha256": "2a0953ed8d4bf8dae8ed5d8a62497d966be172cae2220025274a0046d50f7f29",
+      "post_visible_text_sha256": "2a0953ed8d4bf8dae8ed5d8a62497d966be172cae2220025274a0046d50f7f29",
+      "scores_pct": [100, 100, 100],
+      "terminal_states": ["complete", "complete", "complete"],
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed"
+      ],
+      "capture_status": "missing",
+      "timestamp_status": "not_preserved_after_user_interruption",
+      "included_in_analysis": true
+    },
+    {
+      "sample": "news-quote-02",
+      "role": "human",
+      "service": "zerogpt",
+      "candidate_sha256": "d43be99d347369f058521f2d94db984f501d4a56a5083bbd90364478bf51e1b9",
+      "post_visible_text_sha256": "d43be99d347369f058521f2d94db984f501d4a56a5083bbd90364478bf51e1b9",
+      "scores_pct": [13.6],
+      "terminal_states": ["complete"],
+      "transition_signals": ["loading_or_disabled_observed"],
+      "capture_status": "missing",
+      "timestamp_status": "not_preserved_after_user_interruption",
+      "included_in_analysis": true
+    },
+    {
+      "sample": "news-quote-02",
+      "role": "ai",
+      "service": "zerogpt",
+      "candidate_sha256": "c1e57cc175248abfdf3fdfe89f162e08c2597edbf71f8af7a7064c2a35d66e1a",
+      "post_visible_text_sha256": "c1e57cc175248abfdf3fdfe89f162e08c2597edbf71f8af7a7064c2a35d66e1a",
+      "scores_pct": [49.8, 49.8, 49.8],
+      "terminal_states": ["complete", "complete", "complete"],
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed"
+      ],
+      "capture_status": "missing",
+      "timestamp_status": "not_preserved_after_user_interruption",
+      "included_in_analysis": true
+    },
+    {
+      "sample": "news-quote-02",
+      "role": "candidate",
+      "service": "zerogpt",
+      "candidate_sha256": "25b438cefc9d2240464e0ec3470de47bc0afa075937e1a26bdbe6be84c50ed4d",
+      "post_visible_text_sha256": "25b438cefc9d2240464e0ec3470de47bc0afa075937e1a26bdbe6be84c50ed4d",
+      "scores_pct": [51.5, 50.2, 51.5],
+      "terminal_states": ["complete", "complete", "complete"],
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed"
+      ],
+      "capture_status": "missing",
+      "timestamp_status": "not_preserved_after_user_interruption",
+      "included_in_analysis": true
+    },
+    {
+      "sample": "news-quote-03",
+      "role": "human",
+      "service": "zerogpt",
+      "candidate_sha256": "bb36bf1d2fbb881b6ab2e7cffea9aaab6991894130e7c305da60b62ae8599def",
+      "post_visible_text_sha256": "bb36bf1d2fbb881b6ab2e7cffea9aaab6991894130e7c305da60b62ae8599def",
+      "scores_pct": [35.4],
+      "terminal_states": ["complete"],
+      "transition_signals": ["loading_or_disabled_observed"],
+      "capture_status": "missing",
+      "timestamp_status": "not_preserved_after_user_interruption",
+      "included_in_analysis": true
+    },
+    {
+      "sample": "news-quote-03",
+      "role": "ai",
+      "service": "zerogpt",
+      "candidate_sha256": "2498ccc627e1018e9248460c8f37b5e5470497e5d361423e916d9ad19c440df7",
+      "post_visible_text_sha256": "2498ccc627e1018e9248460c8f37b5e5470497e5d361423e916d9ad19c440df7",
+      "scores_pct": [50, 50, 50],
+      "terminal_states": ["complete", "complete", "complete"],
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed"
+      ],
+      "capture_status": "missing",
+      "timestamp_status": "not_preserved_after_user_interruption",
+      "included_in_analysis": true
+    },
+    {
+      "sample": "news-quote-03",
+      "role": "candidate",
+      "service": "zerogpt",
+      "candidate_sha256": "17b02fb1edabfbd660e4787a9c9de2179ea285ef1ea9a3d1c318995367106157",
+      "post_visible_text_sha256": "17b02fb1edabfbd660e4787a9c9de2179ea285ef1ea9a3d1c318995367106157",
+      "scores_pct": [50.5, 50.5, 50.5],
+      "terminal_states": ["complete", "complete", "complete"],
+      "transition_signals": [
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed",
+        "loading_or_disabled_observed"
+      ],
+      "capture_status": "missing",
+      "timestamp_status": "not_preserved_after_user_interruption",
+      "included_in_analysis": true
+    }
+  ],
+  "blocked_attempts": [
+    {
+      "sample": "news-quote-01",
+      "role": "human",
+      "service": "copyleaks",
+      "candidate_sha256": "420224f24c38443a86b260a96fe53b5ced8b575b6cffd43a9c5aa3c059c5e198",
+      "post_visible_text_sha256": "420224f24c38443a86b260a96fe53b5ced8b575b6cffd43a9c5aa3c059c5e198",
+      "terminal_state": "blocked",
+      "score_pct": null,
+      "transition_signal": "loading_or_disabled_observed",
+      "visible_terminal_message": "Oops, scan limit reached. The guest form did not return a percentage.",
+      "timestamp_status": "not_preserved_after_user_interruption",
+      "included_in_analysis": false
+    }
+  ],
+  "not_run": [
+    {
+      "service": "copyleaks",
+      "scope": "remaining preregistered cells",
+      "reason": "guest scan limit reached before the first score"
+    },
+    {
+      "service": "scribbr",
+      "scope": "all preregistered cells",
+      "reason": "first technical fill failed before submission; no result was transmitted or inferred"
+    },
+    {
+      "service": "sapling",
+      "scope": "all preregistered cells",
+      "reason": "user reprioritized the work after the confirmatory factor had already failed all three ZeroGPT effect tests"
+    }
+  ],
+  "analysis": {
+    "sample_results": [
+      {
+        "sample": "news-quote-01",
+        "status": "failed_no_effect_above_noise",
+        "eligible": true,
+        "zerogpt_effect": false,
+        "edit_cost": 0.0586,
+        "zerogpt_human": {
+          "scores_pct": [45.8],
+          "median_pct": 45.8,
+          "range_pct": 0.0
+        },
+        "zerogpt_baseline": {
+          "scores_pct": [100, 100, 100],
+          "median_pct": 100.0,
+          "range_pct": 0.0
+        },
+        "zerogpt_candidate": {
+          "scores_pct": [100, 100, 100],
+          "median_pct": 100.0,
+          "range_pct": 0.0
+        },
+        "zerogpt_reduction_pct": 0.0,
+        "required_reduction_pct": 2.0
+      },
+      {
+        "sample": "news-quote-02",
+        "status": "failed_no_effect_above_noise",
+        "eligible": true,
+        "zerogpt_effect": false,
+        "edit_cost": 0.0397,
+        "zerogpt_human": {
+          "scores_pct": [13.6],
+          "median_pct": 13.6,
+          "range_pct": 0.0
+        },
+        "zerogpt_baseline": {
+          "scores_pct": [49.8, 49.8, 49.8],
+          "median_pct": 49.8,
+          "range_pct": 0.0
+        },
+        "zerogpt_candidate": {
+          "scores_pct": [51.5, 50.2, 51.5],
+          "median_pct": 51.5,
+          "range_pct": 1.3
+        },
+        "zerogpt_reduction_pct": -1.7,
+        "required_reduction_pct": 2.0
+      },
+      {
+        "sample": "news-quote-03",
+        "status": "failed_no_effect_above_noise",
+        "eligible": true,
+        "zerogpt_effect": false,
+        "edit_cost": 0.0726,
+        "zerogpt_human": {
+          "scores_pct": [35.4],
+          "median_pct": 35.4,
+          "range_pct": 0.0
+        },
+        "zerogpt_baseline": {
+          "scores_pct": [50, 50, 50],
+          "median_pct": 50.0,
+          "range_pct": 0.0
+        },
+        "zerogpt_candidate": {
+          "scores_pct": [50.5, 50.5, 50.5],
+          "median_pct": 50.5,
+          "range_pct": 0.0
+        },
+        "zerogpt_reduction_pct": -0.5,
+        "required_reduction_pct": 2.0
+      }
+    ],
+    "zerogpt_successful_samples": 0,
+    "zerogpt_transfer_rejected": true,
+    "confirmatory_holdout_completed": false,
+    "primary_pair_available": false,
+    "factor": "quote_integrity_restoration",
+    "production_rule_admitted": false,
+    "admission_reason": "all_three_zerogpt_effect_tests_failed_and_copyleaks_was_blocked"
+  }
+}

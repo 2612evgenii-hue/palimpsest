@@ -47,6 +47,20 @@ PLATEAU_MECHANISMS = {
 DEFAULT_STATE = Path("workspace/STATE.json")
 SCRIPTS = Path(__file__).resolve().parent
 REGISTRY_PATH = SCRIPTS.parent / "assets" / "service-registry.json"
+ACADEMIC_DIRECT_MARKERS = {
+    "dissertation": r"\bdissertation\b",
+    "thesis": r"\bthesis\b",
+    "assessment_brief": r"\bassessment\s+brief\b",
+    "submitted_for_degree": r"\bsubmitted\b.{0,120}\bdegree\b",
+}
+ACADEMIC_SUPPORT_MARKERS = {
+    "supervisor": r"\bsupervisor\b",
+    "university": r"\buniversity\b",
+    "assignment": r"\bassignment\b",
+    "module": r"\bmodule\b",
+    "marking": r"\bmarking\s+(?:grid|criteria|rubric)\b",
+    "academic_integrity": r"\bacademic\s+integrity\b",
+}
 
 ATTESTATIONS: dict[str, dict] = {
     "master_brief": {
@@ -147,6 +161,103 @@ def state_path(raw: Path) -> Path:
     return raw.expanduser().resolve()
 
 
+def authorization_evidence_profile(
+    raw_path: str | None,
+    scope: str | None,
+) -> dict:
+    if not raw_path:
+        raise StateError(
+            "academic_authorized_ai_revision requires --authorization-evidence"
+        )
+    path = V.resolve_existing(raw_path)
+    healthy, message = capture_artifact_health(path)
+    if not healthy:
+        raise StateError(f"authorization evidence is not a valid image/PDF: {message}")
+    normalized_scope = str(scope or "").strip()
+    if len(normalized_scope) < 40:
+        raise StateError(
+            "academic_authorized_ai_revision requires a specific "
+            "40+ character --authorization-scope"
+        )
+    return {
+        "path": str(path),
+        "sha256": V.sha256_file(path),
+        "structural_validation": message,
+        "scope": normalized_scope,
+        "trust": "user_supplied_unverified_external_document",
+        "independently_authenticated": False,
+    }
+
+
+def integrity_context_profile(
+    text: str,
+    asserted: str = "auto",
+    authorization_evidence: str | None = None,
+    authorization_scope: str | None = None,
+) -> dict:
+    """Classify assessed academic work before any detector workflow is enabled."""
+    direct = [
+        name
+        for name, pattern in ACADEMIC_DIRECT_MARKERS.items()
+        if re.search(pattern, text, flags=re.IGNORECASE | re.DOTALL)
+    ]
+    supporting = [
+        name
+        for name, pattern in ACADEMIC_SUPPORT_MARKERS.items()
+        if re.search(pattern, text, flags=re.IGNORECASE | re.DOTALL)
+    ]
+    detected = (
+        "academic_assessment"
+        if direct or len(supporting) >= 3
+        else "general"
+    )
+    if asserted == "general" and detected == "academic_assessment":
+        raise StateError(
+            "--content-context general conflicts with strong academic-assessment "
+            f"signals: {', '.join(direct + supporting)}"
+        )
+    authorization = None
+    if asserted == "academic_authorized_ai_revision":
+        authorization = authorization_evidence_profile(
+            authorization_evidence,
+            authorization_scope,
+        )
+        context = asserted
+    else:
+        context = detected if asserted == "auto" else asserted
+    optimization_allowed = (
+        context == "general"
+        or (
+            context == "academic_authorized_ai_revision"
+            and authorization is not None
+        )
+    )
+    return {
+        "asserted": asserted,
+        "detected": detected,
+        "context": context,
+        "signals": {
+            "direct": direct,
+            "supporting": supporting,
+        },
+        "detector_score_optimization_allowed": optimization_allowed,
+        "policy": (
+            "feedback_fact_check_originality_and_minimal_proofreading_only"
+            if context == "academic_assessment"
+            else (
+                "authorized_quality_first_ai_revision_with_disclosure"
+                if context == "academic_authorized_ai_revision"
+                else "general_quality_first_editing"
+            )
+        ),
+        "disclosure_review_required": context in {
+            "academic_assessment",
+            "academic_authorized_ai_revision",
+        },
+        "authorization": authorization,
+    }
+
+
 def load_state(path: Path) -> dict:
     try:
         st = V.load_json(path)
@@ -188,8 +299,8 @@ def word_count(path: str | Path) -> int:
     return len(T.words(V.read_text(path)))
 
 
-def semantic_source_units(st: dict) -> list[dict]:
-    """Create a bounded, deterministic source-unit inventory for reconciliation."""
+def semantic_source_bodies(st: dict) -> list[tuple[str, str]]:
+    """Return deterministic full source units from the immutable original."""
     text = V.read_text(st["files"]["original"])
     if st["route"] == "surgical":
         bodies = T.sentences(text)
@@ -197,17 +308,25 @@ def semantic_source_units(st: dict) -> list[dict]:
     else:
         bodies = [
             paragraph.text.strip()
-            for paragraph in T.paragraphs(text)
+            for paragraph in T.editorial_paragraphs(text)
             if paragraph.text.strip()
         ]
         prefix = "P"
     return [
+        (f"{prefix}{index:04d}", body)
+        for index, body in enumerate(bodies, start=1)
+    ]
+
+
+def semantic_source_units(st: dict) -> list[dict]:
+    """Create a bounded source-unit inventory for reconciliation artifacts."""
+    return [
         {
-            "id": f"{prefix}{index:04d}",
+            "id": unit_id,
             "original_sha256": V.sha256_text(body),
             "original_excerpt": body[:240],
         }
-        for index, body in enumerate(bodies, start=1)
+        for unit_id, body in semantic_source_bodies(st)
     ]
 
 
@@ -314,6 +433,26 @@ def cmd_init(args: argparse.Namespace) -> int:
             return fail(f"unknown function {item}; expected F1..F4")
         flags[name] = True
     source_words = word_count(original)
+    original_text = V.read_text(original)
+    try:
+        integrity = integrity_context_profile(
+            original_text,
+            args.content_context,
+            args.authorization_evidence,
+            args.authorization_scope,
+        )
+    except StateError as exc:
+        return fail(str(exc))
+    if (
+        not integrity["detector_score_optimization_allowed"]
+        and flags["F1"]
+    ):
+        return fail(
+            "F1 detector-score optimization is disabled for assessed academic "
+            "work; use F2/F3/F4 for structure, fact/source, originality, "
+            "fidelity, and minimal proofreading, then follow the institution's "
+            "AI-use and disclosure rules"
+        )
     route = args.route
     if route == "auto":
         # In score-mandatory mode, switch to stable chunks before the smallest
@@ -327,19 +466,30 @@ def cmd_init(args: argparse.Namespace) -> int:
     default_budget = (
         0.30
         if flags["F1"]
-        else (0.12 if route == "surgical" else 0.18)
+        else (
+            0.10
+            if integrity["context"] == "academic_assessment"
+            else (0.12 if route == "surgical" else 0.18)
+        )
     )
     budget = args.budget if args.budget is not None else default_budget
     para_budget = (
         args.para_budget
         if args.para_budget is not None
-        else (0.60 if flags["F1"] else (0.35 if route == "surgical" else 0.45))
+        else (
+            0.60
+            if flags["F1"]
+            else (
+                0.25
+                if integrity["context"] == "academic_assessment"
+                else (0.35 if route == "surgical" else 0.45)
+            )
+        )
     )
     if not 0 <= budget <= 1:
         return fail("--budget must be between 0 and 1")
     if not 0 <= para_budget <= 1:
         return fail("--para-budget must be between 0 and 1")
-    original_text = V.read_text(original)
     source_language = language_profile(original_text)
     detected_language = source_language["detected"]
     if args.language and args.language != detected_language:
@@ -391,6 +541,7 @@ def cmd_init(args: argparse.Namespace) -> int:
         "route": route,
         "language": language,
         "source_language": source_language,
+        "integrity_policy": integrity,
         "style_mode": "unselected",
         "english_level": {
             "requested": "unselected" if language == "en" else "not_applicable",
@@ -471,7 +622,10 @@ def cmd_init(args: argparse.Namespace) -> int:
     refresh_goal(st)
     V.atomic_write_json(target, st)
     print(f"Palimpsest v{VERSION} state: {target}")
-    print(f"route={route} language={language} words={source_words}")
+    print(
+        f"route={route} language={language} words={source_words} "
+        f"context={integrity['context']}"
+    )
     print(f"functions={','.join(k for k, v in flags.items() if v) or 'none'}")
     if services:
         print(f"detectors={','.join(services)} (live capability review still required)")
@@ -586,6 +740,17 @@ def cmd_intake(args: argparse.Namespace) -> int:
                         raise StateError(f"unknown function {item}; expected F1..F4 or none")
                     if name not in normalized:
                         normalized.append(name)
+                if (
+                    "F1" in normalized
+                    and not st.get("integrity_policy", {}).get(
+                        "detector_score_optimization_allowed",
+                        True,
+                    )
+                ):
+                    raise StateError(
+                        "F1 detector-score optimization cannot be enabled for "
+                        "assessed academic work; keep F1 off and use F2/F3/F4"
+                    )
                 old_f1 = st["flags"]["F1"]
                 st["flags"] = {name: name in normalized for name in st["flags"]}
                 if old_f1 != st["flags"]["F1"]:
@@ -1071,8 +1236,15 @@ def validate_attestation(st: dict, kind: str, path: Path) -> tuple[bool, list[st
                 excerpt = str(evidence.get("excerpt", "")).strip()
                 if not location:
                     problems.append(f"{unit_id}: edited_evidence location is required")
-                if len(excerpt) < 20:
-                    problems.append(f"{unit_id}: edited excerpt must contain 20+ characters")
+                minimum_excerpt = min(
+                    20,
+                    max(1, len(str(expected["original_excerpt"]).strip())),
+                )
+                if len(excerpt) < minimum_excerpt:
+                    problems.append(
+                        f"{unit_id}: edited excerpt must contain "
+                        f"{minimum_excerpt}+ characters"
+                    )
                     continue
                 start_char = evidence.get("start_char")
                 end_char = evidence.get("end_char")
@@ -2465,6 +2637,7 @@ def semantic_coverage_reconciliation(
         for row in semantic.get("source_units", [])
         if isinstance(row, dict)
     ]
+    original_bodies = dict(semantic_source_bodies(st))
     if any(row.get("verdict") != "preserved" for row in rows):
         return False, [
             "coverage reconciliation accepts preserved units only; "
@@ -2487,8 +2660,10 @@ def semantic_coverage_reconciliation(
                     (
                         item
                         for item in rows
-                        if excerpt
-                        and excerpt in str(item.get("original_excerpt", ""))
+                        if excerpt and excerpt in original_bodies.get(
+                            str(item.get("id", "")),
+                            "",
+                        )
                     ),
                     None,
                 )
@@ -2622,7 +2797,12 @@ def detector_targets(st: dict) -> tuple[list[tuple[str, str]], list[str]]:
     segments = data.get("segments", [])
     coverage = st["detector_policy"]["coverage"]
     if coverage == "full":
-        selected = segments
+        # Full F1 coverage means every editable-prose target.  A reference list
+        # remains mapped and fidelity-protected, but is not rewritten or scored
+        # as if fixed bibliographic metadata were ordinary prose.
+        selected = [x for x in segments if x.get("detector_eligible", True)]
+        if not selected:
+            return [], ["segment map has no detector-eligible prose targets"]
     else:
         requested = set(st["detector_policy"].get("sample_ids", []))
         requested.update(
@@ -2634,7 +2814,16 @@ def detector_targets(st: dict) -> tuple[list[tuple[str, str]], list[str]]:
         missing = requested - {x["id"] for x in segments}
         if missing:
             return [], [f"sample_ids absent from map: {', '.join(sorted(missing))}"]
-        selected = [x for x in segments if x["id"] in requested]
+        selected = [
+            x for x in segments
+            if x["id"] in requested and x.get("detector_eligible", True)
+        ]
+        protected = requested - {x["id"] for x in selected}
+        if protected:
+            return [], [
+                "sample_ids contain protected non-prose segments: "
+                + ", ".join(sorted(protected))
+            ]
     return [(x["id"], x["current_sha256"]) for x in selected], []
 
 
@@ -3013,7 +3202,38 @@ def verify_state(st: dict, state_file: Path) -> dict:
     original_ok = (
         st.get("files", {}).get("original_sha256_at_init") == original_sha(st)
     )
-    if intake_missing or not master_ok or not language_ok or not original_ok:
+    integrity = st.get("integrity_policy", {})
+    authorization = integrity.get("authorization")
+    authorization_ok = True
+    authorization_message = "authorization evidence not required"
+    if integrity.get("context") == "academic_authorized_ai_revision":
+        authorization_ok = isinstance(authorization, dict)
+        if authorization_ok:
+            authorization_path = Path(str(authorization.get("path", "")))
+            authorization_ok = (
+                authorization_path.is_file()
+                and V.sha256_file(authorization_path) == authorization.get("sha256")
+            )
+            if authorization_ok:
+                healthy, health_message = capture_artifact_health(authorization_path)
+                authorization_ok = healthy
+                authorization_message = (
+                    f"authorization evidence digest/structure: "
+                    f"{'pass' if healthy else health_message}"
+                )
+            else:
+                authorization_message = (
+                    "authorization evidence is missing or changed after init"
+                )
+        else:
+            authorization_message = "authorization evidence is missing from state"
+    if (
+        intake_missing
+        or not master_ok
+        or not language_ok
+        or not original_ok
+        or not authorization_ok
+    ):
         details = (
             ([f"missing intake: {', '.join(intake_missing)}"] if intake_missing else [])
             + [master_msg]
@@ -3023,6 +3243,7 @@ def verify_state(st: dict, state_file: Path) -> dict:
                     f"detected={detected_language}"
                 ),
                 f"original immutable digest: {'pass' if original_ok else 'changed after init'}",
+                authorization_message,
             ]
         )
         gates["G0"] = gate("red", "intake/master brief incomplete", details)
@@ -3033,6 +3254,7 @@ def verify_state(st: dict, state_file: Path) -> dict:
             [
                 f"source language bound to detected {detected_language}",
                 "original SHA-256 still matches init",
+                authorization_message,
             ],
         )
 
@@ -3323,6 +3545,34 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--ref", action="append")
     p.add_argument("--task")
     p.add_argument("--route", choices=["auto", "surgical", "standard", "longform"], default="auto")
+    p.add_argument(
+        "--content-context",
+        choices=[
+            "auto",
+            "general",
+            "academic_assessment",
+            "academic_authorized_ai_revision",
+        ],
+        default="auto",
+        help=(
+            "integrity context; auto is fail-closed when dissertation/thesis/"
+            "assessment signals are present"
+        ),
+    )
+    p.add_argument(
+        "--authorization-evidence",
+        help=(
+            "user-supplied image/PDF permission artifact; required only for "
+            "academic_authorized_ai_revision"
+        ),
+    )
+    p.add_argument(
+        "--authorization-scope",
+        help=(
+            "specific 40+ character description of the permitted AI revision "
+            "and detector-related scope"
+        ),
+    )
     p.add_argument(
         "--language",
         choices=["en", "ru"],

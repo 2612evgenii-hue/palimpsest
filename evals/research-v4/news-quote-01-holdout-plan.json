@@ -1,0 +1,19 @@
+{
+  "schema": "palimpsest.variant-plan.v1",
+  "sample_id": "news-quote-01-ai",
+  "original_sha256": "29a5935f71c3de89241b45664099aa79af931ce6fb39d1448aed25cdd2bdceb3",
+  "reference_sha256": "420224f24c38443a86b260a96fe53b5ced8b575b6cffd43a9c5aa3c059c5e198",
+  "operations": [
+    {
+      "id": "quote-integrity",
+      "factor": "quote_integrity_restoration",
+      "candidate_sha256": "2a0953ed8d4bf8dae8ed5d8a62497d966be172cae2220025274a0046d50f7f29",
+      "old": "\"This was a sophisticated criminal enterprise that exploited legitimate businesses and their workers by flooding markets with counterfeit goods from China,\" said Assistant Attorney General Alice Fisher.",
+      "new": "\"This was a sophisticated criminal conspiracy that trafficked millions of dollars of counterfeit goods from China, profiting off the backs of legitimate companies and their hard-working employees,\" said Assistant Attorney General Alice Fisher.",
+      "source_evidence": {
+        "relation": "restores_the_exact_source_quote_and_unchanged_named_speaker",
+        "reference_excerpt": "\"This was a sophisticated criminal conspiracy that trafficked millions of dollars of counterfeit goods from China, profiting off the backs of legitimate companies and their hard-working employees,\" said Assistant Attorney General Alice Fisher."
+      }
+    }
+  ]
+}

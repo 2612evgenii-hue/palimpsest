@@ -1,0 +1,26 @@
+{
+  "schema": "palimpsest.variant-plan.v1",
+  "sample_id": "pubmed-03-ai",
+  "partition": "holdout",
+  "original_sha256": "7b74e3305ae6549927210da439b07138c337ffa4bbdd5b5ed1e9fa764ad92f2d",
+  "operations": [
+    {
+      "id": "h1-split-adaptive-mechanism",
+      "factor": "sentence_length_variation",
+      "old": "The change in light conditions in these different habitats requires a shift in visual sensitivity, and thyroid hormone may help regulate this adaptive response.",
+      "new": "The change in light conditions in these different habitats requires a shift in visual sensitivity. Thyroid hormone may help regulate this adaptive response."
+    },
+    {
+      "id": "h2-citation-first",
+      "factor": "evidence_order",
+      "old": "A study by Allison et al. (2006) showed that thyroid hormone treatment could induce an opsin switch in juvenile Atlantic salmon, leading to a change in their visual sensitivity.",
+      "new": "Allison et al. (2006) showed that thyroid hormone treatment could induce an opsin switch in juvenile Atlantic salmon, leading to a change in their visual sensitivity."
+    },
+    {
+      "id": "h3-tighten-evidence-frame",
+      "factor": "generic_evidence_frame",
+      "old": "There is evidence to suggest that thyroid hormone can influence the expression of opsins in the retinas of salmonid fish and may play a role in the opsin switch.",
+      "new": "Evidence suggests that thyroid hormone can influence the expression of opsins in the retinas of salmonid fish and may play a role in the opsin switch."
+    }
+  ]
+}

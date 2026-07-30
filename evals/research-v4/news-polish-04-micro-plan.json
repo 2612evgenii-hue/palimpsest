@@ -1,0 +1,96 @@
+{
+  "schema": "palimpsest.variant-plan.v1",
+  "sample_id": "news-polish-04-ai",
+  "original_sha256": "f5c0cd5c83d96ea141adcb3998448c3ca70d56577aa959f3db2b405e1bb36159",
+  "reference_sha256": "cbe30469b6e1fff0c65961e7d5dcaeb6b8f7d5f53fb92209a285604d6f3de5b1",
+  "operations": [
+    {
+      "id": "f1-title-accuracy",
+      "factor": "factual_title_restoration",
+      "candidate_sha256": "73d1d9cc2417a8bf8768afbb4827a9405eee1d0ddcb0b3fbaa98f7b4bf0d4faf",
+      "old": "the last surviving World War I veteran",
+      "new": "the oldest living veteran of World War I",
+      "source_evidence": {
+        "relation": "restores_the_source_title_without_changing_the_person_or_event",
+        "reference_excerpt": "Britain's oldest man and the oldest living veteran of World War I"
+      }
+    },
+    {
+      "id": "f2-lead-frame-removal",
+      "factor": "unsupported_evaluative_frame_removal",
+      "candidate_sha256": "a8f9cd209ec8738786ff88c2e1f8bd43e412ac3a34124c826df37650f123ebea",
+      "old": ", blending celebration with solemn remembrance",
+      "new": "",
+      "source_evidence": {
+        "relation": "removes_an_added_interpretive_clause_absent_from_the_source_lead",
+        "reference_excerpt": "Britain's oldest man and the oldest living veteran of World War I was celebrating his 112th birthday Friday with a party and a fly-past at an air force base."
+      }
+    },
+    {
+      "id": "f3-metaphor-removal",
+      "factor": "unsupported_metaphor_removal",
+      "candidate_sha256": "3655123b5a090c4584baf15a5f1bc5178f207cd94c19bf7deef9cb6cbab6d21a",
+      "old": " but remained a living bridge to history",
+      "new": "",
+      "source_evidence": {
+        "relation": "removes_an_added_metaphor_while_retaining_the_discharge_fact",
+        "reference_excerpt": "He left the service a year later, the defense ministry said."
+      }
+    },
+    {
+      "id": "f4-record-accuracy",
+      "factor": "record_claim_restoration",
+      "candidate_sha256": "816c670a17590ae20e0497c25350850c724cc131451d42890d71bcb88cc190d1",
+      "old": "Guinness World Records recognizes Allingham as Britain’s oldest citizen and the nation’s longest-serving military veteran.",
+      "new": "Allingham is Britain’s oldest man and the oldest surviving member of the armed forces, according to Guinness World Records.",
+      "source_evidence": {
+        "relation": "restores_the_two_titles_and_their_attribution",
+        "reference_excerpt": "Allingham is Britain's oldest man and the oldest surviving member of the armed forces, according to Guinness World Records."
+      }
+    },
+    {
+      "id": "f5-event-status",
+      "factor": "event_status_restoration",
+      "candidate_sha256": "92b970d8a63d7008cbf4198ed47304b2e9732b7ffb24879650c3bd0cc36de427",
+      "old": "Following a birthday luncheon, vintage aircraft from the Battle of Britain Memorial Flight soared overhead in tribute. Members of the Falcons Parachute Display Team later descended with a signed card from Britain’s air chief, honoring the centenarian’s legacy.",
+      "new": "After a birthday lunch, aircraft from the Battle of Britain Memorial Flight were scheduled to fly overhead. Members of the Falcons Parachute Display Team then planned to descend and present Allingham with a birthday card from Britain’s air chief.",
+      "source_evidence": {
+        "relation": "restores_planned_event_status_and_preserves_the_named_teams_and_card",
+        "reference_excerpt": "After a birthday lunch, aircraft from the Battle of Britain Memorial Flight, an aerial display team, planned to fly overhead, the base said. Members of the Falcons Parachute Display Team then planned to drop in and present Allingham with a birthday card from the chief of Britain's air staff."
+      }
+    },
+    {
+      "id": "f6-armistice-date",
+      "factor": "unsupported_date_removal",
+      "candidate_sha256": "31c4c6d3702f3188c0b31fc5f77950208cc2fed202e3a4da735f0556b24e1cc1",
+      "old": "during 2023’s Armistice Day commemorations",
+      "new": "on Armistice Day",
+      "source_evidence": {
+        "relation": "removes_an_invented_calendar_year_while_retaining_the_named_commemoration",
+        "reference_excerpt": "In November, he laid a wreath in St. Omer, France -- where he was stationed during the war -- to celebrate Armistice Day, the end of World War I."
+      }
+    },
+    {
+      "id": "f7-quote-date",
+      "factor": "unsupported_date_removal",
+      "candidate_sha256": "90aa7f42af556a85c691862311313e02280b0a7235c1c6ea79120ecfbb0dc2d3",
+      "old": "he told the Ministry of Defense in 2022",
+      "new": "he told the Ministry of Defense",
+      "source_evidence": {
+        "relation": "removes_an_invented_quote_year_without_altering_the_existing_words_of_the_quote",
+        "reference_excerpt": "\"I don't do these things because I enjoy doing them but to keep the memory alive of all my comrades who fought and died in the First World War,\" he told the Ministry of Defense."
+      }
+    },
+    {
+      "id": "f8-quote-integrity",
+      "factor": "quote_integrity_restoration",
+      "candidate_sha256": "b5090bdea7300fb29531e5df3bcffc1eb2cf3cb5e6b89258e29aade1f212469b",
+      "old": "“I don’t do these things for enjoyment,” he told the Ministry of Defense in 2022, “but to honor the memory of every comrade who fought and fell in the Great War.”",
+      "new": "“I don’t do these things because I enjoy doing them but to keep the memory alive of all my comrades who fought and died in the First World War,” he told the Ministry of Defense.",
+      "source_evidence": {
+        "relation": "restores_the_substance_and_attribution_of_the_direct_quote_and_removes_the_invented_year",
+        "reference_excerpt": "\"I don't do these things because I enjoy doing them but to keep the memory alive of all my comrades who fought and died in the First World War,\" he told the Ministry of Defense."
+      }
+    }
+  ]
+}

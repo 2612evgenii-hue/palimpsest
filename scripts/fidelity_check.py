@@ -24,6 +24,10 @@ SCHEMA = "palimpsest.fidelity.v3.1"
 NUMBER = re.compile(r"(?<![\w])[-+]?\d+(?:[.,]\d+)?(?:\s?%|\s?[A-Za-zА-Яа-яЁё]+)?")
 PLAIN_NUMBER = re.compile(r"[-+]?\d+(?:[.,]\d+)?")
 SENTENCE = re.compile(r"[^.!?…\n]+(?:[.!?…]+|$)", re.MULTILINE)
+REFERENCE_HEADING = re.compile(
+    r"(?im)^[ \t]*(?:references|bibliography|список\s+литературы|"
+    r"библиография|литература)[ \t]*\r?$"
+)
 
 PROTECTED = [
     ("code_fence", T.CODE_FENCE),
@@ -123,6 +127,13 @@ def normalize_fragment(value: str) -> str:
     return value.replace("\r\n", "\n").strip()
 
 
+def split_reference_list(text: str) -> tuple[str, str]:
+    match = REFERENCE_HEADING.search(text)
+    if not match:
+        return text, ""
+    return text[:match.start()], text[match.start():]
+
+
 def collect(patterns: list[tuple[str, re.Pattern]], text: str) -> dict[str, list[str]]:
     return {
         name: [normalize_fragment(m.group(0)) for m in rx.finditer(text)]
@@ -152,6 +163,25 @@ def mask_equal(text: str) -> str:
         for i in range(start, end):
             if chars[i] != "\n":
                 chars[i] = " "
+    return "".join(chars)
+
+
+def mask_citations_equal(text: str) -> str:
+    """Mask citation metadata for numeric-context comparison.
+
+    Author-year and bracket citations are already compared exactly. Treating
+    their repeated years as claim numbers caused ordinal misalignment after a
+    sentence split or merge and produced dozens of false
+    NUMBER_CONTEXT_CHANGED findings in real literature reviews.
+    """
+    chars = list(mask_equal(text))
+    for name, pattern in CITATIONS:
+        if name != "author_year_citation":
+            continue
+        for match in pattern.finditer(text):
+            for index in range(match.start(), match.end()):
+                if chars[index] != "\n":
+                    chars[index] = " "
     return "".join(chars)
 
 
@@ -229,7 +259,7 @@ def sentence_records(text: str) -> list[dict]:
 
 
 def number_records(text: str, sentences: list[dict]) -> list[dict]:
-    masked = mask_equal(text)
+    masked = mask_citations_equal(text)
     out: list[dict] = []
     for index, m in enumerate(NUMBER.finditer(masked), start=1):
         raw = m.group(0).strip()
@@ -237,8 +267,11 @@ def number_records(text: str, sentences: list[dict]) -> list[dict]:
         if not numeric:
             continue
         value = numeric.group(0).replace(",", ".")
-        unit = raw[numeric.end():].strip().lower().rstrip(".,;:")
-        unit = UNIT_ALIASES.get(unit, unit)
+        raw_unit = raw[numeric.end():].strip().lower().rstrip(".,;:")
+        unit = UNIT_ALIASES.get(
+            raw_unit,
+            raw_unit if raw_unit in set(UNIT_ALIASES.values()) | {"%"} else "",
+        )
         sent = next((s for s in sentences if s["start"] <= m.start() < s["end"]), None)
         out.append(
             {
@@ -520,14 +553,22 @@ def main() -> int:
     original_text = V.read_text(original_path)
     edited_text = V.read_text(edited_path)
 
+    original_body, original_references = split_reference_list(original_text)
+    edited_body, edited_references = split_reference_list(edited_text)
     original_protected = collect(PROTECTED, original_text)
     edited_protected = collect(PROTECTED, edited_text)
+    original_protected["reference_list"] = (
+        [normalize_fragment(original_references)] if original_references else []
+    )
+    edited_protected["reference_list"] = (
+        [normalize_fragment(edited_references)] if edited_references else []
+    )
     original_citations = collect(CITATIONS, original_text)
     edited_citations = collect(CITATIONS, edited_text)
-    original_sentences = sentence_records(original_text)
-    edited_sentences = sentence_records(edited_text)
-    original_numbers = number_records(original_text, original_sentences)
-    edited_numbers = number_records(edited_text, edited_sentences)
+    original_sentences = sentence_records(original_body)
+    edited_sentences = sentence_records(edited_body)
+    original_numbers = number_records(original_body, original_sentences)
+    edited_numbers = number_records(edited_body, edited_sentences)
 
     findings = compare_exact(original_protected, edited_protected, severity="error")
     citation_severity = "error" if args.strict_citations else "warning"

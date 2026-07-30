@@ -1,0 +1,130 @@
+{
+  "schema": "palimpsest.live-research-pilot.v1",
+  "observed_at": "2026-07-30",
+  "purpose": "calibration only; not a release claim",
+  "services": {
+    "zerogpt": {
+      "independence_group": "zerogpt",
+      "status": "scored"
+    },
+    "scribbr": {
+      "independence_group": "quillbot-family",
+      "status": "scored",
+      "model_version": "v7.1.0"
+    },
+    "copyleaks": {
+      "independence_group": "copyleaks",
+      "status": "blocked",
+      "reason": "guest scan limit reached in current browser session"
+    }
+  },
+  "observations": [
+    {
+      "sample_id": "pubmed-01-ai",
+      "candidate": "baseline",
+      "candidate_sha256": "dcab5ddecf148ef377c9161409df8af57e7324bbae076ffc22351b74d23c5bbc",
+      "service": "zerogpt",
+      "scores_pct": [72.2, 72.2, 72.2],
+      "binding_status": "pre-visible-sha-hardening",
+      "capture_status": "missing"
+    },
+    {
+      "sample_id": "pubmed-01-ai",
+      "candidate": "s1-remove-answer-frame",
+      "candidate_sha256": "758bf2b2259430ae808a421e4eece575e3a3c0bb5f70e5a8f605640725161b89",
+      "doc_change_ratio": 0.0021,
+      "service": "zerogpt",
+      "scores_pct": [63.3, 63.3, 63.3],
+      "binding_status": "pre-visible-sha-hardening",
+      "capture_status": "missing"
+    },
+    {
+      "sample_id": "pubmed-01-ai",
+      "candidate": "s2-reduce-generic-frame",
+      "candidate_sha256": "b1ef1917e3276eab18532bdbea6740c30f18488408c6490548e70906eeb1b6be",
+      "doc_change_ratio": 0.0107,
+      "service": "zerogpt",
+      "scores_pct": [100, 100, 100],
+      "binding_status": "pre-visible-sha-hardening",
+      "capture_status": "missing"
+    },
+    {
+      "sample_id": "pubmed-01-ai",
+      "candidate": "s3-citation-first",
+      "candidate_sha256": "29a54c27f75f7713a55d508c78363e3684227dce8a7fffbd2f754d7692e71e06",
+      "doc_change_ratio": 0.0367,
+      "service": "zerogpt",
+      "scores_pct": [100, 100, 100],
+      "binding_status": "pre-visible-sha-hardening",
+      "capture_status": "missing"
+    },
+    {
+      "sample_id": "pubmed-01-ai",
+      "candidate": "s4-citation-first",
+      "candidate_sha256": "1fe2b44ac9b3b8ade7ec20537a9e79553f68a74e0b371bfdc0d5db113ee5bd02",
+      "doc_change_ratio": 0.0495,
+      "service": "zerogpt",
+      "scores_pct": [100, 100, 100],
+      "binding_status": "pre-visible-sha-hardening",
+      "capture_status": "missing"
+    },
+    {
+      "sample_id": "pubmed-01-ai",
+      "candidate": "s5-tighten-synthesis",
+      "candidate_sha256": "d0c918a59e7f05bf9b8c42f91c3ba0f5528d7db0c9b0a53e9b5170b18b2c675a",
+      "doc_change_ratio": 0.0658,
+      "service": "zerogpt",
+      "scores_pct": [100, 100, 100],
+      "binding_status": "pre-visible-sha-hardening",
+      "capture_status": "missing"
+    },
+    {
+      "sample_id": "pubmed-05-ai",
+      "candidate": "baseline",
+      "candidate_sha256": "3d78f3cb35d03ebacb5fab9b1e9ea73d9160d9de2dcd99af9d3638bd8d9070dd",
+      "visible_text_sha256": "3d78f3cb35d03ebacb5fab9b1e9ea73d9160d9de2dcd99af9d3638bd8d9070dd",
+      "service": "zerogpt",
+      "scores_pct": [94, 94, 94],
+      "binding_status": "terminal-and-visible-sha-bound",
+      "capture_status": "missing"
+    },
+    {
+      "sample_id": "pubmed-05-ai",
+      "candidate": "s1-remove-answer-frame",
+      "candidate_sha256": "fb3bc23dc19f7927b935a0686835d8d4e915a4133b78a5ade4a9ce8b2a449d9d",
+      "visible_text_sha256": "fb3bc23dc19f7927b935a0686835d8d4e915a4133b78a5ade4a9ce8b2a449d9d",
+      "doc_change_ratio": 0.0025,
+      "service": "zerogpt",
+      "scores_pct": [74.4, 74.4, 74.4],
+      "binding_status": "terminal-and-visible-sha-bound",
+      "capture_status": "missing"
+    },
+    {
+      "sample_id": "pubmed-05-ai",
+      "candidate": "baseline",
+      "candidate_sha256": "3d78f3cb35d03ebacb5fab9b1e9ea73d9160d9de2dcd99af9d3638bd8d9070dd",
+      "visible_text_sha256": "3d78f3cb35d03ebacb5fab9b1e9ea73d9160d9de2dcd99af9d3638bd8d9070dd",
+      "service": "scribbr",
+      "scores_pct": [100],
+      "binding_status": "terminal-and-visible-sha-bound",
+      "capture_status": "missing"
+    },
+    {
+      "sample_id": "pubmed-05-ai",
+      "candidate": "s1-remove-answer-frame",
+      "candidate_sha256": "fb3bc23dc19f7927b935a0686835d8d4e915a4133b78a5ade4a9ce8b2a449d9d",
+      "visible_text_sha256": "fb3bc23dc19f7927b935a0686835d8d4e915a4133b78a5ade4a9ce8b2a449d9d",
+      "doc_change_ratio": 0.0025,
+      "service": "scribbr",
+      "scores_pct": [100],
+      "binding_status": "terminal-and-visible-sha-bound",
+      "capture_status": "missing"
+    }
+  ],
+  "preliminary_findings": [
+    "Removing a leading answer-frame token transferred across two ZeroGPT samples but did not reach the hard threshold.",
+    "The same operation had no observed effect on Scribbr v7.1.0.",
+    "Four other natural one-sentence edits increased the first ZeroGPT sample to 100 percent.",
+    "A detector-specific local sensitivity is not yet a Palimpsest rule."
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "schema": "palimpsest.variant-plan.v1",
+  "sample_id": "qa-tech-01-ai",
+  "original_sha256": "291f288af76993e300921dfd71dc35ee824299f2e1c52b447776bcad3309e862",
+  "operations": [
+    {
+      "id": "p2-punctuation-and-verb",
+      "factor": "progressive_bundle",
+      "replacements": [
+        {
+          "old": "Pre-industrial CO₂ levels were roughly 280 ppm; today, they exceed 420 ppm.",
+          "new": "Pre-industrial CO₂ levels were roughly 280 ppm. Today, they exceed 420 ppm."
+        },
+        {
+          "old": "are boosting these gas concentrations beyond natural levels.",
+          "new": "are raising these gas concentrations beyond natural levels."
+        }
+      ]
+    },
+    {
+      "id": "p4-plus-two-splits",
+      "factor": "progressive_bundle",
+      "replacements": [
+        {
+          "old": "Pre-industrial CO₂ levels were roughly 280 ppm; today, they exceed 420 ppm.",
+          "new": "Pre-industrial CO₂ levels were roughly 280 ppm. Today, they exceed 420 ppm."
+        },
+        {
+          "old": "are boosting these gas concentrations beyond natural levels.",
+          "new": "are raising these gas concentrations beyond natural levels."
+        },
+        {
+          "old": "Climate models project a 1.5°C to 4.5°C rise by 2100 if emissions continue unchecked, though uncertainties remain about feedback loops like permafrost thaw releasing more methane.",
+          "new": "Climate models project a 1.5°C to 4.5°C rise by 2100 if emissions continue unchecked. Uncertainties remain about feedback loops like permafrost thaw releasing more methane."
+        },
+        {
+          "old": "Gases like carbon dioxide (CO₂) and methane absorb infrared radiation emitted by the Earth’s surface, trapping heat in the atmosphere.",
+          "new": "Gases like carbon dioxide (CO₂) and methane absorb infrared radiation emitted by the Earth’s surface. This traps heat in the atmosphere."
+        }
+      ]
+    },
+    {
+      "id": "p6-plus-frame-removals",
+      "factor": "progressive_bundle",
+      "replacements": [
+        {
+          "old": "But here’s the catch: human activities—burning fossil fuels, deforestation, industrial processes—are boosting these gas concentrations beyond natural levels.",
+          "new": "Human activities—burning fossil fuels, deforestation, industrial processes—are boosting these gas concentrations beyond natural levels."
+        },
+        {
+          "old": "Pre-industrial CO₂ levels were roughly 280 ppm; today, they exceed 420 ppm.",
+          "new": "Pre-industrial CO₂ levels were roughly 280 ppm. Today, they exceed 420 ppm."
+        },
+        {
+          "old": "are boosting these gas concentrations beyond natural levels.",
+          "new": "are raising these gas concentrations beyond natural levels."
+        },
+        {
+          "old": "Climate models project a 1.5°C to 4.5°C rise by 2100 if emissions continue unchecked, though uncertainties remain about feedback loops like permafrost thaw releasing more methane.",
+          "new": "Climate models project a 1.5°C to 4.5°C rise by 2100 if emissions continue unchecked. Uncertainties remain about feedback loops like permafrost thaw releasing more methane."
+        },
+        {
+          "old": "Gases like carbon dioxide (CO₂) and methane absorb infrared radiation emitted by the Earth’s surface, trapping heat in the atmosphere.",
+          "new": "Gases like carbon dioxide (CO₂) and methane absorb infrared radiation emitted by the Earth’s surface. This traps heat in the atmosphere."
+        },
+        {
+          "old": "To understand Earth’s temperature regulation, you first need to grasp how greenhouse gases work.",
+          "new": "Earth’s temperature regulation depends on how greenhouse gases work."
+        }
+      ]
+    },
+    {
+      "id": "p7-plus-analogy-removal",
+      "factor": "progressive_bundle",
+      "replacements": [
+        {
+          "old": "But here’s the catch: human activities—burning fossil fuels, deforestation, industrial processes—are boosting these gas concentrations beyond natural levels.",
+          "new": "Human activities—burning fossil fuels, deforestation, industrial processes—are boosting these gas concentrations beyond natural levels."
+        },
+        {
+          "old": "Pre-industrial CO₂ levels were roughly 280 ppm; today, they exceed 420 ppm.",
+          "new": "Pre-industrial CO₂ levels were roughly 280 ppm. Today, they exceed 420 ppm."
+        },
+        {
+          "old": "are boosting these gas concentrations beyond natural levels.",
+          "new": "are raising these gas concentrations beyond natural levels."
+        },
+        {
+          "old": "Climate models project a 1.5°C to 4.5°C rise by 2100 if emissions continue unchecked, though uncertainties remain about feedback loops like permafrost thaw releasing more methane.",
+          "new": "Climate models project a 1.5°C to 4.5°C rise by 2100 if emissions continue unchecked. Uncertainties remain about feedback loops like permafrost thaw releasing more methane."
+        },
+        {
+          "old": "Gases like carbon dioxide (CO₂) and methane absorb infrared radiation emitted by the Earth’s surface, trapping heat in the atmosphere.",
+          "new": "Gases like carbon dioxide (CO₂) and methane absorb infrared radiation emitted by the Earth’s surface. This traps heat in the atmosphere."
+        },
+        {
+          "old": "To understand Earth’s temperature regulation, you first need to grasp how greenhouse gases work.",
+          "new": "Earth’s temperature regulation depends on how greenhouse gases work."
+        },
+        {
+          "old": "While debates persist over precise impacts, the basic physics—more greenhouse gases equal more heat retention—is as settled as the link between sunlight and sunburn.",
+          "new": "While debates persist over precise impacts, the basic physics—more greenhouse gases equal more heat retention—is settled."
+        }
+      ]
+    }
+  ]
+}

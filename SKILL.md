@@ -1,6 +1,6 @@
 ---
 name: palimpsest
-description: Professional RU/EN editing, rewriting, and copywriting with an iterative check→mark→minimal edit→recheck workflow, optional external or source-as-reference handwriting control, preserved English proficiency, strict user-selected AI-detector thresholds, fact-checking, originality review, semantic fidelity, and lossless long-document memory. Use for humanizing drafts, reducing current detector scores, matching an author's writing habits without copying phrases, restructuring prose, verifying facts or attribution, and editing dissertations, reports, essays, manuscripts, or other text across context resets.
+description: Professional RU/EN editing, rewriting, and copywriting with an iterative diagnose→minimal edit→verify workflow, optional external or source-as-reference handwriting control, preserved English proficiency, fact-checking, bounded originality review, semantic fidelity, and lossless long-document memory. User-selected AI-detector measurement is available in general contexts and in an explicit evidence-bound authorised academic-revision mode; assessed work otherwise stays quality-only.
 ---
 
 # Palimpsest v3.5
@@ -34,26 +34,38 @@ while pursuing the exact functions and detector scope selected by the user.
    deliberate errors, citation laundering, or cosmetic synonym spinning.
 9. Detector scores are current external measurements, not proof of authorship
    and not a promise about future detector versions.
-10. With F1 enabled, every mandatory detector result must be **strictly below
+10. Classify the content context before offering F1. A dissertation, thesis,
+    assessed essay, assignment, or comparable student submission defaults to
+    quality-only `academic_assessment`. F1 is permitted only when the user
+    supplies a structurally valid image/PDF authorisation artifact and a
+    specific scope for `academic_authorized_ai_revision`. Treat that artifact
+    as user-supplied, unverified external evidence; bind it to SHA-256, never
+    claim independent authentication, and require disclosure review.
+11. With F1 enabled in a permitted general or explicitly authorised context,
+    every mandatory detector result must be **strictly below
     20% AI** on every full-coverage target. Aim for **strictly below 15%**.
     Exactly 20% fails.
-11. A high score, missing/stale evidence, blocked service, sampled coverage,
+12. A high score, missing/stale evidence, blocked service, sampled coverage,
     waiver, or plateau never completes F1. `READY_WITH_LIMITS` is not success
     for a detector score at or above 20%.
-12. Close only through current green evidence. There is no force-close or
+13. Close only through current green evidence. There is no force-close or
     local quote-based detector bypass.
 
 Read [references/doctrine.md](references/doctrine.md) and
-[references/memory.md](references/memory.md) before editing. Read the routed
+[references/memory.md](references/memory.md) before editing. Classify the
+content context with
+[references/academic-integrity.md](references/academic-integrity.md), then read the routed
 reference when its phase becomes active:
 
 | Phase | Read |
 |---|---|
+| content context and assessed work | [references/academic-integrity.md](references/academic-integrity.md) |
 | intake and goal | [references/intake.md](references/intake.md) |
 | reference handwriting | [references/ductus.md](references/ductus.md) |
 | diagnosis and edit design | [references/patterns.md](references/patterns.md), [references/surgery.md](references/surgery.md) |
 | marks and detector rounds | [references/annotation.md](references/annotation.md), [references/detectors.md](references/detectors.md) |
 | semantic reconciliation | [references/fidelity.md](references/fidelity.md) |
+| consented real-work research | [references/shadow-validation.md](references/shadow-validation.md) |
 | F3 | [references/factcheck.md](references/factcheck.md) |
 | F4 | [references/anti-plagiarism.md](references/anti-plagiarism.md) |
 | regression work | [references/evals.md](references/evals.md) |
@@ -61,25 +73,31 @@ reference when its phase becomes active:
 ## Intake: three user questions plus the F1 scope
 
 Ask one question at a time. Do not repeat information already explicit, but
-always obtain the reference decision.
+always obtain the reference decision. First infer `content_context`. If the
+source is assessed academic work, default to F2–F4. Offer F1 only after the
+user supplies an authorisation image/PDF whose recorded scope explicitly
+covers the requested AI-assisted revision and detector work. Never relabel
+strong assessment signals as `general`.
 
 1. **Style reference and English level.** Ask whether style-reference files
    exist. Select `external_reference` or `source_as_reference`. For English,
    record A1–C2/native or `infer_from_source`.
 2. **Functions.** Ask which functions to enable:
-   - `F1`: humanize and reduce current AI-detector scores through
-     `score_mandatory`;
+   - `F1`: in general contexts or evidence-bound
+     `academic_authorized_ai_revision`, measure and reduce current AI-detector
+     scores through `score_mandatory`;
    - `F2`: make structure less mechanical while preserving genre clarity;
    - `F3`: deeply verify claims against primary/official sources;
    - `F4`: resolve close paraphrase, quotation, citation, and attribution risk.
 3. **F1 detector scope.** If F1 is selected, ask which detectors to enable or
-   disable. Start from the repeatable no-sign-up English profile:
+   disable. Start from the no-account English candidate profile:
    `zerogpt,scribbr,gptinf,copyleaks` (Russian:
    `zerogpt,gptinf,copyleaks`). Also offer GPTZero and QuillBot as optional
    account/limit-sensitive services and show the original six-service profile
-   when requested. ZeroGPT remains mandatory by user preference. Every service
-   retained by this answer becomes mandatory for the current job. Without F1,
-   record `none`.
+   when requested. Copyleaks itself is guest-quota-sensitive: selection never
+   substitutes for a fresh capability review. ZeroGPT remains mandatory by
+   user preference. Every service retained by this answer becomes mandatory
+   for the current job. Without F1, record `none`.
 4. **Writing requirements.** Ask for audience, genre, structure, length,
    citation style, forbidden wording, protected fragments, and other rules.
 
@@ -92,7 +110,7 @@ goal is unmet.
 ```bash
 python3 scripts/state.py --state workspace/STATE.json init \
   --original workspace/original.md --working workspace/working.md \
-  --flags F1,F2
+  --flags F1,F2 --content-context general
 
 python3 scripts/state.py --state workspace/STATE.json intake \
   --question Q1 --style-mode source_as_reference --english-level B2 \
@@ -104,15 +122,15 @@ python3 scripts/state.py --state workspace/STATE.json intake \
 python3 scripts/state.py --state workspace/STATE.json intake \
   --question Q3 \
   --services zerogpt,scribbr,gptinf,copyleaks \
-  --answer "Use the repeatable no-sign-up English profile." --source explicit
+  --answer "Use the no-account English candidate profile." --source explicit
 python3 scripts/state.py --state workspace/STATE.json intake \
   --question Q4 --answer "Technical report; preserve headings and citations." \
   --source explicit
 ```
 
 `--language` is only an assertion and cannot relabel Russian as English.
-With F1, auto-routing starts stable chunking at 1,000 words so the full text can
-fit the smallest common public limits. `risk_sampled` is forbidden in
+With F1, auto-routing starts stable chunking at 1,000 words so every editable
+prose target can fit the smallest common public limits. `risk_sampled` is forbidden in
 `score_mandatory`.
 
 ## Evidence and editor roles
@@ -160,15 +178,24 @@ conversational phrasing into academic prose.
 
 ## Core F1 loop: check → mark → edit → recheck
 
+Use this section only for `general` or
+`academic_authorized_ai_revision`. The academic mode requires the unchanged
+authorisation artifact, its exact scope, quality-first safeguards, and an
+AI-use/disclosure review; it is not evidence that the institution itself was
+independently contacted.
+
 Repeat the following cycle until every mandatory service is below the hard
 threshold:
 
 1. **Check every mandatory service.** Use its live browser UI, lawful existing
    institutional access, or a user-supplied institutional report. Do not
    purchase accounts or bypass access controls.
-2. **Cover the entire text.** For long text, check every stable target/chunk.
-   Respect the current service limit and aggregate conservatively: the
-   worst target controls that service's pass.
+2. **Cover the entire editable prose.** For long text, check every stable
+   detector-eligible target/chunk. A bibliography remains in the exact segment
+   map and fidelity audit but is protected from rewriting and excluded from
+   editable-prose detector targets. Never call this a whole-file pass; report
+   it as full prose coverage. Respect the current service limit and aggregate
+   conservatively: the worst prose target controls that service's pass.
 3. **Capture evidence.** Prepare a one-use challenge and record the exact
    current digest, score, URL, time, visible excerpt, and screenshot/PDF/API
    artifact.
@@ -182,9 +209,20 @@ threshold:
    `references/annotation.md`. Preserve the clean candidate separately.
 7. **Edit only marked zones.** Rotate mechanisms: residue deletion, rhythm,
    syntax, information order, paragraph shape, voice balance, or transition
-   repair. Do not repeat one trick across the text.
-8. **Run fidelity and style screens.** Revert unsupported claim, logic,
-   modality, unit, actor, chronology, citation, English-level, or voice drift.
+   repair. Do not repeat one trick across the text. Vendor feature names,
+   highlights, and generic advice such as “increase sentence variation” are
+   hypotheses, not causal edit recipes; never apply blanket split/merge rules.
+   Do not make claims or subjects more direct merely to influence a detector:
+   `direct_claim_restoration` failed its preregistered transfer holdout.
+   Restoring an exact quote also failed all three eligible ZeroGPT transfer
+   tests in the interrupted holdout-03. Change directness or quotation only
+   for a source-supported editorial or fidelity reason, never as a score rule.
+8. **Run fidelity, English-level, and style screens before live recheck.**
+   Reject unsupported claim, logic, modality, unit, actor, chronology,
+   citation, English-level, or voice drift before sending the candidate to a
+   detector. A quality-rejected candidate cannot support F1 even if an
+   exploratory score would fall. Preserve the source-relative envelope even
+   when the coarse CEFR label itself remains unchanged.
    A current exact semantic mapping may reconcile only lexical
    `CLAIM_DROPPED`/`CLAIM_ADDED` false positives; it can never override hard
    number, polarity, modality, causality, chronology, citation, or protected
@@ -238,6 +276,50 @@ It never turns a score of 20% or more green or yellow. Continue with a
 materially different meaning-safe hypothesis, ask the user to change F1/scope,
 or report the reproducible blocker while leaving the task open.
 
+## Optional shadow-validation on real work
+
+Real projects may be used as a private validation layer only after reading
+`references/shadow-validation.md`. This is optional and never delays delivery.
+Default to `delivery_only`: keep raw text, candidates, captures, and case JSON
+inside the private workspace and never commit them.
+
+Ask for separate consent only if aggregate research reuse is actually useful.
+Without explicit consent, do not retain or aggregate project metrics as
+research. Consent does not authorize publication; shadow-case public export is
+always disabled.
+
+Freeze original/candidate SHA, one-factor hypotheses, quality evidence,
+services, repeats, and privacy **before** reading new detector results:
+
+```bash
+python3 scripts/shadow_case.py init \
+  --case workspace/shadow/case.json --case-id real-en-001 \
+  --original workspace/original.md \
+  --language en --genre technical_report --english-level B2 \
+  --services zerogpt,scribbr,gptinf,copyleaks \
+  --privacy-mode delivery_only --evidence-tier delivery_diagnostic
+python3 scripts/shadow_case.py add-candidate \
+  --case workspace/shadow/case.json \
+  --candidate workspace/candidate-C001.md --id C001 \
+  --hypothesis-id local_editorial_mechanism \
+  --operation-summary "One bounded source-preserving editorial operation." \
+  --quality-status pass \
+  --fidelity-evidence "Exact source-unit review preserves claims and modality." \
+  --style-evidence "Candidate remains inside the source handwriting envelope." \
+  --english-level-evidence "Candidate remains at the recorded source level."
+python3 scripts/shadow_case.py freeze --case workspace/shadow/case.json
+```
+
+After freeze, use `shadow_case.py prepare-observation`, then record only
+exact-SHA terminal observations; blocked/error is not a score. Use
+`shadow_case.py summary` to compute the complete-case Pareto frontier and
+least-changed hard pass, then `shadow_case.py seal --outcome completed` or
+`stopped`. The seal binds the observation matrix and summary digest. A
+one-shot delivery case is diagnostic.
+Even a three-repeat consented case can only enter aggregate review; it cannot
+admit a production detector recipe without multi-text calibration and a new
+preregistered holdout.
+
 ## F2, F3, and F4
 
 - **F2:** break mechanical symmetry, repeated transitions, duplicate summaries,
@@ -248,9 +330,9 @@ or report the reproducible blocker while leaving the task open.
 - **F4:** distinguish shared ideas, quotation, acceptable paraphrase, and close
   paraphrase. Preserve required attribution. Do not disguise plagiarism.
 
-After any F2/F3/F4 work, run and register a new full mandatory detector round,
-even if the text digest did not change. The state machine rejects a final round
-registered before those artifacts.
+When F1 is enabled, run and register a new full mandatory detector round after
+any F2/F3/F4 work, even if the text digest did not change. Without F1, do not
+create detector evidence merely to satisfy this workflow.
 
 ## Long documents and context resets
 
@@ -272,18 +354,21 @@ whole-text completion from a sample or the current context window.
 
 ## Final reconciliation and closure
 
-After the first all-service hard pass:
+With F1, begin after the first all-service hard pass. Without F1, begin
+directly with reconciliation:
 
 1. Compare original and working side by side across every source unit.
 2. Repair any loss of meaning, facts, logic, modality, chronology, purpose,
    style handwriting, or English level.
 3. Complete F2/F3/F4 if selected.
-4. Run every mandatory detector again on the final full text.
-5. Register the final passing `detector_round` after all optional-function
-   artifacts.
+4. If F1 is enabled, run every mandatory detector again on every final
+   detector-eligible prose target.
+5. If F1 is enabled, register the final passing `detector_round` after all
+   optional-function artifacts.
 6. Remove working annotations; complete constraints review and proofreading.
-7. Register a report containing before/after scores for every service and
-   target, highlight/edit rounds, fidelity checks, changes, and limitations.
+7. Register a report containing the applicable source/structure/overlap,
+   fidelity, style, change, and limitation evidence. Include detector
+   before/after scores only when F1 was permitted and selected.
 8. Run `verify`, inspect every detail, then run `close`.
 
 ```bash

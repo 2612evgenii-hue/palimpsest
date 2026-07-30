@@ -1,0 +1,264 @@
+# Протокол исследования минимальных редакций для Palimpsest 4.0
+
+Статус: calibration phase. Версия skill остаётся `3.5.0`; результаты этого
+каталога нельзя считать правилами 4.0 до holdout-проверки.
+
+## Исследовательский вопрос
+
+Найти не «самый низкий score любой ценой», а наименьшую естественную редакцию,
+которая одновременно:
+
+1. сохраняет утверждения, числа, модальность, причинность, жанр и назначение;
+2. сохраняет исходный CEFR и авторский регистр;
+3. проходит каждый выбранный обязательный сервис;
+4. воспроизводится после повторного сканирования;
+5. переносится на тексты, не использованные при подборе правила.
+
+Коммерческие детекторы рассматриваются как меняющиеся black-box classifiers.
+Наблюдение их реакции не является доказательством авторства.
+
+## Scope сервисов
+
+Основная независимая пара:
+
+- ZeroGPT;
+- Copyleaks.
+
+Дополнительные наблюдения:
+
+- Scribbr — связанная с QuillBot/Learneo семья;
+- Sapling — отдельная research-only family для коротких EN-текстов в пределах
+  текущего guest limit; false-positive controls обязательны;
+- GPTinf — агрегатор;
+- GPTZero и QuillBot — только когда повторная проверка доступна без регистрации
+  либо пользователь явно включил их в Q3.
+
+Turnitin изучается по первичной документации, но не входит в live-матрицу:
+публичного повторяемого режима без институционального доступа нет.
+
+## Корпус и разделение
+
+Корпус зафиксирован в `corpus-manifest.json` и использует два независимых
+публичных источника с известными revision и SHA-256 каждого текста:
+
+- пары PubMed human/GPT-4 из MAGE;
+- human/DeepSeek пары из AIGC-text-bank: строгий научный abstract, формальный
+  news report, non-native student essays с исходными метками B1/B2 и
+  техническое объяснение;
+- human/DeepSeek AI-polish пары из того же pinned dataset для научного abstract
+  и формального news: они нужны как отдельный near-boundary режим, а не как
+  замена AI-native корпусу.
+
+PubMed 03–04 и news-01 зарезервированы как holdout. Остальные пары относятся к
+calibration. Для каждой AI-записи есть тематически связанный human control.
+Следующая итерация обязана добавить аналитический memo. B2 essay уже закреплён
+в baseline-scout-01; human controls продолжают сканироваться вместе с каждой
+AI/AI-polish записью.
+
+После hash-binding основного manifest новые независимые тексты добавляются
+только отдельным supplemental manifest. Holdout-02 закрепляет так две ранее
+непроверенные AI-polish пары (`arxiv_001213`, `news_004384`) и не переписывает
+корпус, на который уже ссылаются прежние preregistration-файлы.
+Holdout-03 тем же способом закрепляет три новые formal-news пары с
+материально изменёнными прямыми цитатами. Они выбраны по source fidelity до
+любого score и не использовались в calibration.
+
+Перед экспериментом source text проходит только `plain_text_v1`: NFC, LF и
+удаление хвостовых пробелов/табов на строках. Абзацы, видимые символы и
+terminal newline сохраняются. Manifest фиксирует upstream source SHA и
+canonical SHA. Это не edit-вариант и не detector strategy: одна и та же
+каноническая форма подаётся всем сервисам.
+
+Нельзя подбирать операции на holdout и затем называть тот же текст независимой
+проверкой.
+
+До подбора микроправок допустим отдельный baseline scout. Его единственная
+задача — найти calibration-тексты без потолка/пола, на которых UI способен
+показать малый эффект. Список текстов, их порядок, сервисы и числовое окно
+resolvability замораживаются до первого score. Отбор по baseline не является
+доказательством эффективности: он создаёт selection bias, поэтому последующий
+эффект всё равно обязан пройти новые тексты и независимые detector groups.
+Начиная с baseline-scout-02, новый edit experiment запускается только из
+`cross_family_window`: обе primary detector families должны одновременно
+пройти заранее замороженный AI-range, human-control и AI−human gap. Окно
+только одной семьи остаётся диагностикой и не разрешает подбирать правку.
+
+Micro-edit v2 перед кандидатами повторяет неизменённые human/AI controls обоих
+сервисов. Сдвиг любой control-ячейки больше `5 п.п.` останавливает эксперимент:
+старый baseline нельзя использовать как текущую шкалу. Кандидаты публикуются
+в minimal-first порядке; один сервис может инициировать repeats только при
+эффекте больше заранее заданного пола и отсутствии регрессии во втором.
+Confirmatory success требует улучшения больше пола в обеих семьях, `n=3` и
+same-SHA range не больше `5 п.п.` в каждой.
+
+Source-grounded correction с изменением числа или цитаты не становится
+`authorized_change` по свободному тексту агента. План обязан связать original,
+reference, candidate и literal reference excerpt отдельными SHA; builder
+проверяет excerpt в самом reference. Detector score никогда не является
+основанием удалить число, модальность или атрибуцию.
+
+До первого live-score holdout обязан иметь отдельный preregistration-файл:
+закреплённые sample/plan SHA, confirmatory factor, quality-first порядок,
+primary services, repeat policy и критерий успеха. Preregistration публикуется
+отдельным git commit; итоговый результат привязывает полный commit SHA и SHA
+самого preregistration-файла. После этого detector score не может породить
+новый вариант внутри того же holdout.
+
+## Последовательность эксперимента
+
+### 1. Baseline и шум
+
+Один и тот же полный текст проверить три раза без изменений. Для сервиса
+зафиксировать median, min/max и модель/дату, если они видимы. После каждой
+смены варианта сначала зафиксировать exact visible SHA, затем обязательно
+увидеть переход от предыдущего результата: loading/disabled-state, новый
+result id/URL или изменившийся result text. Старый terminal score, который
+остаётся на странице сразу после submit, не является новым наблюдением.
+После terminal state проверить полный кандидат повторно либо записать отдельно
+документированную DOM-нормализацию сервиса. Первый процент, появившийся до
+transition check, считать потенциально stale. Если same-SHA разброс больше
+5 процентных пунктов, вся ячейка получает instrumentation/stability flag и не
+может поддерживать admission до чистого rerun.
+
+### 2. Однофакторные естественные редакции
+
+Создавать варианты с бюджетами `0.02`, `0.05`, `0.08`, `0.12`, `0.18`.
+Каждый вариант должен менять одну заранее названную семью признаков:
+
+- удалить пустую мета-фразу или шаблонный вывод;
+- заменить обобщение конкретным уже присутствующим субъектом/действием;
+- локально перестроить одну клаузу без смены модальности;
+- исправить однообразное повторение синтаксической конструкции;
+- восстановить естественную длину предложения без добавления новой мысли;
+- вернуть исходный профессиональный термин вместо расплывчатого синонима.
+
+Подсветка detector UI — только экспериментальный фактор, не команда для
+редактирования. Для гипотезы «правка подсвеченного участка помогает» нужен
+сопоставимый вариант вне подсветки. Кандидат сначала проходит CEFR, fidelity и
+style screens; случайно просканированный rejected-кандидат сохраняется в
+журнале как non-admissible protocol deviation и не участвует в Pareto.
+
+Опечатки, невидимые символы, homoglyphs, случайная пунктуация, ложные цитаты,
+выдуманные детали и намеренное ухудшение английского запрещены. Они проверяют
+хрупкость классификатора, но не являются допустимой редакционной стратегией.
+Quality screen выполняется до live detector scan. Сохранение той же грубой
+CEFR-метки недостаточно: source-relative reading grade, sentence rhythm и
+другие declared features также должны остаться внутри envelope.
+
+### 3. Комбинации
+
+Комбинировать только однофакторные варианты, которые:
+
+- дали снижение больше измеренного шума хотя бы на двух текстах;
+- не ухудшили другой независимый detector group больше чем на 5 пунктов;
+- прошли fidelity, style и CEFR;
+- не увеличили change ratio без дополнительного эффекта.
+
+Диагностический progressive bundle без предварительно подтверждённых
+однофакторных эффектов допустим только как явно помеченный ceiling/cliff probe:
+он не участвует в допуске правила, а нужен, чтобы проверить, появляется ли
+измеримый ответ раньше, чем CEFR или style screen начинают отклонять текст.
+
+### 4. Выбор результата
+
+Использовать лексикографическую цель:
+
+1. ноль hard fidelity violations;
+2. все обязательные сервисы строго `<20%`;
+3. минимальный `doc_change_ratio`;
+4. минимальное число изменённых spans;
+5. минимальный worst-service score.
+
+Если ни один вариант не проходит, оставить F1 открытым. Не расширять бюджет
+только ради красивого среднего score.
+
+## Метрики
+
+- `doc_change_ratio` и paragraph ratio из `scripts/minimality.py`;
+- `char_change_ratio`, `edit_cost=max(word,char)` и число изменённых spans:
+  пунктуационная перестройка не может считаться нулевой правкой;
+- median/min/max score по сервису;
+- `worst_core_score` по обязательным независимым группам;
+- `delta_score / changed_percent` как эффективность, но не самостоятельная
+  цель;
+- fidelity codes, CEFR result, style distance;
+- Pareto frontier: вариант не должен быть одновременно сильнее изменён и хуже
+  по worst-service score другого варианта.
+
+## Критерий допуска правила в будущую 4.0
+
+Правило допускается в skill, только если:
+
+- calibration: эффект выше шума минимум на 4 текстах;
+- holdout: эффект сохраняется минимум в 70% проверок;
+- human controls: false-positive score в среднем не растёт;
+- отсутствуют hard fidelity и CEFR нарушения;
+- эффект наблюдается минимум на двух независимых detector groups;
+- в отчёте указаны отрицательные результаты и дата проверки.
+
+Наблюдение на одном сервисе или одном тексте остаётся гипотезой.
+
+## Evidence
+
+Каждая строка должна быть привязана к:
+
+- SHA-256 полного текста;
+- service id и independence group из registry;
+- времени проверки;
+- repeat index;
+- `post_visible_text_sha256` после завершения сканирования;
+- terminal UI state (`complete`, `blocked`, `error`);
+- raw capture с SHA-256 либо честному `capture_status=missing`;
+- точному id операции и родительского варианта.
+
+Для contenteditable-полей SHA вычисляется по реально видимому тексту сразу
+после fill и до submit. После terminal result binding вычисляется повторно,
+если DOM сохраняет исходный текст. Если сервис оборачивает предложения в spans
+или нормализует переносы, сохраняются оба значения:
+`post_visible_text_sha256` до submit и `post_result_dom_text_sha256` после
+result; преобразование описывается явно и не должно менять содержательные
+символы. Новый result/share URL или доказанный loading-state используется как
+обязательный transition signal, а не как необязательная деталь.
+
+Отсутствующий capture не превращается в доказательство. Такой результат можно
+использовать для навигации исследования, но не для release claim.
+
+Pilot с объявленным Pareto обязан проходить
+`python3 scripts/research_pilot.py --pilot <pilot.json>`: валидатор заново
+проверяет binding, повторы, quality exclusions, medians, hard pass и frontier.
+Micro-edit result обязан проходить
+`python3 scripts/research_micro.py --result <result.json>`: валидатор заново
+проверяет frozen commit/SHA, первый score, repeat policy, diagnostic scope и
+declared effect summary.
+Transition-bound holdout обязан проходить
+`python3 scripts/research_holdout.py --result <result.json>`: валидатор заново
+проверяет preregistration/commit binding, полную exact-SHA матрицу, три
+повтора, transition signals, исключённые технические попытки и вычисленный
+verdict.
+До live run standalone holdout v3 обязан проходить
+`python3 scripts/research_holdout.py --preregistration <prereg.json>`:
+валидатор сверяет calibration/corpus/plan SHA, holdout partition, candidate
+binding, quality ceiling, registry independence groups и repeat policy.
+Прерванный holdout не подаётся как completed result. Его допустимая
+falsification-часть проходит
+`python3 scripts/research_holdout.py --partial-result <partial.json>`:
+отдельный schema требует честные missing timestamp/capture limits, полный
+зафиксированный service slice, exact SHA и заново вычисляет только тот вывод,
+который логически поддерживается неполной матрицей.
+
+## Shadow-validation на реальной работе
+
+Реальный проект не становится корпусом автоматически. По умолчанию
+`delivery_only`: raw text, варианты, captures и case JSON остаются локальными,
+а aggregate research запрещён. `private_research` требует отдельного согласия
+и хранит только SHA цитаты согласия.
+
+`scripts/shadow_case.py` замораживает original/candidate SHA, hypotheses,
+quality evidence, service scope, repeat policy и privacy до новых scores.
+Один `delivery_diagnostic` case помогает выбрать вариант в текущем проекте.
+`research_candidate` требует три повтора и может попасть лишь в aggregate
+review; production admission всё равно требует calibration/holdout по
+критериям выше. Observation сначала создаётся как SHA-prefilled frozen cell,
+а terminal seal связывает digest всей matrix и пересчитанного summary.
+`completed` требует полного quality-pass coverage; `stopped` хранит конкретную
+причину. После seal mutation отклоняется.

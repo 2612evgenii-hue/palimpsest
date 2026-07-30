@@ -32,6 +32,16 @@ def unquoted_text(text: str) -> str:
     return text
 
 
+def without_reference_list(text: str) -> str:
+    """Remove a terminal bibliography headed by a standalone common heading."""
+    match = re.search(
+        r"(?im)^[ \t]*(?:references|bibliography|список\s+литературы|"
+        r"библиографический\s+список)[ \t]*$",
+        text,
+    )
+    return text[:match.start()] if match else text
+
+
 def paragraphs(text: str) -> list[str]:
     return [part.strip() for part in re.split(r"\n[ \t]*\n+", unquoted_text(text)) if part.strip()]
 
@@ -91,10 +101,20 @@ def longest_run(
     return best
 
 
-def analyze(draft: Path, sources: list[Path], ngram: int, min_run: int, ratio: float) -> dict:
+def analyze(
+    draft: Path,
+    sources: list[Path],
+    ngram: int,
+    min_run: int,
+    ratio: float,
+    exclude_reference_list: bool = False,
+) -> dict:
     index, source_meta, source_words = source_index(sources, ngram)
     findings = []
-    for paragraph_number, paragraph in enumerate(paragraphs(V.read_text(draft)), start=1):
+    draft_text = V.read_text(draft)
+    if exclude_reference_list:
+        draft_text = without_reference_list(draft_text)
+    for paragraph_number, paragraph in enumerate(paragraphs(draft_text), start=1):
         draft_words = tokens(paragraph)
         if len(draft_words) < ngram:
             continue
@@ -127,6 +147,7 @@ def analyze(draft: Path, sources: list[Path], ngram: int, min_run: int, ratio: f
             "minimum_high_risk_run_words": min_run,
             "minimum_high_risk_paragraph_ratio": ratio,
             "quoted_and_fenced_code_excluded": True,
+            "terminal_reference_list_excluded": exclude_reference_list,
         },
         "sources": source_meta,
         "high_risk_count": sum(item["risk"] == "high" for item in findings),
@@ -147,6 +168,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--ngram", type=int, default=8)
     parser.add_argument("--min-run", type=int, default=16)
     parser.add_argument("--ratio", type=float, default=0.35)
+    parser.add_argument(
+        "--exclude-reference-list",
+        action="store_true",
+        help=(
+            "exclude a terminal section headed References, Bibliography, "
+            "Список литературы, or Библиографический список"
+        ),
+    )
     parser.add_argument("--out")
     parser.add_argument("--json", action="store_true")
     return parser
@@ -166,7 +195,14 @@ def main() -> int:
     try:
         draft = V.resolve_existing(args.draft)
         sources = [V.resolve_existing(path) for path in args.source]
-        payload = analyze(draft, sources, args.ngram, args.min_run, args.ratio)
+        payload = analyze(
+            draft,
+            sources,
+            args.ngram,
+            args.min_run,
+            args.ratio,
+            exclude_reference_list=args.exclude_reference_list,
+        )
         if args.out:
             V.atomic_write_json(Path(args.out).expanduser().resolve(), payload)
     except (OSError, ValueError) as exc:

@@ -6,6 +6,7 @@ import sys
 import unittest
 
 import test_regressions
+import test_research
 import test_stress
 import v3_acceptance
 
@@ -17,6 +18,7 @@ def main() -> int:
             loader.loadTestsFromModule(v3_acceptance),
             loader.loadTestsFromModule(test_regressions),
             loader.loadTestsFromModule(test_stress),
+            loader.loadTestsFromModule(test_research),
         ]
     )
     count = suite.countTestCases()

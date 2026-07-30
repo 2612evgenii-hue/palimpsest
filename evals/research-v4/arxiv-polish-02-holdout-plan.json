@@ -1,0 +1,14 @@
+{
+  "schema": "palimpsest.variant-plan.v1",
+  "sample_id": "arxiv-polish-02-ai",
+  "original_sha256": "4a235ee71c843d5bf588f0e4b1d5a9f47ee35cb976ed59c3c5252953917d660b",
+  "reference_sha256": "5fb96a2c22f5330ec3d817c43827a9db5c88844be88fe8958fdd61016f14cb54",
+  "operations": [
+    {
+      "id": "h1-direct-claim",
+      "factor": "direct_claim_restoration",
+      "old": "By decoupling network design from strict permutation symmetry constraints, our work unlocks new pathways for graph-aware architectures without compromising computational efficiency.",
+      "new": "By moving beyond strict permutation symmetry constraints, natural graph networks support more flexible architectures without compromising computational scalability."
+    }
+  ]
+}

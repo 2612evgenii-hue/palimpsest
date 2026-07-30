@@ -1,0 +1,415 @@
+{
+  "schema": "palimpsest.live-research-pilot.v2",
+  "experiment_id": "holdout-01-pubmed-transfer",
+  "status": "completed_holdout",
+  "run_date": "2026-07-30",
+  "language": "en",
+  "genre": "scientific_abstract",
+  "target_cefr": "C2",
+  "source_as_reference": true,
+  "canonicalization": "plain_text_v1",
+  "preregistration": {
+    "path": "holdout-01-preregistration.json",
+    "sha256": "57256f089e32340c1537cbeb5054fa4fafd0de42057db75c3ca6aa297cca601a",
+    "git_commit_before_live_scores": "0adc16146030a830e5b606fea4ace4f8b975627b",
+    "status_at_commit": "frozen_before_live_scores"
+  },
+  "candidates": {
+    "p03-human-control": {
+      "source_sha256": "0b6cbb3aadd0ee29674a86068e8b4ffb3d7a686ceb925da6d6eca3c79cf2d022",
+      "canonical_sha256": "0b6cbb3aadd0ee29674a86068e8b4ffb3d7a686ceb925da6d6eca3c79cf2d022",
+      "authorship": "human",
+      "sample": "pubmed-03"
+    },
+    "p03-baseline": {
+      "source_sha256": "7b74e3305ae6549927210da439b07138c337ffa4bbdd5b5ed1e9fa764ad92f2d",
+      "canonical_sha256": "7b74e3305ae6549927210da439b07138c337ffa4bbdd5b5ed1e9fa764ad92f2d",
+      "authorship": "ai",
+      "sample": "pubmed-03",
+      "edit_cost": 0.0
+    },
+    "p03-h1-split-adaptive-mechanism": {
+      "canonical_sha256": "ffb1fc2ded7e64f81af36657a99bc4e8615acd694f257c4f4ac80e18d40a2bb1",
+      "sample": "pubmed-03",
+      "factor": "sentence_length_variation",
+      "role": "confirmatory",
+      "doc_change_ratio": 0.0038,
+      "char_change_ratio": 0.004779,
+      "changed_spans": 2,
+      "edit_cost": 0.004779,
+      "quality": {
+        "cefr": "fail_C2_drift",
+        "estimated_band": "C2",
+        "reading_grade_delta": -1.697,
+        "failed_signal": "reading_grade",
+        "fidelity": "pass",
+        "style_distance": 26.6,
+        "style_reliability": "low_short_text",
+        "status": "rejected"
+      }
+    },
+    "p03-h2-citation-first": {
+      "canonical_sha256": "1579b9927456b22da24672fdbd68498c1d89025df2e3b001a032c18bfb6f89e5",
+      "sample": "pubmed-03",
+      "factor": "evidence_order",
+      "role": "exploratory_comparator",
+      "doc_change_ratio": 0.0116,
+      "char_change_ratio": 0.006599,
+      "changed_spans": 1,
+      "edit_cost": 0.0116,
+      "quality": {
+        "cefr": "pass_C2",
+        "fidelity": "pass",
+        "style_distance": 2.9,
+        "style_reliability": "low_short_text"
+      }
+    },
+    "p03-h3-tighten-evidence-frame": {
+      "canonical_sha256": "6c61ec4c828db81069f450da2b95a8d868f3d1a8d5f26d76ce3f840bd5700ef4",
+      "sample": "pubmed-03",
+      "factor": "generic_evidence_frame",
+      "role": "exploratory_comparator",
+      "doc_change_ratio": 0.0193,
+      "char_change_ratio": 0.008998,
+      "changed_spans": 3,
+      "edit_cost": 0.0193,
+      "quality": {
+        "cefr": "pass_C2",
+        "fidelity": "pass",
+        "style_distance": 7.8,
+        "style_reliability": "low_short_text"
+      }
+    },
+    "p04-human-control": {
+      "source_sha256": "47e93e98b7508157cce6b672bfe38a5fae7183322c7a5b9da35a3cb90df5fd08",
+      "canonical_sha256": "47e93e98b7508157cce6b672bfe38a5fae7183322c7a5b9da35a3cb90df5fd08",
+      "authorship": "human",
+      "sample": "pubmed-04"
+    },
+    "p04-baseline": {
+      "source_sha256": "587beff7f65bd785fea713ad30ff6d423c31ff98fa7207d24ae5be4eb52684bb",
+      "canonical_sha256": "587beff7f65bd785fea713ad30ff6d423c31ff98fa7207d24ae5be4eb52684bb",
+      "authorship": "ai",
+      "sample": "pubmed-04",
+      "edit_cost": 0.0
+    },
+    "p04-h1-split-result-mechanism": {
+      "canonical_sha256": "509f8a3a1db8757196d710ceb3694c8177ae4e09c7dbfb9e7c77d14ed5b5abcb",
+      "sample": "pubmed-04",
+      "factor": "sentence_length_variation",
+      "role": "confirmatory",
+      "doc_change_ratio": 0.0148,
+      "char_change_ratio": 0.011797,
+      "changed_spans": 2,
+      "edit_cost": 0.0148,
+      "quality": {
+        "cefr": "fail_C2_drift",
+        "estimated_band": "C2",
+        "reading_grade_delta": -1.32,
+        "failed_signal": "reading_grade",
+        "fidelity": "pass",
+        "style_distance": 23.9,
+        "style_reliability": "low_short_text",
+        "status": "rejected"
+      }
+    },
+    "p04-h2-citation-first": {
+      "canonical_sha256": "73f0a5ea2a4096b54afd443aba9064bff752e882cad41a136ef25e7da29a54fd",
+      "sample": "pubmed-04",
+      "factor": "evidence_order",
+      "role": "exploratory_comparator",
+      "doc_change_ratio": 0.0309,
+      "char_change_ratio": 0.015647,
+      "changed_spans": 2,
+      "edit_cost": 0.0309,
+      "quality": {
+        "cefr": "pass_C2",
+        "fidelity": "pass",
+        "style_distance": 20.9,
+        "style_reliability": "low_short_text"
+      }
+    },
+    "p04-h3-remove-synthesis-marker": {
+      "canonical_sha256": "faae2d223762bb04d57be2b96d9c5c860ecff75d4e99f0103d46d92ea00d8a45",
+      "sample": "pubmed-04",
+      "factor": "synthesis_frame",
+      "role": "exploratory_comparator",
+      "doc_change_ratio": 0.005,
+      "char_change_ratio": 0.007752,
+      "changed_spans": 1,
+      "edit_cost": 0.007752,
+      "quality": {
+        "cefr": "pass_C2",
+        "fidelity": "pass",
+        "style_distance": 7.1,
+        "style_reliability": "low_short_text"
+      }
+    }
+  },
+  "observations": [
+    {
+      "candidate": "p03-human-control",
+      "service": "zerogpt",
+      "scores_pct": [0, 0, 0],
+      "post_visible_text_sha256": "0b6cbb3aadd0ee29674a86068e8b4ffb3d7a686ceb925da6d6eca3c79cf2d022",
+      "terminal_state": "complete",
+      "capture_status": "missing"
+    },
+    {
+      "candidate": "p03-baseline",
+      "service": "zerogpt",
+      "scores_pct": [100, 100, 100],
+      "post_visible_text_sha256": "7b74e3305ae6549927210da439b07138c337ffa4bbdd5b5ed1e9fa764ad92f2d",
+      "terminal_state": "complete",
+      "capture_status": "missing"
+    },
+    {
+      "candidate": "p03-human-control",
+      "service": "scribbr",
+      "scores_pct": [0, 0, 0],
+      "post_visible_text_sha256": "0b6cbb3aadd0ee29674a86068e8b4ffb3d7a686ceb925da6d6eca3c79cf2d022",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "detector_model": "v7.1.0"
+    },
+    {
+      "candidate": "p03-baseline",
+      "service": "scribbr",
+      "scores_pct": [100, 100, 100],
+      "post_visible_text_sha256": "7b74e3305ae6549927210da439b07138c337ffa4bbdd5b5ed1e9fa764ad92f2d",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "detector_model": "v7.1.0"
+    },
+    {
+      "candidate": "p03-human-control",
+      "service": "sapling",
+      "scores_pct": [96.4],
+      "post_visible_text_sha256": "0b6cbb3aadd0ee29674a86068e8b4ffb3d7a686ceb925da6d6eca3c79cf2d022",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "result_transition": "share_url_changed",
+      "evidence_role": "diagnostic_false_positive_control"
+    },
+    {
+      "candidate": "p03-baseline",
+      "service": "sapling",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "7b74e3305ae6549927210da439b07138c337ffa4bbdd5b5ed1e9fa764ad92f2d",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "result_transition": "share_url_changed",
+      "evidence_role": "diagnostic_only"
+    },
+    {
+      "candidate": "p03-h2-citation-first",
+      "service": "zerogpt",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "1579b9927456b22da24672fdbd68498c1d89025df2e3b001a032c18bfb6f89e5",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "evidence_role": "screening_only"
+    },
+    {
+      "candidate": "p03-h2-citation-first",
+      "service": "scribbr",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "1579b9927456b22da24672fdbd68498c1d89025df2e3b001a032c18bfb6f89e5",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "detector_model": "v7.1.0",
+      "evidence_role": "screening_only"
+    },
+    {
+      "candidate": "p03-h3-tighten-evidence-frame",
+      "service": "zerogpt",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "6c61ec4c828db81069f450da2b95a8d868f3d1a8d5f26d76ce3f840bd5700ef4",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "evidence_role": "screening_only"
+    },
+    {
+      "candidate": "p03-h3-tighten-evidence-frame",
+      "service": "scribbr",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "6c61ec4c828db81069f450da2b95a8d868f3d1a8d5f26d76ce3f840bd5700ef4",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "detector_model": "v7.1.0",
+      "evidence_role": "screening_only"
+    },
+    {
+      "candidate": "p04-human-control",
+      "service": "zerogpt",
+      "scores_pct": [42.9, 42.9, 42.9],
+      "post_visible_text_sha256": "47e93e98b7508157cce6b672bfe38a5fae7183322c7a5b9da35a3cb90df5fd08",
+      "terminal_state": "complete",
+      "capture_status": "missing"
+    },
+    {
+      "candidate": "p04-baseline",
+      "service": "zerogpt",
+      "scores_pct": [100, 100, 100],
+      "post_visible_text_sha256": "587beff7f65bd785fea713ad30ff6d423c31ff98fa7207d24ae5be4eb52684bb",
+      "terminal_state": "complete",
+      "capture_status": "missing"
+    },
+    {
+      "candidate": "p04-human-control",
+      "service": "scribbr",
+      "scores_pct": [0, 0, 0],
+      "post_visible_text_sha256": "47e93e98b7508157cce6b672bfe38a5fae7183322c7a5b9da35a3cb90df5fd08",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "detector_model": "v7.1.0"
+    },
+    {
+      "candidate": "p04-baseline",
+      "service": "scribbr",
+      "scores_pct": [100, 100, 100],
+      "post_visible_text_sha256": "587beff7f65bd785fea713ad30ff6d423c31ff98fa7207d24ae5be4eb52684bb",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "detector_model": "v7.1.0"
+    },
+    {
+      "candidate": "p04-human-control",
+      "service": "sapling",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "47e93e98b7508157cce6b672bfe38a5fae7183322c7a5b9da35a3cb90df5fd08",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "result_transition": "share_url_changed",
+      "evidence_role": "diagnostic_false_positive_control"
+    },
+    {
+      "candidate": "p04-baseline",
+      "service": "sapling",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "587beff7f65bd785fea713ad30ff6d423c31ff98fa7207d24ae5be4eb52684bb",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "result_transition": "share_url_changed",
+      "evidence_role": "diagnostic_only"
+    },
+    {
+      "candidate": "p04-h2-citation-first",
+      "service": "zerogpt",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "73f0a5ea2a4096b54afd443aba9064bff752e882cad41a136ef25e7da29a54fd",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "evidence_role": "screening_only"
+    },
+    {
+      "candidate": "p04-h2-citation-first",
+      "service": "scribbr",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "73f0a5ea2a4096b54afd443aba9064bff752e882cad41a136ef25e7da29a54fd",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "detector_model": "v7.1.0",
+      "evidence_role": "screening_only"
+    },
+    {
+      "candidate": "p04-h3-remove-synthesis-marker",
+      "service": "zerogpt",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "faae2d223762bb04d57be2b96d9c5c860ecff75d4e99f0103d46d92ea00d8a45",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "evidence_role": "screening_only"
+    },
+    {
+      "candidate": "p04-h3-remove-synthesis-marker",
+      "service": "scribbr",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "faae2d223762bb04d57be2b96d9c5c860ecff75d4e99f0103d46d92ea00d8a45",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "detector_model": "v7.1.0",
+      "evidence_role": "screening_only"
+    }
+  ],
+  "service_errors": [
+    {
+      "candidate": "p03-human-control",
+      "service": "copyleaks",
+      "status": "error",
+      "reason": "The public embedded UI remained in disabled loading state with 16 loading progressbars for more than 50 seconds and produced no score.",
+      "post_visible_text_sha256": "0b6cbb3aadd0ee29674a86068e8b4ffb3d7a686ceb925da6d6eca3c79cf2d022"
+    }
+  ],
+  "pareto": {
+    "primary_repeated_services": ["zerogpt", "scribbr"],
+    "minimum_repeats": 3,
+    "eligible_candidates": ["p03-baseline", "p04-baseline"],
+    "frontier": ["p03-baseline", "p04-baseline"],
+    "rows": [
+      {
+        "candidate": "p03-baseline",
+        "edit_cost": 0.0,
+        "median_scores_pct": {
+          "zerogpt": 100.0,
+          "scribbr": 100.0
+        },
+        "worst_score_pct": 100.0,
+        "hard_pass": false
+      },
+      {
+        "candidate": "p04-baseline",
+        "edit_cost": 0.0,
+        "median_scores_pct": {
+          "zerogpt": 100.0,
+          "scribbr": 100.0
+        },
+        "worst_score_pct": 100.0,
+        "hard_pass": false
+      }
+    ]
+  },
+  "holdout_transfer": {
+    "confirmatory_factor": "sentence_length_variation",
+    "required_successes": 2,
+    "successful_samples": 0,
+    "sample_results": {
+      "pubmed-03": {
+        "status": "failed_before_live_scan",
+        "reason": "H1 failed explicit C2 reading-grade envelope."
+      },
+      "pubmed-04": {
+        "status": "failed_before_live_scan",
+        "reason": "H1 failed explicit C2 reading-grade envelope."
+      }
+    },
+    "transfer_confirmed": false
+  },
+  "admission": {
+    "hard_threshold_pct": 20,
+    "confirmatory_candidate_scanned": false,
+    "confirmatory_quality_passes": 0,
+    "required_holdout_successes": 2,
+    "observed_holdout_successes": 0,
+    "rule_admitted": false,
+    "sentence_split_rule_admitted": false,
+    "comparator_rule_admitted": false
+  },
+  "findings": [
+    "The confirmatory sentence-split candidates were rejected before detector scanning on both holdout samples: they kept the coarse C2 label but lowered reading grade outside the explicit source-relative envelope.",
+    "Both AI baselines were saturated at 100% in three repeats on ZeroGPT and Scribbr.",
+    "All four preregistered quality-passing comparators remained 100% in both primary services in screening scans.",
+    "The p04 human control scored 42.9% in ZeroGPT and 0% in Scribbr; Sapling assigned 96.4% and 100% to the two human controls.",
+    "Copyleaks accepted an exact SHA-bound input but never reached a terminal result, so no score was recorded.",
+    "The calibration sentence-split effect did not pass the preregistered holdout quality contract and is not transferable as a Palimpsest rule."
+  ],
+  "limits": [
+    "Only two scientific holdout samples were tested; failure here rejects the current rule but does not characterize every possible local sentence split.",
+    "Both AI baselines were at the displayed ceiling, so primary services could not resolve small adverse or beneficial changes in comparator scores.",
+    "H1 was not sent to detector services because preregistration required rejection after a failed quality screen.",
+    "Sapling was diagnostic only because its human controls produced severe false positives.",
+    "Copyleaks did not reach a terminal state and is excluded from score comparisons.",
+    "No screenshots were retained; scored observations are DOM-only with post-terminal full-text SHA binding.",
+    "The source-as-reference style metric is low-reliability on 97–132 word texts."
+  ]
+}

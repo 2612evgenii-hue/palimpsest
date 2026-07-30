@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import json
+import struct
 import subprocess
 import sys
 import tempfile
 import unittest
+import zlib
 from pathlib import Path
 
 
@@ -23,6 +25,7 @@ SEGMENT = SCRIPTS / "segment.py"
 MEMORY = SCRIPTS / "memory.py"
 OVERLAP = SCRIPTS / "source_overlap.py"
 ENGLISH_LEVEL = SCRIPTS / "english_level.py"
+STATE = SCRIPTS / "state.py"
 sys.path.insert(0, str(SCRIPTS))
 import state as STATE_MODULE  # noqa: E402
 
@@ -122,6 +125,276 @@ class FixtureSensitivityTests(unittest.TestCase):
         codes = {item["code"] for item in data(fidelity)["findings"]}
         self.assertTrue(codes)
         self.assertLessEqual(codes, {"CLAIM_DROPPED", "CLAIM_ADDED"})
+
+
+class AcademicIntegrityContextTests(unittest.TestCase):
+    ACADEMIC_TEXT = (
+        "A dissertation submitted in partial fulfilment of the requirements "
+        "of the Degree of Bachelor of Arts at Example University. This chapter "
+        "reviews hospitality design research for supervision.\n"
+    )
+
+    def init(
+        self,
+        root: Path,
+        *,
+        flags: str,
+        context: str = "auto",
+        authorization: bool = False,
+    ) -> tuple[subprocess.CompletedProcess[str], Path]:
+        original = write(root / "original.md", self.ACADEMIC_TEXT)
+        working = write(root / "working.md", self.ACADEMIC_TEXT)
+        state = root / "STATE.json"
+        args: list[object] = [
+            "--state",
+            state,
+            "init",
+            "--original",
+            original,
+            "--working",
+            working,
+            "--flags",
+            flags,
+            "--content-context",
+            context,
+        ]
+        if authorization:
+            evidence = root / "authorization.png"
+
+            def chunk(kind: bytes, body: bytes) -> bytes:
+                crc = zlib.crc32(kind + body) & 0xFFFFFFFF
+                return (
+                    struct.pack(">I", len(body))
+                    + kind
+                    + body
+                    + struct.pack(">I", crc)
+                )
+
+            width, height = 320, 180
+            rows = b"".join(
+                b"\x00" + bytes([index % 256, 64, 128]) * width
+                for index in range(height)
+            )
+            evidence.write_bytes(
+                b"\x89PNG\r\n\x1a\n"
+                + chunk(
+                    b"IHDR",
+                    struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0),
+                )
+                + chunk(b"IDAT", zlib.compress(rows))
+                + chunk(b"IEND", b"")
+            )
+            args.extend(
+                [
+                    "--authorization-evidence",
+                    evidence,
+                    "--authorization-scope",
+                    (
+                        "Permit AI-assisted paraphrasing, stylistic rewriting, "
+                        "and detector false-positive reduction with disclosure."
+                    ),
+                ]
+            )
+        proc = run(STATE, *args)
+        return proc, state
+
+    def test_academic_assessment_blocks_f1_at_init(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            proc, _ = self.init(Path(raw), flags="F1,F3")
+            self.assertNotEqual(proc.returncode, 0)
+            self.assertIn("disabled for assessed academic work", proc.stderr)
+
+    def test_academic_assessment_allows_quality_functions_with_small_defaults(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            proc, state = self.init(Path(raw), flags="F2,F3,F4")
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            payload = json.loads(state.read_text(encoding="utf-8"))
+            self.assertEqual(
+                payload["integrity_policy"]["context"],
+                "academic_assessment",
+            )
+            self.assertFalse(
+                payload["integrity_policy"]["detector_score_optimization_allowed"]
+            )
+            self.assertEqual(payload["budgets"]["document_change_ratio"], 0.10)
+            self.assertEqual(payload["budgets"]["paragraph_change_ratio"], 0.25)
+            self.assertFalse(payload["flags"]["F1"])
+            self.assertEqual(payload["detector_policy"]["selected_services"], [])
+
+    def test_general_assertion_cannot_downgrade_strong_academic_signals(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            proc, _ = self.init(Path(raw), flags="F3", context="general")
+            self.assertNotEqual(proc.returncode, 0)
+            self.assertIn("conflicts with strong academic-assessment signals", proc.stderr)
+
+    def test_intake_cannot_enable_f1_after_academic_init(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            proc, state = self.init(Path(raw), flags="F2")
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            q1 = run(
+                STATE,
+                "--state",
+                state,
+                "intake",
+                "--question",
+                "Q1",
+                "--answer",
+                "Use the source as its own style reference.",
+                "--style-mode",
+                "source_as_reference",
+                "--english-level",
+                "infer_from_source",
+            )
+            self.assertEqual(q1.returncode, 0, q1.stderr)
+            q2 = run(
+                STATE,
+                "--state",
+                state,
+                "intake",
+                "--question",
+                "Q2",
+                "--answer",
+                "Enable F1 and F3.",
+                "--functions",
+                "F1,F3",
+            )
+            self.assertNotEqual(q2.returncode, 0)
+            self.assertIn(
+                "cannot be enabled for assessed academic work",
+                q2.stderr,
+            )
+
+    def test_authorized_academic_f1_requires_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            proc, _ = self.init(
+                Path(raw),
+                flags="F1,F3",
+                context="academic_authorized_ai_revision",
+            )
+            self.assertNotEqual(proc.returncode, 0)
+            self.assertIn("requires --authorization-evidence", proc.stderr)
+
+    def test_structurally_valid_authorization_enables_academic_f1(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            proc, state = self.init(
+                Path(raw),
+                flags="F1,F3",
+                context="academic_authorized_ai_revision",
+                authorization=True,
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            payload = json.loads(state.read_text(encoding="utf-8"))
+            policy = payload["integrity_policy"]
+            self.assertEqual(
+                policy["context"],
+                "academic_authorized_ai_revision",
+            )
+            self.assertTrue(policy["detector_score_optimization_allowed"])
+            self.assertFalse(
+                policy["authorization"]["independently_authenticated"]
+            )
+            self.assertEqual(
+                policy["authorization"]["trust"],
+                "user_supplied_unverified_external_document",
+            )
+            self.assertTrue(payload["flags"]["F1"])
+            self.assertIn("zerogpt", payload["detector_policy"]["selected_services"])
+
+    def test_authorization_mutation_is_a_g0_blocker(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            proc, state = self.init(
+                root,
+                flags="F1",
+                context="academic_authorized_ai_revision",
+                authorization=True,
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            (root / "authorization.png").write_bytes(b"changed")
+            verified = run(STATE, "--state", state, "verify")
+            self.assertNotEqual(verified.returncode, 0)
+            self.assertIn(
+                "authorization evidence is missing or changed after init",
+                verified.stdout,
+            )
+
+    def test_authorized_academic_intake_can_enable_f1(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            proc, state = self.init(
+                Path(raw),
+                flags="F3",
+                context="academic_authorized_ai_revision",
+                authorization=True,
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            q1 = run(
+                STATE,
+                "--state",
+                state,
+                "intake",
+                "--question",
+                "Q1",
+                "--answer",
+                "Use the source as its own style reference.",
+                "--style-mode",
+                "source_as_reference",
+                "--english-level",
+                "infer_from_source",
+            )
+            self.assertEqual(q1.returncode, 0, q1.stderr)
+            q2 = run(
+                STATE,
+                "--state",
+                state,
+                "intake",
+                "--question",
+                "Q2",
+                "--answer",
+                "Enable the authorized F1 and F3 functions.",
+                "--functions",
+                "F1,F3",
+            )
+            self.assertEqual(q2.returncode, 0, q2.stderr)
+
+    def test_semantic_template_expands_docx_single_newline_units(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            original = write(
+                root / "original.txt",
+                "First complete academic paragraph ends here.\n"
+                "Second complete academic paragraph ends here.\n"
+                "Third complete academic paragraph ends here.\n",
+            )
+            working = write(root / "working.txt", original.read_text())
+            state_path = root / "STATE.json"
+            proc = run(
+                STATE,
+                "--state",
+                state_path,
+                "init",
+                "--original",
+                original,
+                "--working",
+                working,
+                "--flags",
+                "F2",
+                "--content-context",
+                "general",
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            out = root / "semantic.json"
+            proc = run(
+                STATE,
+                "--state",
+                state_path,
+                "template",
+                "--kind",
+                "semantic_review",
+                "--out",
+                out,
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            self.assertEqual(len(json.loads(out.read_text())["source_units"]), 3)
 
 
 PATTERN_CASES = {
@@ -251,6 +524,39 @@ class MinimalityTests(unittest.TestCase):
             )
             self.assertEqual(result["paragraphs"]["added"], 1)
 
+    def test_docx_single_newline_paragraphs_are_not_collapsed(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            original = write(
+                root / "o.txt",
+                "First complete paragraph keeps its original academic wording.\n"
+                "Second complete paragraph keeps its original academic wording.\n"
+                "Third complete paragraph keeps its original academic wording.\n",
+            )
+            edited = write(
+                root / "e.txt",
+                "First complete paragraph keeps its original academic wording.\n"
+                "Second complete paragraph now uses revised academic wording.\n"
+                "Third complete paragraph keeps its original academic wording.\n",
+            )
+            result = data(
+                run(
+                    MINIMALITY,
+                    "--original",
+                    original,
+                    "--current",
+                    edited,
+                    "--budget",
+                    "1",
+                    "--para-budget",
+                    "1",
+                    "--json",
+                )
+            )
+            self.assertEqual(result["paragraphs"]["total"], 3)
+            self.assertEqual(result["paragraphs"]["untouched"], 2)
+            self.assertEqual(result["paragraphs"]["edited"], 1)
+
 
 class AnnotationTests(unittest.TestCase):
     def test_valid_fixture_has_no_parser_errors(self) -> None:
@@ -371,6 +677,67 @@ class StyleTests(unittest.TestCase):
 
 
 class FidelityRegressionTests(unittest.TestCase):
+    def test_word_after_year_is_not_invented_unit(self) -> None:
+        _rc, codes = self.fidelity(
+            "Allingham was discharged in 1919 but remained active.",
+            "Allingham was discharged in 1919.",
+        )
+        self.assertNotIn("UNIT_CHANGED", codes)
+
+    def test_citation_year_is_not_a_claim_number_context(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            original = write(
+                root / "o.md",
+                "The evidence supports the proposed relationship (Smith, 2020).\n",
+            )
+            edited = write(
+                root / "e.md",
+                "Smith's evidence is consistent with the proposed relationship "
+                "(Smith, 2020).\n",
+            )
+            result = data(
+                run(
+                    FIDELITY,
+                    "--original",
+                    original,
+                    "--edited",
+                    edited,
+                    "--json",
+                )
+            )
+            codes = {item["code"] for item in result["findings"]}
+            self.assertNotIn("NUMBER_CONTEXT_CHANGED", codes)
+
+    def test_reference_list_is_exact_but_not_semantic_claim_prose(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            original = write(
+                root / "o.md",
+                "The body preserves its supported claim (Smith, 2020).\n"
+                "REFERENCES\n"
+                "Smith, A. (2020). Fixed title.\n",
+            )
+            edited = write(
+                root / "e.md",
+                "The body preserves its supported claim (Smith, 2020).\n"
+                "REFERENCES\n"
+                "Smith, A. (2020). Changed title.\n",
+            )
+            result = data(
+                run(
+                    FIDELITY,
+                    "--original",
+                    original,
+                    "--edited",
+                    edited,
+                    "--json",
+                )
+            )
+            codes = {item["code"] for item in result["findings"]}
+            self.assertIn("REFERENCE_LIST_CHANGED", codes)
+            self.assertNotIn("NUMBER_CONTEXT_CHANGED", codes)
+
     def fidelity(self, original: str, edited: str) -> tuple[int, set[str]]:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
@@ -551,6 +918,168 @@ class SegmentRegressionTests(unittest.TestCase):
             for left, right in zip(mapped, mapped[1:]):
                 self.assertEqual(left["end"], right["start"])
 
+    def test_single_overlong_extracted_block_is_bounded_and_lossless(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            text = " ".join(
+                f"Sentence {index} preserves the extracted document wording."
+                for index in range(1, 161)
+            )
+            working = write(root / "working.md", text)
+            mapping = root / "SEGMENTS.json"
+            proc = run(
+                SEGMENT,
+                "map",
+                working,
+                "--out",
+                mapping,
+                "--target",
+                "120",
+                "--min",
+                "80",
+                "--max",
+                "140",
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            payload = json.loads(mapping.read_text(encoding="utf-8"))
+            self.assertGreater(len(payload["segments"]), 1)
+            self.assertTrue(
+                all(item["words"] <= 140 for item in payload["segments"])
+            )
+            rebuilt = "".join(
+                text[item["start"]:item["end"]]
+                for item in payload["segments"]
+            )
+            self.assertEqual(rebuilt, text)
+
+    def test_tiny_tail_merges_within_public_limit_tolerance(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            text = " ".join(["academic"] * 1060)
+            working = write(root / "working.txt", text)
+            mapping = root / "SEGMENTS.json"
+            proc = run(
+                SEGMENT,
+                "map",
+                working,
+                "--out",
+                mapping,
+                "--target",
+                "900",
+                "--min",
+                "700",
+                "--max",
+                "1050",
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            segments = json.loads(mapping.read_text())["segments"]
+            self.assertEqual(len(segments), 1)
+            self.assertEqual(segments[0]["words"], 1060)
+            self.assertEqual(segments[0]["start"], 0)
+            self.assertEqual(segments[0]["end"], len(text))
+
+    def test_reference_list_is_separate_and_protected(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            prose = " ".join(
+                f"Academic sentence {index} preserves the argument."
+                for index in range(1, 41)
+            )
+            references = "\n".join(
+                f"Author, A. ({2000 + index}). Fixed source title."
+                for index in range(1, 21)
+            )
+            text = prose + "\nREFERENCES\n" + references + "\n"
+            working = write(root / "working.txt", text)
+            mapping = root / "SEGMENTS.json"
+            proc = run(
+                SEGMENT,
+                "map",
+                working,
+                "--out",
+                mapping,
+                "--target",
+                "80",
+                "--min",
+                "40",
+                "--max",
+                "100",
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            segments = json.loads(mapping.read_text())["segments"]
+            bibliography = [
+                item for item in segments
+                if item["content_kind"] == "bibliography"
+            ]
+            self.assertTrue(bibliography)
+            self.assertTrue(
+                all(item["detector_eligible"] is False for item in bibliography)
+            )
+            self.assertTrue(
+                all(
+                    "REFERENCES" not in text[item["start"]:item["end"]]
+                    for item in segments
+                    if item["content_kind"] == "prose"
+                )
+            )
+
+    def test_full_detector_targets_cover_prose_not_bibliography(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            text = (
+                " ".join(
+                    f"Body sentence {index} preserves an academic claim."
+                    for index in range(1, 61)
+                )
+                + "\nREFERENCES\n"
+                + "\n".join(
+                    f"Author, A. ({2000 + index}). Fixed source title."
+                    for index in range(1, 21)
+                )
+            )
+            working = write(root / "working.txt", text)
+            mapping = root / "SEGMENTS.json"
+            proc = run(
+                SEGMENT,
+                "map",
+                working,
+                "--out",
+                mapping,
+                "--target",
+                "90",
+                "--min",
+                "50",
+                "--max",
+                "110",
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            state = {
+                "route": "longform",
+                "files": {
+                    "working": str(working),
+                    "segments": str(mapping),
+                },
+                "detector_policy": {
+                    "coverage": "full",
+                    "sample_ids": [],
+                },
+            }
+            targets, problems = STATE_MODULE.detector_targets(state)
+            payload = json.loads(mapping.read_text())
+            expected = {
+                item["id"]
+                for item in payload["segments"]
+                if item["detector_eligible"]
+            }
+            bibliography = {
+                item["id"]
+                for item in payload["segments"]
+                if item["content_kind"] == "bibliography"
+            }
+            self.assertEqual(problems, [])
+            self.assertEqual({target for target, _ in targets}, expected)
+            self.assertFalse({target for target, _ in targets} & bibliography)
+
     def test_stale_map_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             working, mapping = self.make_map(Path(raw))
@@ -691,6 +1220,41 @@ class OverlapRegressionTests(unittest.TestCase):
             proc = run(OVERLAP, "--draft", draft, "--source", source, "--json")
             self.assertEqual(proc.returncode, 0)
             self.assertEqual(data(proc)["high_risk_count"], 0)
+
+    def test_terminal_reference_list_can_be_excluded(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            source = write(root / "source.md", self.SOURCE)
+            draft = write(
+                root / "draft.md",
+                "The body contains independently written analysis.\n\n"
+                "REFERENCES\n\n"
+                f"{self.SOURCE}\n",
+            )
+            baseline = run(
+                OVERLAP,
+                "--draft",
+                draft,
+                "--source",
+                source,
+                "--json",
+            )
+            self.assertEqual(baseline.returncode, 1)
+            proc = run(
+                OVERLAP,
+                "--draft",
+                draft,
+                "--source",
+                source,
+                "--exclude-reference-list",
+                "--json",
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            result = data(proc)
+            self.assertEqual(result["high_risk_count"], 0)
+            self.assertTrue(
+                result["configuration"]["terminal_reference_list_excluded"]
+            )
 
     def test_invalid_ngram_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

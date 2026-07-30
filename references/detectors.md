@@ -1,5 +1,13 @@
 # F1 и детекторы: контракт v3.5
 
+> **Граница применения.** F1 допустим в общем контексте или в
+> `academic_authorized_ai_revision` с digest-bound изображением/PDF разрешения,
+> конкретным scope и обязательным disclosure review. Без такого evidence
+> диссертации, дипломы и иные оцениваемые работы остаются quality-only.
+> Сам файл разрешения считается user-supplied и неаутентифицированным; см.
+> [academic-integrity.md](academic-integrity.md). Результат AI-детектора не
+> доказывает авторство или нарушение.
+
 ## Содержание
 
 1. Контракт успеха
@@ -10,12 +18,14 @@
 6. Long-form
 7. Plateau и недоступность
 8. Evidence и границы доверия
+9. Реальная работа как shadow-validation
 
 ## 1. Контракт успеха
 
 При F1 автоматически действует `score_mandatory`.
 
-- hard pass: каждый обязательный сервис на каждом target даёт `score < 20%`;
+- hard pass: каждый обязательный сервис на каждом detector-eligible prose
+  target даёт `score < 20%`;
 - soft target: стремиться к `score < 15%` везде;
 - `20.0%` не проходит;
 - ни среднее, ни лучший сервис, ни голосование не заменяют проверку каждого;
@@ -26,10 +36,15 @@
 Score — текущий сигнал конкретного сервиса, а не доказательство авторства.
 Нельзя обещать прохождение будущей версии модели.
 
+Библиография, нормативные реквизиты и иные фиксированные непрозаические блоки
+остаются в 100%-ной карте документа, но получают
+`detector_eligible: false`. Их нельзя переписывать ради score. Поэтому итог
+называется **full prose coverage**, а не whole-file pass.
+
 ## 2. Выбор сервисов
 
-После выбора F1 всегда задать пользователю отдельный вопрос. Repeatable
-no-sign-up профиль для EN:
+После выбора F1 всегда задать пользователю отдельный вопрос. Стартовый
+no-account candidate profile для EN:
 
 1. [ZeroGPT](https://www.zerogpt.com/)
 2. [Scribbr AI Detector](https://www.scribbr.com/ai-detector/)
@@ -41,6 +56,13 @@ registry и предлагаются отдельно: live-проверка 202
 sign-up/guest-limit вместо повторяемого результата. Исходный профиль из шести
 сервисов сохранён как явная опция:
 `zerogpt,gptzero,scribbr,quillbot,gptinf,copyleaks`.
+
+Список — не обещание доступности. Copyleaks ранее вернул полноценный guest
+результат, но в holdout-03 остановился на `scan limit reached` до первого
+score. Поэтому registry помечает его `guest_quota_sensitive`: он остаётся
+ценным независимым кандидатом, но должен быть подтверждён capability review
+для конкретной работы. Blocked не заменяется другим сервисом без нового ответа
+пользователя на Q3.
 
 Q3 разрешает явно включить или выключить сервисы перед работой. ZeroGPT
 сохраняется как обязательный по постоянному предпочтению пользователя. Каждый
@@ -85,10 +107,29 @@ registry. Не создавать аккаунт, не платить и не о
 5. Зарегистрировать `detector_round`.
 6. Поставить inline marks в отдельной редакторской working copy.
 7. Внести минимальные правки только по меткам.
-8. Проверить fidelity, minimality, стиль и English level.
+8. До отправки кандидата проверить fidelity, minimality, стиль и
+   source-relative English level. Quality-rejected кандидат не сканировать ради
+   «красивого» score и не включать в Pareto/admission.
 9. Снова прогнать все обязательные service×target.
 
 Если первый bounded pass не достигает порога, не крутить cosmetic synonyms.
+Подсветка и публичное описание признаков сервиса — только гипотезы. Не
+превращать `sentence variation`, perplexity, predictability или «AI phrases» в
+массовый split/merge/синонимизацию без воспроизводимого cross-text эффекта.
+Так же нельзя использовать «более прямой субъект/claim» как detector-рецепт:
+калибровочный сигнал `direct_claim_restoration` не перенёсся на
+preregistered holdout. Степень прямоты меняется только по редакторской причине
+или ради точного соответствия источнику, а не ради предполагаемого score.
+Точное восстановление изменённой цитаты тоже не является detector-рецептом.
+В partial holdout-03 оно не снизило ZeroGPT ни на одном из трёх новых
+formal-news текстов: `100→100`, `49,8→51,5` и `50→50,5` по median. Copyleaks
+был blocked, поэтому полный multi-service holdout не завершён; отрицательный
+ZeroGPT transfer при этом достаточен, чтобы не переносить factor в skill.
+Цитаты всё равно исправлять по source fidelity, а не ради предполагаемого
+score.
+При baseline на отображаемом потолке 100% микроправки нельзя ранжировать как
+равно неэффективные: сервис просто не показывает разницу. Если качество уже
+дрейфует, а score остаётся на потолке, остановить этот механизм.
 После зарегистрированного failed result можно расширить edit envelope:
 
 ```bash
@@ -146,7 +187,8 @@ python3 scripts/state.py --state workspace/STATE.json artifact \
 В F1 auto-route переходит к стабильным сегментам с 1,000 слов. Рекомендуемые
 границы `400–950` слов укладываются в наименьший общий публичный word limit.
 
-- покрыть все сегменты;
+- покрыть все detector-eligible prose segments;
+- сохранить и отдельно проверить protected bibliography segments;
 - не использовать `risk_sampled`;
 - не менять границы между сервисами одного раунда;
 - привязывать score к exact segment SHA;
@@ -189,3 +231,24 @@ stale evidence, последующего изменения файла и три
 screenshot: структурная проверка не заменяет OCR или подписанный receipt.
 Поэтому capture — аудиторский след, а не криптографическое доказательство.
 Никогда не выдумывать проценты или выделенные зоны.
+
+## 9. Реальная работа как shadow-validation
+
+Реальная работа лучше синтетического текста для проверки usability и
+source-relative minimality, но она не должна становиться скрытым публичным
+корпусом. Использовать
+[shadow-validation](shadow-validation.md):
+
+- по умолчанию `delivery_only`, без research reuse;
+- отдельное согласие для private aggregate research;
+- raw text/candidates/captures никогда не коммитить;
+- original и все hypotheses заморозить до новых scores;
+- quality-rejected кандидаты не сканировать;
+- blocked/error не превращать в score;
+- Pareto считать только по полной mandatory matrix;
+- после matrix ставить terminal seal; `completed` запрещён при missing/blocked;
+- один case не допускает production-правило.
+
+`delivery_diagnostic` помогает выбрать наименее изменённый проходящий вариант
+для текущего проекта. `research_candidate` требует согласия и три повтора, но
+остаётся только кандидатом для будущего multi-text calibration/holdout.

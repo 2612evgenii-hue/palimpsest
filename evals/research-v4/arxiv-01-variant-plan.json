@@ -1,0 +1,37 @@
+{
+  "schema": "palimpsest.variant-plan.v1",
+  "sample_id": "arxiv-01-ai",
+  "original_sha256": "6e8e78879cee06a9498fe42002b5e416046493b233642ec204b47bb700ea3f77",
+  "operations": [
+    {
+      "id": "s1-additive-marker-swap",
+      "factor": "discourse_marker",
+      "old": "The code demonstrates that velocity gradients in the interstellar medium further modulate the peak separation by altering photon escape probabilities through frequency redistribution.",
+      "new": "The code demonstrates that velocity gradients in the interstellar medium also modulate the peak separation by altering photon escape probabilities through frequency redistribution."
+    },
+    {
+      "id": "s2-split-mechanism",
+      "factor": "sentence_length_variation",
+      "old": "The code demonstrates that velocity gradients in the interstellar medium further modulate the peak separation by altering photon escape probabilities through frequency redistribution.",
+      "new": "The code demonstrates that velocity gradients in the interstellar medium further modulate the peak separation. They do so by altering photon escape probabilities through frequency redistribution."
+    },
+    {
+      "id": "s3-reorder-implication",
+      "factor": "local_clause_restructure",
+      "old": "These findings necessitate systematic corrections when interpreting Lyα spectra from Lyman-break galaxies (LBGs).",
+      "new": "Interpreting Lyα spectra from Lyman-break galaxies (LBGs) therefore requires systematic corrections."
+    },
+    {
+      "id": "s4-split-scaling-relation",
+      "factor": "sentence_length_variation",
+      "old": "The study proposes a scaling relation between observed Lyα equivalent widths and intrinsic emission strengths, accounting for site-specific radiation trapping efficiencies and differential dust attenuation across sightlines.",
+      "new": "The proposed scaling relation links observed Lyα equivalent widths to intrinsic emission strengths. It accounts for site-specific radiation trapping efficiencies and differential dust attenuation across sightlines."
+    },
+    {
+      "id": "s5-replace-furthermore",
+      "factor": "discourse_marker",
+      "old": "Furthermore, the models suggest that anisotropic Lyα escape fractions could explain discrepancies in clustering measurements between LBG surveys and Lyα-selected samples.",
+      "new": "The models also suggest that anisotropic Lyα escape fractions could explain discrepancies in clustering measurements between LBG surveys and Lyα-selected samples."
+    }
+  ]
+}

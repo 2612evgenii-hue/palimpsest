@@ -37,13 +37,18 @@ python3 scripts/state.py --state workspace/STATE.json intake \
 python3 scripts/state.py --state workspace/STATE.json intake \
   --question Q3 \
   --services zerogpt,scribbr,gptinf,copyleaks \
-  --answer "Use the repeatable no-sign-up English profile." --source explicit
+  --answer "Use the no-account English candidate profile." --source explicit
 
 python3 scripts/state.py --state workspace/STATE.json intake \
   --question Q4 \
   --answer "Technical report; preserve headings, citations, claims, and B2." \
   --source explicit
 ```
+
+Стартовый список не обещает guest-доступ: Copyleaks quota-sensitive, а
+GPTZero/QuillBot могут требовать sign-up. Fresh `capability_review` решает,
+какие выбранные сервисы реально доступны; scope меняет только новый ответ
+пользователя.
 
 Проверь `goal`:
 

@@ -1,0 +1,67 @@
+{
+  "schema": "palimpsest.variant-plan.v1",
+  "sample_id": "qa-tech-01-ai",
+  "original_sha256": "291f288af76993e300921dfd71dc35ee824299f2e1c52b447776bcad3309e862",
+  "operations": [
+    {
+      "id": "s1-semicolon-to-period",
+      "factor": "sentence_boundary_punctuation",
+      "old": "Pre-industrial CO₂ levels were roughly 280 ppm; today, they exceed 420 ppm.",
+      "new": "Pre-industrial CO₂ levels were roughly 280 ppm. Today, they exceed 420 ppm."
+    },
+    {
+      "id": "s2-expand-contraction",
+      "factor": "contraction",
+      "old": "The concern isn’t that greenhouse gases exist—they’re vital—but that their rapid increase disrupts equilibrium.",
+      "new": "The concern is not that greenhouse gases exist—they are vital—but that their rapid increase disrupts equilibrium."
+    },
+    {
+      "id": "s3-remove-meta-transition",
+      "factor": "discourse_marker",
+      "old": "But here’s the catch: human activities—burning fossil fuels, deforestation, industrial processes—are boosting these gas concentrations beyond natural levels.",
+      "new": "Human activities—burning fossil fuels, deforestation, industrial processes—are boosting these gas concentrations beyond natural levels."
+    },
+    {
+      "id": "s4-list-as-including-clause",
+      "factor": "parenthetical_structure",
+      "old": "But here’s the catch: human activities—burning fossil fuels, deforestation, industrial processes—are boosting these gas concentrations beyond natural levels.",
+      "new": "But here’s the catch: human activities, including burning fossil fuels, deforestation, and industrial processes, are boosting these gas concentrations beyond natural levels."
+    },
+    {
+      "id": "s5-local-verb-substitution",
+      "factor": "lexical_substitution",
+      "old": "are boosting these gas concentrations beyond natural levels.",
+      "new": "are raising these gas concentrations beyond natural levels."
+    },
+    {
+      "id": "s6-split-model-qualification",
+      "factor": "sentence_length_variation",
+      "old": "Climate models project a 1.5°C to 4.5°C rise by 2100 if emissions continue unchecked, though uncertainties remain about feedback loops like permafrost thaw releasing more methane.",
+      "new": "Climate models project a 1.5°C to 4.5°C rise by 2100 if emissions continue unchecked. Uncertainties remain about feedback loops like permafrost thaw releasing more methane."
+    },
+    {
+      "id": "s7-remove-closing-analogy",
+      "factor": "analogy",
+      "old": "While debates persist over precise impacts, the basic physics—more greenhouse gases equal more heat retention—is as settled as the link between sunlight and sunburn.",
+      "new": "While debates persist over precise impacts, the basic physics—more greenhouse gases equal more heat retention—is settled."
+    },
+    {
+      "id": "s8-expand-question-contrast",
+      "factor": "contrast_structure",
+      "old": "The key question isn’t whether the planet will warm, but how quickly ecosystems and societies can adapt.",
+      "new": "The key question is not whether the planet will warm; it is how quickly ecosystems and societies can adapt."
+    },
+    {
+      "id": "s9-split-radiation-mechanism",
+      "factor": "sentence_length_variation",
+      "old": "Gases like carbon dioxide (CO₂) and methane absorb infrared radiation emitted by the Earth’s surface, trapping heat in the atmosphere.",
+      "new": "Gases like carbon dioxide (CO₂) and methane absorb infrared radiation emitted by the Earth’s surface. This traps heat in the atmosphere."
+    },
+    {
+      "id": "s10-direct-opening",
+      "factor": "answer_frame",
+      "old": "To understand Earth’s temperature regulation, you first need to grasp how greenhouse gases work.",
+      "new": "Earth’s temperature regulation depends on how greenhouse gases work."
+    }
+  ]
+}

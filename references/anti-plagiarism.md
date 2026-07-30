@@ -25,12 +25,16 @@
 python3 scripts/source_overlap.py \
   --draft workspace/working.md \
   --source sources/a.md --source sources/b.md \
+  --exclude-reference-list \
   --out workspace/overlap.json
 ```
 
 Экран:
 
 - исключает fenced code и явные цитаты из lexical-run поиска;
+- по явному флагу исключает терминальный раздел `References`,
+  `Bibliography`, `Список литературы` или `Библиографический список`, чтобы
+  корректная библиографическая запись не выдавала ложный high-risk match;
 - ищет совпадающие последовательности слов;
 - помечает длинные runs и высокий процент абзаца;
 - привязывает отчёт к SHA черновика и каждого источника.

@@ -1,0 +1,155 @@
+{
+  "schema": "palimpsest.live-research-pilot.v2",
+  "status": "current_calibration",
+  "observed_at": "2026-07-30",
+  "purpose": "canonical scientific-text calibration; not a release claim",
+  "sample_pair": "arxiv-01",
+  "source": {
+    "dataset": "bmbgsj/AIGC-text-bank",
+    "revision": "38d3e0e23fc9997d26929f1fecf9b46eeae567be",
+    "row_id": "arxiv_004084",
+    "genre": "scientific_abstract",
+    "canonicalization": "plain_text_v1"
+  },
+  "candidates": {
+    "human-control": {
+      "source_sha256": "ddbb5f5dadc5951e733fc33792a592c7829325164fc3109ce3be6391f1c60eb9",
+      "canonical_sha256": "ddbb5f5dadc5951e733fc33792a592c7829325164fc3109ce3be6391f1c60eb9",
+      "authorship": "human"
+    },
+    "baseline": {
+      "source_sha256": "23065d210d3ea2d28ca55c2253da6593fabefafb75eb15eb005751f6365d1933",
+      "canonical_sha256": "6e8e78879cee06a9498fe42002b5e416046493b233642ec204b47bb700ea3f77",
+      "authorship": "ai"
+    },
+    "s2-split-mechanism": {
+      "parent_canonical_sha256": "6e8e78879cee06a9498fe42002b5e416046493b233642ec204b47bb700ea3f77",
+      "canonical_sha256": "83cf635f513a275fc4a60b437cdd559d6e2a4b074f3b175d78878df9fe525568",
+      "factor": "sentence_length_variation",
+      "doc_change_ratio": 0.0073,
+      "char_change_ratio": 0.003741,
+      "changed_spans": 1,
+      "edit_cost": 0.0073,
+      "quality": {
+        "cefr": "pass_C2",
+        "fidelity": "pass",
+        "style_distance": 11.6,
+        "style_reliability": "low_short_text"
+      }
+    }
+  },
+  "services": {
+    "zerogpt": {
+      "independence_group": "zerogpt",
+      "status": "scored"
+    },
+    "scribbr": {
+      "independence_group": "quillbot-family",
+      "status": "scored",
+      "model_version": "v7.1.0"
+    },
+    "sapling": {
+      "independence_group": "sapling",
+      "status": "scored",
+      "access": "guest_free_2000_chars"
+    }
+  },
+  "observations": [
+    {
+      "candidate": "human-control",
+      "service": "zerogpt",
+      "scores_pct": [0, 0, 0],
+      "post_visible_text_sha256": "ddbb5f5dadc5951e733fc33792a592c7829325164fc3109ce3be6391f1c60eb9",
+      "terminal_state": "complete",
+      "capture_status": "missing"
+    },
+    {
+      "candidate": "baseline",
+      "service": "zerogpt",
+      "scores_pct": [25.3, 26.0, 25.3],
+      "post_visible_text_sha256": "6e8e78879cee06a9498fe42002b5e416046493b233642ec204b47bb700ea3f77",
+      "terminal_state": "complete",
+      "capture_status": "missing"
+    },
+    {
+      "candidate": "s2-split-mechanism",
+      "service": "zerogpt",
+      "scores_pct": [0, 0, 0],
+      "post_visible_text_sha256": "83cf635f513a275fc4a60b437cdd559d6e2a4b074f3b175d78878df9fe525568",
+      "terminal_state": "complete",
+      "capture_status": "missing"
+    },
+    {
+      "candidate": "human-control",
+      "service": "scribbr",
+      "scores_pct": [0, 0, 0],
+      "post_visible_text_sha256": "ddbb5f5dadc5951e733fc33792a592c7829325164fc3109ce3be6391f1c60eb9",
+      "terminal_state": "complete",
+      "capture_status": "missing"
+    },
+    {
+      "candidate": "baseline",
+      "service": "scribbr",
+      "scores_pct": [20, 20, 20],
+      "post_visible_text_sha256": "6e8e78879cee06a9498fe42002b5e416046493b233642ec204b47bb700ea3f77",
+      "terminal_state": "complete",
+      "capture_status": "missing"
+    },
+    {
+      "candidate": "s2-split-mechanism",
+      "service": "scribbr",
+      "scores_pct": [19, 19, 19],
+      "post_visible_text_sha256": "83cf635f513a275fc4a60b437cdd559d6e2a4b074f3b175d78878df9fe525568",
+      "terminal_state": "complete",
+      "capture_status": "missing"
+    },
+    {
+      "candidate": "human-control",
+      "service": "sapling",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "ddbb5f5dadc5951e733fc33792a592c7829325164fc3109ce3be6391f1c60eb9",
+      "terminal_state": "complete",
+      "result_transition": "share_url_changed",
+      "capture_status": "missing"
+    },
+    {
+      "candidate": "baseline",
+      "service": "sapling",
+      "scores_pct": [99.6],
+      "post_visible_text_sha256": "6e8e78879cee06a9498fe42002b5e416046493b233642ec204b47bb700ea3f77",
+      "terminal_state": "complete",
+      "result_transition": "share_url_changed",
+      "capture_status": "missing"
+    },
+    {
+      "candidate": "s2-split-mechanism",
+      "service": "sapling",
+      "scores_pct": [99.6],
+      "post_visible_text_sha256": "83cf635f513a275fc4a60b437cdd559d6e2a4b074f3b175d78878df9fe525568",
+      "terminal_state": "complete",
+      "result_transition": "share_url_changed",
+      "capture_status": "missing"
+    }
+  ],
+  "admission": {
+    "hard_threshold_pct": 20,
+    "observed_services": ["zerogpt", "scribbr", "sapling"],
+    "candidate": "s2-split-mechanism",
+    "passes_zerogpt_and_scribbr": true,
+    "passes_all_observed_services": false,
+    "rule_admitted": false,
+    "reason": "Sapling remained at 99.6 percent and its human control was a 100 percent false positive; cross-family transfer is not established."
+  },
+  "findings": [
+    "A one-span sentence split with 0.73 percent edit cost moved ZeroGPT below measured noise and Scribbr from the strict boundary to 19 percent.",
+    "The same candidate had no observed effect on Sapling.",
+    "Sapling assigned 100 percent to the paired human scientific abstract, demonstrating a severe domain-specific false positive in this sample.",
+    "Pre-scan contenteditable identity was transient on Sapling; only post-terminal canonical SHA is admissible.",
+    "The candidate is a useful calibration hypothesis, not a Palimpsest rule."
+  ],
+  "limits": [
+    "Sapling has one retained terminal-bound observation per candidate; timed-out repeats are excluded.",
+    "No raw screenshot capture was retained.",
+    "One scientific pair cannot establish genre transfer or holdout performance."
+  ]
+}

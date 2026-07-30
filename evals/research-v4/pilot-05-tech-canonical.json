@@ -1,0 +1,618 @@
+{
+  "schema": "palimpsest.live-research-pilot.v2",
+  "experiment_id": "pilot-05-tech-canonical",
+  "status": "current_calibration",
+  "run_date": "2026-07-30",
+  "language": "en",
+  "genre": "technical_explanation",
+  "topic": "greenhouse gases and climate response",
+  "source_as_reference": true,
+  "target_cefr": "C1",
+  "canonicalization": "plain_text_v1",
+  "corpus": {
+    "dataset": "bmbgsj/AIGC-text-bank",
+    "revision": "38d3e0e23fc9997d26929f1fecf9b46eeae567be",
+    "source_file": "ai_native/ai_data/deepseek.jsonl",
+    "row_id": "qa_000958",
+    "topic_pair": "qa-tech-01",
+    "pairing": "same row: text=human, text_ai=AI; semantically aligned and length matched by the dataset authors"
+  },
+  "candidates": {
+    "human-control": {
+      "source_sha256": "23647552b6146b0914beccb38abc02565a56a485881836df4adc947e27b593b4",
+      "canonical_sha256": "23647552b6146b0914beccb38abc02565a56a485881836df4adc947e27b593b4",
+      "authorship": "human"
+    },
+    "baseline": {
+      "source_sha256": "ce05ac1fe2e9a0ab59907d42594b41af6f739da38b849b1b8fb9781053108963",
+      "canonical_sha256": "291f288af76993e300921dfd71dc35ee824299f2e1c52b447776bcad3309e862",
+      "authorship": "ai",
+      "edit_cost": 0.0
+    },
+    "s1-semicolon-to-period": {
+      "canonical_sha256": "3e9e653bbf9153754ad2077e28ba8f908821244ffe77f777cc61594f39b7a373",
+      "factor": "sentence_boundary_punctuation",
+      "doc_change_ratio": 0.0,
+      "char_change_ratio": 0.001487,
+      "changed_spans": 2,
+      "edit_cost": 0.001487,
+      "quality": {
+        "cefr": "pass_C1",
+        "complexity_delta": -0.264,
+        "fidelity": "pass",
+        "style_distance": 14.2,
+        "style_reliability": "low_short_text"
+      }
+    },
+    "s2-expand-contraction": {
+      "canonical_sha256": "460d46b7f4f7e4668e4cf0812554e5ca90396827f85a72c6b73d98b7cdc6453c",
+      "factor": "contraction",
+      "doc_change_ratio": 0.0155,
+      "char_change_ratio": 0.002229,
+      "changed_spans": 3,
+      "edit_cost": 0.0155,
+      "quality": {
+        "cefr": "pass_C1",
+        "complexity_delta": -0.013,
+        "fidelity": "fail_NEGATION_CHANGED",
+        "style_distance": 3.7,
+        "style_reliability": "low_short_text",
+        "status": "rejected"
+      }
+    },
+    "s3-remove-meta-transition": {
+      "canonical_sha256": "d162e2aff1efa8a5476f1b0e22c09157af9554c619ba2a8d39570d79e1dedb25",
+      "factor": "discourse_marker",
+      "doc_change_ratio": 0.0105,
+      "char_change_ratio": 0.008996,
+      "changed_spans": 1,
+      "edit_cost": 0.0105,
+      "quality": {
+        "cefr": "pass_C1",
+        "complexity_delta": 0.002,
+        "fidelity": "pass",
+        "style_distance": 5.6,
+        "style_reliability": "low_short_text"
+      }
+    },
+    "s4-list-as-including-clause": {
+      "canonical_sha256": "0efad9f478fec0e7cbd286f7f6a388d223c59c60566b3443ebf2c22d9cdba88b",
+      "factor": "parenthetical_structure",
+      "doc_change_ratio": 0.0052,
+      "char_change_ratio": 0.007391,
+      "changed_spans": 3,
+      "edit_cost": 0.007391,
+      "quality": {
+        "cefr": "pass_C1",
+        "complexity_delta": 0.052,
+        "fidelity": "pass",
+        "style_distance": 7.8,
+        "style_reliability": "low_short_text"
+      }
+    },
+    "s5-local-verb-substitution": {
+      "canonical_sha256": "a90d24666f9908446a3608e0234855088d20cb252b9f428ced14c2695c06ebe0",
+      "factor": "lexical_substitution",
+      "doc_change_ratio": 0.0052,
+      "char_change_ratio": 0.002603,
+      "changed_spans": 2,
+      "edit_cost": 0.0052,
+      "quality": {
+        "cefr": "pass_C1",
+        "complexity_delta": -0.01,
+        "fidelity": "pass",
+        "style_distance": 0.0,
+        "style_reliability": "low_short_text"
+      }
+    },
+    "s6-split-model-qualification": {
+      "canonical_sha256": "a099dab777d8c5e2164e3f224ffba04e6d43711163c22d0f374d7a36416f2e26",
+      "factor": "sentence_length_variation",
+      "doc_change_ratio": 0.0026,
+      "char_change_ratio": 0.0041,
+      "changed_spans": 2,
+      "edit_cost": 0.0041,
+      "quality": {
+        "cefr": "pass_C1",
+        "complexity_delta": -0.265,
+        "fidelity": "pass",
+        "style_distance": 4.7,
+        "style_reliability": "low_short_text"
+      }
+    },
+    "s7-remove-closing-analogy": {
+      "canonical_sha256": "c404f8da8a8319175f3ea5693b1436933d33758a747e35cb1c8eb0c060b0034e",
+      "factor": "analogy",
+      "doc_change_ratio": 0.0212,
+      "char_change_ratio": 0.016629,
+      "changed_spans": 2,
+      "edit_cost": 0.0212,
+      "quality": {
+        "cefr": "pass_C1",
+        "complexity_delta": -0.033,
+        "fidelity": "pass",
+        "style_distance": 11.4,
+        "style_reliability": "low_short_text"
+      }
+    },
+    "s8-expand-question-contrast": {
+      "canonical_sha256": "ca110bbb0805fc3849787ef034c2ec007670511bb8dfb8dd36737b264f86892b",
+      "factor": "contrast_structure",
+      "doc_change_ratio": 0.0155,
+      "char_change_ratio": 0.004085,
+      "changed_spans": 5,
+      "edit_cost": 0.0155,
+      "quality": {
+        "cefr": "pass_C1",
+        "complexity_delta": -0.013,
+        "fidelity": "fail_NEGATION_CHANGED",
+        "style_distance": 4.9,
+        "style_reliability": "low_short_text",
+        "status": "rejected"
+      }
+    },
+    "s9-split-radiation-mechanism": {
+      "canonical_sha256": "b0facfac07b1a946f7401532471da413af20380b4c934ed76ea95c569ee2d162",
+      "factor": "sentence_length_variation",
+      "doc_change_ratio": 0.0078,
+      "char_change_ratio": 0.004458,
+      "changed_spans": 2,
+      "edit_cost": 0.0078,
+      "quality": {
+        "cefr": "pass_C1",
+        "complexity_delta": -0.31,
+        "fidelity": "pass",
+        "style_distance": 10.8,
+        "style_reliability": "low_short_text"
+      }
+    },
+    "s10-direct-opening": {
+      "canonical_sha256": "507441b42a25b59abc06e03e6baea6649205179c641a4207240b55513d45862b",
+      "factor": "answer_frame",
+      "doc_change_ratio": 0.0236,
+      "char_change_ratio": 0.016529,
+      "changed_spans": 5,
+      "edit_cost": 0.0236,
+      "quality": {
+        "cefr": "pass_C1",
+        "complexity_delta": -0.001,
+        "fidelity": "pass",
+        "style_distance": 13.5,
+        "style_reliability": "low_short_text"
+      }
+    },
+    "p2-punctuation-and-verb": {
+      "canonical_sha256": "9f612201f8b32c8c3b5ba9aa55b7f71b094b8efbd8e2ccef5c5c9fbf949ed919",
+      "factor": "progressive_bundle",
+      "replacement_count": 2,
+      "doc_change_ratio": 0.0052,
+      "char_change_ratio": 0.004091,
+      "changed_spans": 4,
+      "edit_cost": 0.0052,
+      "quality": {
+        "cefr": "pass_C1",
+        "complexity_delta": -0.274,
+        "fidelity": "pass",
+        "style_distance": 14.2,
+        "style_reliability": "low_short_text"
+      }
+    },
+    "p4-plus-two-splits": {
+      "canonical_sha256": "51d77ccb3f9b02c999bdff778c968d5f48a27b8d1f91ccf5fe99332dc7d61fcb",
+      "factor": "progressive_bundle",
+      "replacement_count": 4,
+      "doc_change_ratio": 0.0155,
+      "char_change_ratio": 0.012668,
+      "changed_spans": 8,
+      "edit_cost": 0.0155,
+      "quality": {
+        "cefr": "fail_C1_drift",
+        "complexity_delta": -0.735,
+        "fidelity": "pass",
+        "style_distance": 22.6,
+        "style_reliability": "low_short_text",
+        "status": "rejected"
+      }
+    },
+    "p6-plus-frame-removals": {
+      "canonical_sha256": "988c6de61397d74726de8ddd04bf5ad6ed06894e86c71255c2c3d236b9688f47",
+      "factor": "progressive_bundle",
+      "replacement_count": 6,
+      "doc_change_ratio": 0.0504,
+      "char_change_ratio": 0.038724,
+      "changed_spans": 14,
+      "edit_cost": 0.0504,
+      "quality": {
+        "cefr": "fail_C1_drift",
+        "complexity_delta": -0.702,
+        "fidelity": "pass",
+        "style_distance": 36.3,
+        "style_reliability": "low_short_text",
+        "status": "rejected"
+      }
+    },
+    "p7-plus-analogy-removal": {
+      "canonical_sha256": "4de699206732b3bfea5f8856b7a1c4024c48e7b492e771a24afe514884531f91",
+      "factor": "progressive_bundle",
+      "replacement_count": 7,
+      "doc_change_ratio": 0.0732,
+      "char_change_ratio": 0.056371,
+      "changed_spans": 16,
+      "edit_cost": 0.0732,
+      "quality": {
+        "cefr": "fail_C1_drift",
+        "complexity_delta": -0.699,
+        "fidelity": "pass",
+        "style_distance": 34.5,
+        "style_reliability": "low_short_text",
+        "status": "rejected"
+      }
+    }
+  },
+  "observations": [
+    {
+      "candidate": "human-control",
+      "service": "zerogpt",
+      "scores_pct": [38, 38, 38],
+      "post_visible_text_sha256": "23647552b6146b0914beccb38abc02565a56a485881836df4adc947e27b593b4",
+      "terminal_state": "complete",
+      "capture_status": "missing"
+    },
+    {
+      "candidate": "baseline",
+      "service": "zerogpt",
+      "scores_pct": [100, 100, 100],
+      "post_visible_text_sha256": "291f288af76993e300921dfd71dc35ee824299f2e1c52b447776bcad3309e862",
+      "terminal_state": "complete",
+      "capture_status": "missing"
+    },
+    {
+      "candidate": "human-control",
+      "service": "scribbr",
+      "scores_pct": [0, 0, 0],
+      "post_visible_text_sha256": "23647552b6146b0914beccb38abc02565a56a485881836df4adc947e27b593b4",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "detector_model": "v7.1.0"
+    },
+    {
+      "candidate": "baseline",
+      "service": "scribbr",
+      "scores_pct": [100, 100, 100],
+      "post_visible_text_sha256": "291f288af76993e300921dfd71dc35ee824299f2e1c52b447776bcad3309e862",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "detector_model": "v7.1.0"
+    },
+    {
+      "candidate": "human-control",
+      "service": "sapling",
+      "scores_pct": [99.1],
+      "post_visible_text_sha256": "23647552b6146b0914beccb38abc02565a56a485881836df4adc947e27b593b4",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "evidence_role": "diagnostic_false_positive_control"
+    },
+    {
+      "candidate": "baseline",
+      "service": "sapling",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "291f288af76993e300921dfd71dc35ee824299f2e1c52b447776bcad3309e862",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "evidence_role": "diagnostic_only"
+    },
+    {
+      "candidate": "s1-semicolon-to-period",
+      "service": "zerogpt",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "3e9e653bbf9153754ad2077e28ba8f908821244ffe77f777cc61594f39b7a373",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "evidence_role": "screening_only"
+    },
+    {
+      "candidate": "s1-semicolon-to-period",
+      "service": "scribbr",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "3e9e653bbf9153754ad2077e28ba8f908821244ffe77f777cc61594f39b7a373",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "detector_model": "v7.1.0",
+      "evidence_role": "screening_only"
+    },
+    {
+      "candidate": "s3-remove-meta-transition",
+      "service": "zerogpt",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "d162e2aff1efa8a5476f1b0e22c09157af9554c619ba2a8d39570d79e1dedb25",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "evidence_role": "screening_only"
+    },
+    {
+      "candidate": "s3-remove-meta-transition",
+      "service": "scribbr",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "d162e2aff1efa8a5476f1b0e22c09157af9554c619ba2a8d39570d79e1dedb25",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "detector_model": "v7.1.0",
+      "evidence_role": "screening_only"
+    },
+    {
+      "candidate": "s4-list-as-including-clause",
+      "service": "zerogpt",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "0efad9f478fec0e7cbd286f7f6a388d223c59c60566b3443ebf2c22d9cdba88b",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "evidence_role": "screening_only"
+    },
+    {
+      "candidate": "s4-list-as-including-clause",
+      "service": "scribbr",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "0efad9f478fec0e7cbd286f7f6a388d223c59c60566b3443ebf2c22d9cdba88b",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "detector_model": "v7.1.0",
+      "evidence_role": "screening_only"
+    },
+    {
+      "candidate": "s5-local-verb-substitution",
+      "service": "zerogpt",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "a90d24666f9908446a3608e0234855088d20cb252b9f428ced14c2695c06ebe0",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "evidence_role": "screening_only"
+    },
+    {
+      "candidate": "s5-local-verb-substitution",
+      "service": "scribbr",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "a90d24666f9908446a3608e0234855088d20cb252b9f428ced14c2695c06ebe0",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "detector_model": "v7.1.0",
+      "evidence_role": "screening_only"
+    },
+    {
+      "candidate": "s6-split-model-qualification",
+      "service": "zerogpt",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "a099dab777d8c5e2164e3f224ffba04e6d43711163c22d0f374d7a36416f2e26",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "evidence_role": "screening_only"
+    },
+    {
+      "candidate": "s6-split-model-qualification",
+      "service": "scribbr",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "a099dab777d8c5e2164e3f224ffba04e6d43711163c22d0f374d7a36416f2e26",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "detector_model": "v7.1.0",
+      "evidence_role": "screening_only"
+    },
+    {
+      "candidate": "s7-remove-closing-analogy",
+      "service": "zerogpt",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "c404f8da8a8319175f3ea5693b1436933d33758a747e35cb1c8eb0c060b0034e",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "evidence_role": "screening_only"
+    },
+    {
+      "candidate": "s7-remove-closing-analogy",
+      "service": "scribbr",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "c404f8da8a8319175f3ea5693b1436933d33758a747e35cb1c8eb0c060b0034e",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "detector_model": "v7.1.0",
+      "evidence_role": "screening_only"
+    },
+    {
+      "candidate": "s9-split-radiation-mechanism",
+      "service": "zerogpt",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "b0facfac07b1a946f7401532471da413af20380b4c934ed76ea95c569ee2d162",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "evidence_role": "screening_only"
+    },
+    {
+      "candidate": "s9-split-radiation-mechanism",
+      "service": "scribbr",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "b0facfac07b1a946f7401532471da413af20380b4c934ed76ea95c569ee2d162",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "detector_model": "v7.1.0",
+      "evidence_role": "screening_only"
+    },
+    {
+      "candidate": "s10-direct-opening",
+      "service": "zerogpt",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "507441b42a25b59abc06e03e6baea6649205179c641a4207240b55513d45862b",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "evidence_role": "screening_only"
+    },
+    {
+      "candidate": "s10-direct-opening",
+      "service": "scribbr",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "507441b42a25b59abc06e03e6baea6649205179c641a4207240b55513d45862b",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "detector_model": "v7.1.0",
+      "evidence_role": "screening_only"
+    },
+    {
+      "candidate": "p2-punctuation-and-verb",
+      "service": "zerogpt",
+      "scores_pct": [100, 100, 100],
+      "post_visible_text_sha256": "9f612201f8b32c8c3b5ba9aa55b7f71b094b8efbd8e2ccef5c5c9fbf949ed919",
+      "terminal_state": "complete",
+      "capture_status": "missing"
+    },
+    {
+      "candidate": "p2-punctuation-and-verb",
+      "service": "scribbr",
+      "scores_pct": [100, 100, 100],
+      "post_visible_text_sha256": "9f612201f8b32c8c3b5ba9aa55b7f71b094b8efbd8e2ccef5c5c9fbf949ed919",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "detector_model": "v7.1.0"
+    },
+    {
+      "candidate": "p2-punctuation-and-verb",
+      "service": "sapling",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "9f612201f8b32c8c3b5ba9aa55b7f71b094b8efbd8e2ccef5c5c9fbf949ed919",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "evidence_role": "diagnostic_only"
+    },
+    {
+      "candidate": "p4-plus-two-splits",
+      "service": "zerogpt",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "51d77ccb3f9b02c999bdff778c968d5f48a27b8d1f91ccf5fe99332dc7d61fcb",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "evidence_role": "quality_rejected_exploratory"
+    },
+    {
+      "candidate": "p4-plus-two-splits",
+      "service": "scribbr",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "51d77ccb3f9b02c999bdff778c968d5f48a27b8d1f91ccf5fe99332dc7d61fcb",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "detector_model": "v7.1.0",
+      "evidence_role": "quality_rejected_exploratory"
+    },
+    {
+      "candidate": "p6-plus-frame-removals",
+      "service": "zerogpt",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "988c6de61397d74726de8ddd04bf5ad6ed06894e86c71255c2c3d236b9688f47",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "evidence_role": "quality_rejected_exploratory"
+    },
+    {
+      "candidate": "p6-plus-frame-removals",
+      "service": "scribbr",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "988c6de61397d74726de8ddd04bf5ad6ed06894e86c71255c2c3d236b9688f47",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "detector_model": "v7.1.0",
+      "evidence_role": "quality_rejected_exploratory"
+    },
+    {
+      "candidate": "p7-plus-analogy-removal",
+      "service": "zerogpt",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "4de699206732b3bfea5f8856b7a1c4024c48e7b492e771a24afe514884531f91",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "evidence_role": "quality_rejected_exploratory"
+    },
+    {
+      "candidate": "p7-plus-analogy-removal",
+      "service": "scribbr",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "4de699206732b3bfea5f8856b7a1c4024c48e7b492e771a24afe514884531f91",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "detector_model": "v7.1.0",
+      "evidence_role": "quality_rejected_exploratory"
+    },
+    {
+      "candidate": "p7-plus-analogy-removal",
+      "service": "sapling",
+      "scores_pct": [100],
+      "post_visible_text_sha256": "4de699206732b3bfea5f8856b7a1c4024c48e7b492e771a24afe514884531f91",
+      "terminal_state": "complete",
+      "capture_status": "missing",
+      "evidence_role": "quality_rejected_exploratory"
+    }
+  ],
+  "zerogpt_highlight_map": {
+    "baseline_marked_sentences": 11,
+    "baseline_total_sentences": 11,
+    "localization_available": false,
+    "reason": "Every sentence was marked, so the map could not identify a narrower edit target."
+  },
+  "blocked_services": [
+    {
+      "service": "copyleaks",
+      "candidate": "human-control",
+      "status": "blocked",
+      "reason": "Public embedded UI returned 'Oops, scan limit reached…' after an exact pre-submit SHA check.",
+      "post_visible_text_sha256": "23647552b6146b0914beccb38abc02565a56a485881836df4adc947e27b593b4"
+    }
+  ],
+  "pareto": {
+    "primary_repeated_services": ["zerogpt", "scribbr"],
+    "minimum_repeats": 3,
+    "eligible_candidates": ["baseline", "p2-punctuation-and-verb"],
+    "frontier": ["baseline"],
+    "rows": [
+      {
+        "candidate": "baseline",
+        "edit_cost": 0.0,
+        "median_scores_pct": {
+          "zerogpt": 100.0,
+          "scribbr": 100.0
+        },
+        "worst_score_pct": 100.0,
+        "hard_pass": false
+      },
+      {
+        "candidate": "p2-punctuation-and-verb",
+        "edit_cost": 0.0052,
+        "median_scores_pct": {
+          "zerogpt": 100.0,
+          "scribbr": 100.0
+        },
+        "worst_score_pct": 100.0,
+        "hard_pass": false
+      }
+    ]
+  },
+  "admission": {
+    "hard_threshold_pct": 20,
+    "passes_all_observed_services": false,
+    "rule_admitted": false,
+    "safe_micro_edit_supported": false,
+    "progressive_bundle_supported": false,
+    "zerogpt_highlight_map_supported_as_causal_edit_guide": false
+  },
+  "findings": [
+    "Eight quality-passing one-factor edits with edit_cost 0.001487 to 0.0236 all remained at 100% in both ZeroGPT and Scribbr.",
+    "The quality-passing two-edit bundle cost 0.0052 and remained 100% in three repeats on both primary services.",
+    "Progressive bundles up to edit_cost 0.0732 also remained 100% in both primary services, but bundles from four edits onward failed the C1 drift screen; the six- and seven-edit bundles also moved style distance above 30.",
+    "ZeroGPT highlighted all 11 baseline sentences, so its highlight map supplied no location-specific causal hypothesis on this sample.",
+    "The human control scored 38% in ZeroGPT, 0% in Scribbr, and 99.1% in Sapling. Detector outputs cannot be treated as ground-truth authorship labels.",
+    "No detector-facing editing rule is admitted from this pilot. The result supports stopping escalation when quality begins to drift without a measured score response."
+  ],
+  "limits": [
+    "One 191-word AI text and its 192-word human control cannot establish a genre-wide or model-wide rule.",
+    "ZeroGPT and Scribbr were saturated at 100%, so this sample could not resolve score changes smaller than their displayed ceiling.",
+    "Sapling was diagnostic only because it assigned 99.1% to the human control.",
+    "Copyleaks was blocked by the public guest scan limit; no Copyleaks score was recorded or inferred.",
+    "No screenshots were retained. Evidence is bound to exact post-terminal visible-text SHA-256 values, but remains DOM-only.",
+    "Style-distance reliability is low for a 193-word source reference.",
+    "The deterministic fidelity pass is a screen, not proof of semantic equivalence."
+  ]
+}

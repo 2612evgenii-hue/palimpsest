@@ -1,0 +1,123 @@
+{
+  "schema": "palimpsest.research-corpus.v3",
+  "canonicalization": {
+    "id": "plain_text_v1",
+    "rules": [
+      "Unicode NFC",
+      "CRLF and CR become LF",
+      "trailing spaces and tabs are removed from each line",
+      "visible prose, paragraph breaks, and terminal newline state are preserved"
+    ]
+  },
+  "datasets": {
+    "aigc-text-bank-polish-deepseek": {
+      "id": "bmbgsj/AIGC-text-bank",
+      "revision": "38d3e0e23fc9997d26929f1fecf9b46eeae567be",
+      "license": "cc-by-nc-sa-4.0",
+      "source_url": "https://huggingface.co/datasets/bmbgsj/AIGC-text-bank",
+      "retrieval": {
+        "type": "jsonl_range",
+        "file_path": "ai_polish/deepseek.jsonl"
+      }
+    }
+  },
+  "samples": [
+    {
+      "id": "news-quote-01-human",
+      "dataset": "aigc-text-bank-polish-deepseek",
+      "row_id": "news_001729",
+      "range_start": 0,
+      "range_length": 2000000,
+      "field": "text",
+      "model": "DeepSeek",
+      "authorship": "human",
+      "genre": "formal_news",
+      "topic_pair": "news-quote-01",
+      "partition": "holdout",
+      "word_count": 236,
+      "sha256": "420224f24c38443a86b260a96fe53b5ced8b575b6cffd43a9c5aa3c059c5e198"
+    },
+    {
+      "id": "news-quote-01-ai",
+      "dataset": "aigc-text-bank-polish-deepseek",
+      "row_id": "news_001729",
+      "range_start": 0,
+      "range_length": 2000000,
+      "field": "text_ai",
+      "model": "DeepSeek",
+      "authorship": "ai",
+      "generation_mode": "ai_polish",
+      "genre": "formal_news",
+      "topic_pair": "news-quote-01",
+      "partition": "holdout",
+      "word_count": 248,
+      "sha256": "f1999e4a81dc0411d3268befb3c66140c2f8d3db9b30213a3c431c625b1330a8",
+      "canonical_sha256": "29a5935f71c3de89241b45664099aa79af931ce6fb39d1448aed25cdd2bdceb3"
+    },
+    {
+      "id": "news-quote-02-human",
+      "dataset": "aigc-text-bank-polish-deepseek",
+      "row_id": "news_001021",
+      "range_start": 0,
+      "range_length": 2000000,
+      "field": "text",
+      "model": "DeepSeek",
+      "authorship": "human",
+      "genre": "formal_news",
+      "topic_pair": "news-quote-02",
+      "partition": "holdout",
+      "word_count": 299,
+      "sha256": "4bfcad758cf4ab05098c5e6ed463d3baff7c6db24f7837a2eb505758dec41855",
+      "canonical_sha256": "d43be99d347369f058521f2d94db984f501d4a56a5083bbd90364478bf51e1b9"
+    },
+    {
+      "id": "news-quote-02-ai",
+      "dataset": "aigc-text-bank-polish-deepseek",
+      "row_id": "news_001021",
+      "range_start": 0,
+      "range_length": 2000000,
+      "field": "text_ai",
+      "model": "DeepSeek",
+      "authorship": "ai",
+      "generation_mode": "ai_polish",
+      "genre": "formal_news",
+      "topic_pair": "news-quote-02",
+      "partition": "holdout",
+      "word_count": 276,
+      "sha256": "57b443d9459509b743829d4eec09590513b0b60674f4f9bc3cc419177a9384bb",
+      "canonical_sha256": "c1e57cc175248abfdf3fdfe89f162e08c2597edbf71f8af7a7064c2a35d66e1a"
+    },
+    {
+      "id": "news-quote-03-human",
+      "dataset": "aigc-text-bank-polish-deepseek",
+      "row_id": "news_003239",
+      "range_start": 0,
+      "range_length": 2000000,
+      "field": "text",
+      "model": "DeepSeek",
+      "authorship": "human",
+      "genre": "formal_news",
+      "topic_pair": "news-quote-03",
+      "partition": "holdout",
+      "word_count": 408,
+      "sha256": "bb36bf1d2fbb881b6ab2e7cffea9aaab6991894130e7c305da60b62ae8599def"
+    },
+    {
+      "id": "news-quote-03-ai",
+      "dataset": "aigc-text-bank-polish-deepseek",
+      "row_id": "news_003239",
+      "range_start": 0,
+      "range_length": 2000000,
+      "field": "text_ai",
+      "model": "DeepSeek",
+      "authorship": "ai",
+      "generation_mode": "ai_polish",
+      "genre": "formal_news",
+      "topic_pair": "news-quote-03",
+      "partition": "holdout",
+      "word_count": 356,
+      "sha256": "7d639c047acdc86ded6e82895d4a15162d2ba67f1fb3d6d98b92932bb65fbcbd",
+      "canonical_sha256": "2498ccc627e1018e9248460c8f37b5e5470497e5d361423e916d9ad19c440df7"
+    }
+  ]
+}

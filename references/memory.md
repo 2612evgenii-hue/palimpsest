@@ -68,10 +68,14 @@ next → pack ID → прочитать стыки → правка → sync →
 
 ## Detector coverage
 
-`full` — каждый текущий сегмент имеет результаты каждого выбранного сервиса.
+`full` — каждый текущий `detector_eligible` prose segment имеет результаты
+каждого выбранного сервиса. Protected bibliography segments остаются в
+100%-ной карте и проходят citation/fidelity checks, но не переписываются ради
+classifier score.
 
-При F1 `score_mandatory` разрешён только `full`: каждый текущий сегмент имеет
-результат каждого обязательного сервиса. Worst segment определяет pass сервиса.
+При F1 `score_mandatory` разрешён только `full`: каждый текущий prose target
+имеет результат каждого обязательного сервиса. Worst prose segment определяет
+pass сервиса. В отчёте это называется full prose coverage, не whole-file pass.
 
 `risk_sampled` может использоваться только вне score-mandatory для отдельной
 диагностики. Тогда он включает:

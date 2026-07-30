@@ -1,0 +1,193 @@
+{
+  "schema": "palimpsest.micro-edit-preregistration.v1",
+  "experiment_id": "micro-01-source-directness",
+  "status": "frozen_before_live_scores",
+  "frozen_at": "2026-07-30T20:04:42+03:00",
+  "purpose": "Test whether three natural source-preserving micro-edit factors reduce a resolvable detector score without sacrificing fidelity, strict genre, source-relative C2, or style.",
+  "baseline_binding": {
+    "path": "baseline-scout-01-result.json",
+    "sha256": "ea491aa12392f4d48167ed43d1c129b025940567c4be14f88a488a9ff5edd80d",
+    "git_commit": "1d76a44a7123a22cd5ecefd47abd13129659c5fe",
+    "selected_pairs": ["arxiv-polish-01", "news-polish-01"]
+  },
+  "plans": [
+    {
+      "sample": "arxiv-polish-01",
+      "path": "arxiv-polish-01-micro-plan.json",
+      "sha256": "a72e38568565e9fc8fd4540766b386db320780fbae1af932027d81a2f2b9d648",
+      "original_sha256": "49ce9ed9f3889e5c230c501e76bb0bbcece879750d23e00302e9ef67b1548892",
+      "reference_sha256": "beeb53b69015e5433c32cafb47f0468c0ecd6f2800c1f8ffe790dc2973fa4672"
+    },
+    {
+      "sample": "news-polish-01",
+      "path": "news-polish-01-micro-plan.json",
+      "sha256": "f1aaa6fafa093649b7ef4f58dbd7d583723fd5dfc2da5c83512c6f95fede329a",
+      "original_sha256": "9d643193ce1c5068120c9fad4eebc9a9027f2b36f62a86ce830efd3f7734c200",
+      "reference_sha256": "1fdbbfdba75ea5fd72c0c89f16e57f0ef3d294739e1c21165ab19c8f20341cb5"
+    }
+  ],
+  "factors": [
+    {
+      "id": "evaluative_framing_removal",
+      "hypothesis": "Removing one optional evaluative frame while retaining the proposition may reduce a predictable AI-polish signal.",
+      "not_a_recipe": "The edit must be locally justified by tone and may not remove a qualification, attribution, or factual claim."
+    },
+    {
+      "id": "direct_subject_restoration",
+      "hypothesis": "Replacing one abstract/rhetorical subject with a direct actor that makes the same claim may reduce an AI-polish signal.",
+      "not_a_recipe": "The actor and evidential strength must remain the same; arbitrary active-voice conversion is not allowed."
+    },
+    {
+      "id": "direct_claim_restoration",
+      "hypothesis": "Replacing one metaphorical or nominalized restatement with a direct, source-supported equivalent may reduce an AI-polish signal.",
+      "not_a_recipe": "The edit cannot simplify technical content, delete modality, or change the claim."
+    }
+  ],
+  "candidates": [
+    {
+      "sample": "arxiv-polish-01",
+      "id": "f1-evaluative-framing",
+      "factor": "evaluative_framing_removal",
+      "sha256": "8fde047bbd7f2c76b4b23acfbd49c97be9f4192a7f2c322b66b6a13e8686cdd9",
+      "edit_cost": 0.002958,
+      "doc_change_ratio": 0.0021,
+      "char_change_ratio": 0.002958,
+      "changed_spans": 1,
+      "quality": {
+        "english_level": "pass_C2",
+        "reading_grade_delta": -0.075,
+        "fidelity_screen": "pass",
+        "semantic_review": "pass_tone_only_marker_removed",
+        "style_distance": 6.0,
+        "style_reliability": "low_short_text"
+      }
+    },
+    {
+      "sample": "arxiv-polish-01",
+      "id": "f2-direct-subject",
+      "factor": "direct_subject_restoration",
+      "sha256": "4ac36d1c88169c233e719c17849a9ba9e9fdc436198741d5869dc0dd83f49021",
+      "edit_cost": 0.0128,
+      "doc_change_ratio": 0.0128,
+      "char_change_ratio": 0.007547,
+      "changed_spans": 7,
+      "quality": {
+        "english_level": "pass_C2",
+        "reading_grade_delta": -0.1,
+        "fidelity_screen": "pass",
+        "semantic_review": "pass_same_users_feedback_attributes_and_valence",
+        "style_distance": 2.3,
+        "style_reliability": "low_short_text"
+      }
+    },
+    {
+      "sample": "arxiv-polish-01",
+      "id": "f3-direct-claim",
+      "factor": "direct_claim_restoration",
+      "sha256": "4ab11f050697c8a36684b74b2a45382d682c05f3e9f3e6acca411b69fe53944f",
+      "edit_cost": 0.0429,
+      "doc_change_ratio": 0.0429,
+      "char_change_ratio": 0.02585,
+      "changed_spans": 13,
+      "quality": {
+        "english_level": "pass_C2",
+        "reading_grade_delta": -0.558,
+        "fidelity_screen": "pass",
+        "semantic_review": "pass_same_cost_reliability_practicality_and_prevention_claim",
+        "style_distance": 5.2,
+        "style_reliability": "low_short_text"
+      }
+    },
+    {
+      "sample": "news-polish-01",
+      "id": "f1-evaluative-framing",
+      "factor": "evaluative_framing_removal",
+      "sha256": "9b6f9d74e737a9970e4de464f2239759a8f853619d37cf9fd07c34471e8056a1",
+      "edit_cost": 0.005041,
+      "doc_change_ratio": 0.0023,
+      "char_change_ratio": 0.005041,
+      "changed_spans": 1,
+      "quality": {
+        "english_level": "pass_C2",
+        "reading_grade_delta": -0.145,
+        "fidelity_screen": "pass",
+        "semantic_review": "pass_evaluative_modifier_removed_context_retained",
+        "style_distance": 1.0,
+        "style_reliability": "low_short_text"
+      }
+    },
+    {
+      "sample": "news-polish-01",
+      "id": "f2-direct-subject",
+      "factor": "direct_subject_restoration",
+      "sha256": "a10ce841598ef991933f70e4144abc07797e6310c90d81fadb00b948c771210c",
+      "edit_cost": 0.0114,
+      "doc_change_ratio": 0.0114,
+      "char_change_ratio": 0.005338,
+      "changed_spans": 4,
+      "quality": {
+        "english_level": "pass_C2",
+        "reading_grade_delta": 0.017,
+        "fidelity_screen": "pass",
+        "semantic_review": "pass_same_audience_action_place_and_modal_force",
+        "style_distance": 1.5,
+        "style_reliability": "low_short_text"
+      }
+    },
+    {
+      "sample": "news-polish-01",
+      "id": "f3-direct-claim",
+      "factor": "direct_claim_restoration",
+      "sha256": "8affc57b97413a6c7dd24624777f35f27333649b37f02ba84f95dc6ccd2c5b0e",
+      "edit_cost": 0.0411,
+      "doc_change_ratio": 0.0411,
+      "char_change_ratio": 0.02292,
+      "changed_spans": 15,
+      "quality": {
+        "english_level": "pass_C2",
+        "reading_grade_delta": -0.107,
+        "fidelity_screen": "pass",
+        "semantic_review": "pass_same_uncertainty_about_serving_in_senate",
+        "style_distance": 5.5,
+        "style_reliability": "low_short_text"
+      }
+    }
+  ],
+  "services": {
+    "primary_screen": [
+      {
+        "id": "zerogpt",
+        "baseline_noise": {
+          "arxiv-polish-01": 0.1,
+          "news-polish-01": 0.0
+        }
+      },
+      {
+        "id": "scribbr",
+        "model_version": "v7.1.0",
+        "role": "cross_service_regression_check"
+      }
+    ],
+    "diagnostic_best_candidate_if_available": ["copyleaks"]
+  },
+  "procedure": [
+    "Scan every frozen candidate once in ZeroGPT and Scribbr in factor order f1, f2, f3 and sample order arxiv, news.",
+    "After terminal state, recompute the full visible candidate SHA-256; stale or mismatched observations are invalid.",
+    "A candidate advances to repeats only if ZeroGPT improves beyond that sample's frozen baseline noise and Scribbr does not worsen by more than 5 points.",
+    "Repeat each advancing candidate in both services until n=3; do not repeat a failed candidate.",
+    "Do not create, combine, or alter a candidate after any micro-01 score is visible.",
+    "Attempt Copyleaks once only on the lowest-edit-cost advancing candidate if the guest UI is usable; blocked/error is not a score."
+  ],
+  "success_criteria": {
+    "factor_screen_success": "The same factor improves ZeroGPT beyond baseline noise on both samples, has no Scribbr regression over 5 points, and completes required repeats.",
+    "effect_size_reporting": "Report median delta, score range, and delta per changed percent separately for every sample/service.",
+    "hard_pass_is_not_required": "This is a causal micro-effect experiment; a score may remain above 20%.",
+    "rule_admission": "Even a screen success remains calibration evidence and requires a new preregistered holdout before entering production skill."
+  },
+  "stopping_rules": [
+    "If no frozen factor succeeds on both samples, stop without adaptive edits.",
+    "If a candidate fails fidelity, English-level, or style on reinspection, do not scan it.",
+    "Do not expand edit budget in micro-01.",
+    "Do not infer a Copyleaks result from a blocked or loading UI."
+  ]
+}
