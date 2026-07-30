@@ -108,6 +108,50 @@ class ResearchCorpusTests(unittest.TestCase):
         self.assertEqual(rule["minimum_ai_minus_human_gap"], 20)
         self.assertEqual(rule["maximum_selected_pairs"], 3)
 
+    def test_cross_family_scout_two_is_frozen_on_new_strict_pairs(self) -> None:
+        research_dir = ROOT / "evals/research-v4"
+        manifest_path = research_dir / "scout-02-corpus-manifest.json"
+        manifest_bytes = manifest_path.read_bytes()
+        manifest = json.loads(manifest_bytes)
+        prereg = json.loads(
+            (research_dir / "baseline-scout-02-preregistration.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(
+            prereg["schema"],
+            "palimpsest.baseline-scout-preregistration.v2",
+        )
+        self.assertEqual(prereg["status"], "frozen_before_live_scores")
+        self.assertEqual(
+            prereg["corpus_binding"]["sha256"],
+            hashlib.sha256(manifest_bytes).hexdigest(),
+        )
+        samples = {sample["id"]: sample for sample in manifest["samples"]}
+        self.assertEqual(len(prereg["ordered_pairs"]), 6)
+        self.assertGreaterEqual(
+            sum(
+                pair["genre"] in {"scientific_abstract", "formal_news"}
+                for pair in prereg["ordered_pairs"]
+            ),
+            4,
+        )
+        for pair in prereg["ordered_pairs"]:
+            for role in ("human", "ai"):
+                sample = samples[f"{pair['pair']}-{role}"]
+                self.assertEqual(
+                    pair[f"{role}_sha256"],
+                    sample.get("canonical_sha256", sample["sha256"]),
+                )
+        self.assertEqual(
+            prereg["selection_rule"]["cross_family_window"],
+            "both primary service cells pass",
+        )
+        self.assertIn(
+            "stop without edit variants",
+            prereg["selection_rule"]["no_cross_family_window"],
+        )
+
     def test_partial_jsonl_range_finds_one_complete_pinned_row(self) -> None:
         payload = (
             b'partial-prefix\n'
@@ -404,6 +448,88 @@ class ResearchScoutTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(ValueError, "repeat policy"):
             research_scout.recompute_selection(data, prereg)
+
+    def test_cross_family_scout_v2_selects_only_two_service_window(self) -> None:
+        prereg = {
+            "schema": "palimpsest.baseline-scout-preregistration.v2",
+            "ordered_pairs": [
+                {
+                    "pair": "p1",
+                    "human_sha256": "1" * 64,
+                    "ai_sha256": "2" * 64,
+                },
+                {
+                    "pair": "p2",
+                    "human_sha256": "3" * 64,
+                    "ai_sha256": "4" * 64,
+                },
+            ],
+            "services": {
+                "primary_accessible": [{"id": "zerogpt"}, {"id": "scribbr"}]
+            },
+            "usable_cell_rule": {
+                "ai_score_min_inclusive": 20,
+                "ai_score_max_inclusive": 90,
+                "human_score_max_inclusive": 50,
+                "minimum_ai_minus_human_gap": 10,
+            },
+            "selection_rule": {"maximum_selected_pairs": 2},
+        }
+        scores = {
+            ("p1", "human", "zerogpt"): [0, 0, 0],
+            ("p1", "ai", "zerogpt"): [50, 50, 50],
+            ("p1", "human", "scribbr"): [0, 0, 0],
+            ("p1", "ai", "scribbr"): [40, 40, 40],
+            ("p2", "human", "zerogpt"): [10, 10, 10],
+            ("p2", "ai", "zerogpt"): [30, 30, 30],
+            ("p2", "human", "scribbr"): [0, 0, 0],
+            ("p2", "ai", "scribbr"): [0, 0, 0],
+        }
+        observations = []
+        first = {"zerogpt": True, "scribbr": True}
+        hashes = {
+            ("p1", "human"): "1" * 64,
+            ("p1", "ai"): "2" * 64,
+            ("p2", "human"): "3" * 64,
+            ("p2", "ai"): "4" * 64,
+        }
+        for (pair, role, service), values in scores.items():
+            transitions = ["loading_or_disabled_observed"] * 3
+            if first[service]:
+                transitions[0] = "first_scan_no_prior_result"
+                first[service] = False
+            observation = {
+                "pair": pair,
+                "role": role,
+                "service": service,
+                "scores_pct": values,
+                "candidate_sha256": hashes[(pair, role)],
+                "post_visible_text_sha256": hashes[(pair, role)],
+                "terminal_states": ["complete"] * 3,
+                "transition_signals": transitions,
+                "observed_at": ["2026-07-30T18:00:00Z"] * 3,
+            }
+            if service == "scribbr":
+                observation.update(
+                    {
+                        "ai_generated_pct": values,
+                        "ai_refined_pct": [0, 0, 0],
+                        "human_pct": [100 - value for value in values],
+                    }
+                )
+            observations.append(observation)
+        selection = research_scout.recompute_selection(
+            {"observations": observations},
+            prereg,
+        )
+        self.assertEqual(selection["selected_pairs"], ["p1"])
+        self.assertEqual(selection["diagnostic_pairs"], ["p2"])
+        self.assertTrue(selection["edit_variants_allowed"])
+        tampered = json.loads(json.dumps({"observations": observations}))
+        first_observation = tampered["observations"][0]
+        first_observation["transition_signals"][0] = "loading_or_disabled_observed"
+        with self.assertRaisesRegex(ValueError, "first-scan transition"):
+            research_scout.recompute_selection(tampered, prereg)
 
 
 class ResearchMicroEditTests(unittest.TestCase):

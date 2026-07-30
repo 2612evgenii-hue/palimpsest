@@ -75,6 +75,10 @@ canonical SHA. Это не edit-вариант и не detector strategy: одн
 resolvability замораживаются до первого score. Отбор по baseline не является
 доказательством эффективности: он создаёт selection bias, поэтому последующий
 эффект всё равно обязан пройти новые тексты и независимые detector groups.
+Начиная с baseline-scout-02, новый edit experiment запускается только из
+`cross_family_window`: обе primary detector families должны одновременно
+пройти заранее замороженный AI-range, human-control и AI−human gap. Окно
+только одной семьи остаётся диагностикой и не разрешает подбирать правку.
 
 До первого live-score holdout обязан иметь отдельный preregistration-файл:
 закреплённые sample/plan SHA, confirmatory factor, quality-first порядок,

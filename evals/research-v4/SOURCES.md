@@ -125,3 +125,14 @@ abstract и formal news, полный связанный human source, дост�
 возможность одной source-supported meaning-equivalent правки. Upstream
 revision остаётся тем же pinned commit; SHA human/AI полей и canonical form
 записаны в `holdout-02-corpus-manifest.json`.
+
+Baseline-scout-02 также использует отдельный supplemental manifest и шесть
+ранее не сканированных строк того же pinned AI-polish revision:
+`arxiv_008467`, `arxiv_003842`, `news_002334`, `news_003652`,
+`essay_nonnative_002622` и `qa_007837`. Четыре первых образца дают основной
+строгий scientific/formal-news слой; learner essay с upstream B1 metadata и
+technical explanation проверяют жанровую переносимость измерительного окна.
+Все human/AI поля и canonical forms связаны SHA до первого detector score.
+Scout отбирает не «лучшие тексты», а только те, где обе доступные независимые
+семьи способны измерять локальное изменение без пола/потолка и с наблюдаемым
+разрывом AI−human.

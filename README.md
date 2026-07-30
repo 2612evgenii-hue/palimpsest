@@ -80,6 +80,14 @@ Scribbr остался на полу `0%`. Результат — `0/2`, пра�
 Это также запрещает трактовать «сделать claim прямее» как универсальный
 detector-рецепт: такая правка остаётся только редакторским инструментом.
 
+До следующего edit-фактора заморожен `baseline-scout-02`: шесть новых
+AI-polish/human EN-пар (два scientific abstracts, два formal-news текста,
+B1 learner essay и technical explanation). В отличие от первого scout,
+вариантный эксперимент разрешается только для текста, где и ZeroGPT, и Scribbr
+одновременно находятся вне пола/потолка, дают достаточный разрыв AI−human и
+проходят transition-safe повторы. Если такого окна нет, новые правки на этих
+текстах не создаются.
+
 См.
 [протокол](evals/research-v4/PROTOCOL.md),
 [текущие результаты](evals/research-v4/FINDINGS.md) и
@@ -89,7 +97,8 @@ detector-рецепт: такая правка остаётся только р�
 [holdout-01](evals/research-v4/holdout-01-pubmed-canonical.json) /
 [baseline scout-01](evals/research-v4/baseline-scout-01-result.json) /
 [micro-01](evals/research-v4/micro-01-result.json) /
-[holdout-02](evals/research-v4/holdout-02-result.json).
+[holdout-02](evals/research-v4/holdout-02-result.json) /
+[baseline scout-02 preregistration](evals/research-v4/baseline-scout-02-preregistration.json).
 
 Воспроизвести закреплённый corpus, варианты pilot-05 и проверку Pareto:
 
@@ -113,6 +122,9 @@ python3 scripts/research_micro.py \
   --result evals/research-v4/micro-01-result.json
 python3 scripts/research_holdout.py \
   --result evals/research-v4/holdout-02-result.json
+python3 scripts/research_corpus.py \
+  --manifest evals/research-v4/scout-02-corpus-manifest.json \
+  --out-dir work/research-corpus-scout02
 ```
 
 ## Для чего нужен Palimpsest

@@ -38,6 +38,12 @@
   вычисляет verdict, не доверяя заявленному analysis;
 - production skill прямо запрещает использовать «сделать claim прямее» как
   detector-рецепт; это допустимо только по смысловой/редакторской причине;
+- до новых edit-вариантов заморожен `baseline-scout-02` на шести новых
+  AI-polish/human EN-парах, из которых четыре относятся к строгому
+  scientific/formal-news письму;
+- scout v2 разрешает следующий edit experiment только при одновременном
+  измеримом AI−human окне в ZeroGPT и Scribbr, требует transition signal и
+  повторяет полную двухсервисную baseline-матрицу;
 - skill запрещает blanket split/merge по vendor-подсказке и требует
   quality-first screening до live recheck;
 - полный selftest расширен новыми holdout/scout/anti-forgery слоями.

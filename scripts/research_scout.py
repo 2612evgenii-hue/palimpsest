@@ -15,6 +15,14 @@ import statistics
 from pathlib import Path
 
 
+ALLOWED_TRANSITIONS = {
+    "first_scan_no_prior_result",
+    "loading_or_disabled_observed",
+    "result_identifier_changed",
+    "result_text_changed",
+}
+
+
 def file_sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -51,7 +59,7 @@ def observation_map(data: dict, prereg: dict) -> dict[tuple[str, str, str], dict
     services = {
         item["id"]
         for item in prereg["services"]["primary_accessible"]
-        + prereg["services"]["diagnostic_if_guest_ui_is_terminal"]
+        + prereg["services"].get("diagnostic_if_guest_ui_is_terminal", [])
     }
     mapped: dict[tuple[str, str, str], dict] = {}
     for observation in data.get("observations", []):
@@ -85,6 +93,14 @@ def observation_map(data: dict, prereg: dict) -> dict[tuple[str, str, str], dict
             raise ValueError("terminal_states are required")
         if not isinstance(times, list) or len(times) != len(states):
             raise ValueError("every terminal state needs a timestamp")
+        if prereg.get("schema") == "palimpsest.baseline-scout-preregistration.v2":
+            transitions = observation.get("transition_signals")
+            if (
+                not isinstance(transitions, list)
+                or len(transitions) != len(states)
+                or any(signal not in ALLOWED_TRANSITIONS for signal in transitions)
+            ):
+                raise ValueError("scout v2 requires a transition signal per scan")
         if all(state == "complete" for state in states):
             if len(scores) != len(states):
                 raise ValueError("complete observations need one score per repeat")
@@ -106,7 +122,7 @@ def observation_map(data: dict, prereg: dict) -> dict[tuple[str, str, str], dict
     return mapped
 
 
-def recompute_selection(data: dict, prereg: dict) -> dict:
+def recompute_selection_v1(data: dict, prereg: dict) -> dict:
     mapped = observation_map(data, prereg)
     ordered_pairs = [item["pair"] for item in prereg["ordered_pairs"]]
     primary = [item["id"] for item in prereg["services"]["primary_accessible"]]
@@ -190,13 +206,142 @@ def recompute_selection(data: dict, prereg: dict) -> dict:
     }
 
 
+def recompute_selection_v2(data: dict, prereg: dict) -> dict:
+    mapped = observation_map(data, prereg)
+    ordered_pairs = [item["pair"] for item in prereg["ordered_pairs"]]
+    primary = [item["id"] for item in prereg["services"]["primary_accessible"]]
+    rule = prereg["usable_cell_rule"]
+    selection_rule = prereg["selection_rule"]
+    expected = {
+        (pair, role, service)
+        for pair in ordered_pairs
+        for role in ("human", "ai")
+        for service in primary
+    }
+    if set(mapped) != expected:
+        raise ValueError("scout v2 observation matrix is incomplete or out of scope")
+
+    first_transitions = {service: 0 for service in primary}
+    pair_results = []
+    for pair in ordered_pairs:
+        raw_cells = []
+        usable_count = 0
+        for service in primary:
+            human = mapped[(pair, "human", service)]
+            ai = mapped[(pair, "ai", service)]
+            if (
+                human["terminal_states"][0] != "complete"
+                or ai["terminal_states"][0] != "complete"
+                or not human["scores_pct"]
+                or not ai["scores_pct"]
+            ):
+                raise ValueError("scout v2 first baselines must complete")
+            human_first = float(human["scores_pct"][0])
+            ai_first = float(ai["scores_pct"][0])
+            usable = (
+                rule["ai_score_min_inclusive"]
+                <= ai_first
+                <= rule["ai_score_max_inclusive"]
+                and human_first <= rule["human_score_max_inclusive"]
+                and ai_first - human_first >= rule["minimum_ai_minus_human_gap"]
+            )
+            usable_count += int(usable)
+            raw_cells.append((service, human, ai, usable))
+
+        expected_repeats = 3 if usable_count else 1
+        cells = []
+        for service, human, ai, usable in raw_cells:
+            if (
+                len(human["scores_pct"]) != expected_repeats
+                or len(ai["scores_pct"]) != expected_repeats
+            ):
+                raise ValueError("scout v2 repeat policy differs from frozen rule")
+            human_values = [float(value) for value in human["scores_pct"]]
+            ai_values = [float(value) for value in ai["scores_pct"]]
+            first_transitions[service] += human["transition_signals"].count(
+                "first_scan_no_prior_result"
+            )
+            first_transitions[service] += ai["transition_signals"].count(
+                "first_scan_no_prior_result"
+            )
+            cells.append(
+                {
+                    "service": service,
+                    "usable": usable,
+                    "human_scores_pct": human["scores_pct"],
+                    "ai_scores_pct": ai["scores_pct"],
+                    "human_median_pct": round(
+                        statistics.median(human_values), 3
+                    ),
+                    "ai_median_pct": round(statistics.median(ai_values), 3),
+                    "ai_noise_range_pct": round(
+                        max(ai_values) - min(ai_values), 3
+                    ),
+                    "gap_pct": round(
+                        statistics.median(ai_values)
+                        - statistics.median(human_values),
+                        3,
+                    ),
+                }
+            )
+        if usable_count == len(primary):
+            status = "cross_family_window"
+        elif usable_count == 1:
+            status = "single_family_window"
+        else:
+            status = "unusable"
+        pair_results.append({"pair": pair, "status": status, "cells": cells})
+
+    if any(count != 1 for count in first_transitions.values()):
+        raise ValueError("each fresh service needs exactly one first-scan transition")
+    selected = [
+        item["pair"]
+        for item in pair_results
+        if item["status"] == "cross_family_window"
+    ][: selection_rule["maximum_selected_pairs"]]
+    diagnostic = [
+        item["pair"]
+        for item in pair_results
+        if item["status"] == "single_family_window"
+    ]
+    return {
+        "pair_results": pair_results,
+        "selected_pairs": selected,
+        "diagnostic_pairs": diagnostic,
+        "maximum_selected_pairs": selection_rule["maximum_selected_pairs"],
+        "edit_variants_allowed": bool(selected),
+    }
+
+
+def recompute_selection(data: dict, prereg: dict) -> dict:
+    schema = prereg.get("schema")
+    if schema == "palimpsest.baseline-scout-preregistration.v1":
+        return recompute_selection_v1(data, prereg)
+    if schema == "palimpsest.baseline-scout-preregistration.v2":
+        return recompute_selection_v2(data, prereg)
+    raise ValueError("unsupported baseline scout preregistration schema")
+
+
 def load_result(path: Path) -> dict:
     data = json.loads(path.read_text(encoding="utf-8"))
-    if data.get("schema") != "palimpsest.baseline-scout-result.v1":
+    if data.get("schema") not in {
+        "palimpsest.baseline-scout-result.v1",
+        "palimpsest.baseline-scout-result.v2",
+    }:
         raise ValueError("unsupported baseline scout result schema")
     if data.get("status") != "completed":
         raise ValueError("baseline scout result is not completed")
     prereg = load_preregistration(path, data)
+    expected_result_schema = {
+        "palimpsest.baseline-scout-preregistration.v1": (
+            "palimpsest.baseline-scout-result.v1"
+        ),
+        "palimpsest.baseline-scout-preregistration.v2": (
+            "palimpsest.baseline-scout-result.v2"
+        ),
+    }.get(prereg.get("schema"))
+    if data.get("schema") != expected_result_schema:
+        raise ValueError("scout result/preregistration schema mismatch")
     computed = recompute_selection(data, prereg)
     if data.get("selection") != computed:
         raise ValueError("declared baseline scout selection does not recompute")
