@@ -1,0 +1,26 @@
+{
+  "schema": "palimpsest.variant-plan.v1",
+  "sample_id": "news-polish-01-ai",
+  "original_sha256": "9d643193ce1c5068120c9fad4eebc9a9027f2b36f62a86ce830efd3f7734c200",
+  "reference_sha256": "1fdbbfdba75ea5fd72c0c89f16e57f0ef3d294739e1c21165ab19c8f20341cb5",
+  "operations": [
+    {
+      "id": "f1-evaluative-framing",
+      "factor": "evaluative_framing_removal",
+      "old": "scandal-plagued Governor Rod Blagojevich",
+      "new": "Governor Rod Blagojevich"
+    },
+    {
+      "id": "f2-direct-subject",
+      "factor": "direct_subject_restoration",
+      "old": "Those questioning Roland Burris' qualifications for Illinois' Senate seat need only visit Chicago’s Oak Woods Cemetery.",
+      "new": "Anyone questioning Roland Burris' qualifications for Illinois' Senate seat can visit Chicago’s Oak Woods Cemetery."
+    },
+    {
+      "id": "f3-direct-claim",
+      "factor": "direct_claim_restoration",
+      "old": "While space remains for a potential “U.S. Senator” inscription, that honor now hangs in limbo.",
+      "new": "There is room for a “U.S. Senator” inscription, but Burris may never serve in Washington."
+    }
+  ]
+}

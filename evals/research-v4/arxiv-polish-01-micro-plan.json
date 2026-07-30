@@ -1,0 +1,26 @@
+{
+  "schema": "palimpsest.variant-plan.v1",
+  "sample_id": "arxiv-polish-01-ai",
+  "original_sha256": "49ce9ed9f3889e5c230c501e76bb0bbcece879750d23e00302e9ef67b1548892",
+  "reference_sha256": "beeb53b69015e5433c32cafb47f0468c0ecd6f2800c1f8ffe790dc2973fa4672",
+  "operations": [
+    {
+      "id": "f1-evaluative-framing",
+      "factor": "evaluative_framing_removal",
+      "old": "Notably, the prototype’s production costs remain a fraction of existing commercial systems, with potential for further reduction through mass production.",
+      "new": "The prototype’s production costs remain a fraction of existing commercial systems, with potential for further reduction through mass production."
+    },
+    {
+      "id": "f2-direct-subject",
+      "factor": "direct_subject_restoration",
+      "old": "Initial trials demonstrated favorable user responses regarding comfort, ease of use, and overall satisfaction.",
+      "new": "Users reported favorable responses regarding comfort, ease of use, and overall satisfaction."
+    },
+    {
+      "id": "f3-direct-claim",
+      "factor": "direct_claim_restoration",
+      "old": "This cost-effectiveness, paired with reliable functionality, positions the device as a practical solution for preventing posture-related back pain.",
+      "new": "The device offers a cost-effective and reliable way to help prevent posture-related back pain."
+    }
+  ]
+}

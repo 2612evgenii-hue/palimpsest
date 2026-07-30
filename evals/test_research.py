@@ -404,6 +404,74 @@ class ResearchScoutTests(unittest.TestCase):
             research_scout.recompute_selection(data, prereg)
 
 
+class ResearchMicroEditTests(unittest.TestCase):
+    def test_micro_edit_experiment_is_frozen_and_rebuilds_exact_candidates(
+        self,
+    ) -> None:
+        research_dir = ROOT / "evals/research-v4"
+        prereg = json.loads(
+            (research_dir / "micro-01-preregistration.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(
+            prereg["schema"],
+            "palimpsest.micro-edit-preregistration.v1",
+        )
+        self.assertEqual(prereg["status"], "frozen_before_live_scores")
+        baseline = research_dir / prereg["baseline_binding"]["path"]
+        self.assertEqual(
+            hashlib.sha256(baseline.read_bytes()).hexdigest(),
+            prereg["baseline_binding"]["sha256"],
+        )
+        self.assertEqual(
+            prereg["baseline_binding"]["git_commit"],
+            "1d76a44a7123a22cd5ecefd47abd13129659c5fe",
+        )
+        declared = {
+            (candidate["sample"], candidate["id"]): candidate
+            for candidate in prereg["candidates"]
+        }
+        self.assertEqual(len(declared), 6)
+        self.assertEqual(
+            {candidate["factor"] for candidate in prereg["candidates"]},
+            {
+                "evaluative_framing_removal",
+                "direct_subject_restoration",
+                "direct_claim_restoration",
+            },
+        )
+        for plan_binding in prereg["plans"]:
+            plan_path = research_dir / plan_binding["path"]
+            self.assertEqual(
+                hashlib.sha256(plan_path.read_bytes()).hexdigest(),
+                plan_binding["sha256"],
+            )
+            plan = json.loads(plan_path.read_text(encoding="utf-8"))
+            self.assertEqual(
+                plan["original_sha256"],
+                plan_binding["original_sha256"],
+            )
+            self.assertEqual(
+                plan["reference_sha256"],
+                plan_binding["reference_sha256"],
+            )
+            operations = {
+                operation["id"]: operation for operation in plan["operations"]
+            }
+            self.assertEqual(set(operations), {"f1-evaluative-framing", "f2-direct-subject", "f3-direct-claim"})
+            for operation_id, operation in operations.items():
+                candidate = declared[(plan_binding["sample"], operation_id)]
+                self.assertEqual(candidate["factor"], operation["factor"])
+                self.assertEqual(candidate["quality"]["fidelity_screen"], "pass")
+                self.assertTrue(
+                    candidate["quality"]["english_level"].startswith("pass_")
+                )
+                self.assertTrue(
+                    candidate["quality"]["semantic_review"].startswith("pass_")
+                )
+
+
 class ResearchVariantTests(unittest.TestCase):
     def test_exact_one_factor_builder_is_hash_bound(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
