@@ -9,6 +9,8 @@
    annotations и segments.
 4. **External evidence** — live browser/institutional observations.
 5. **Memory** — stable segments, bounded hot index и cold notes.
+6. **Shadow research** — optional privacy-first real-work cases с plan digest,
+   exact-SHA observations и complete-case Pareto.
 
 ## F1 state flow
 
@@ -81,3 +83,19 @@ State защищает от stale и изменённого evidence, но не 
 - semantic authorized change оставляет G7 red; подтверждённую смысловую правку
   нужно перенести в новый immutable source baseline;
 - никаких обещаний авторства или будущей необнаружимости.
+
+## Shadow state flow
+
+```mermaid
+stateDiagram-v2
+    [*] --> DRAFT
+    DRAFT --> FROZEN: candidates + quality evidence + plan digest
+    FROZEN --> OBSERVING: first terminal observation
+    OBSERVING --> OBSERVING: exact-SHA scored / blocked / error
+    OBSERVING --> SUMMARY: complete-case Pareto
+```
+
+`delivery_only` запрещает aggregate research. `private_research` требует
+отдельного consent hash и три повтора. Freeze не доказывает внешнее время, но
+делает последующую подмену candidate/hypothesis заметной. Shadow-layer не
+заменяет F1 gates `state.py` и никогда не публикует raw client text.

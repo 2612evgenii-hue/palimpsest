@@ -101,15 +101,23 @@ quality-first допуск, 34 live scans имели exact-SHA и transition sig
 подняло ZeroGPT до `71,3%`. Это location-specific calibration signal, а не
 production-рецепт; требуется новый holdout и дополнительная detector family.
 
-До новых detector scores уже заморожен `holdout-03`: три ранее не
-сканированные formal-news пары, в каждой меняется только искажённая
-AI-polish прямая цитата и её source-proven attribution. Edit cost кандидатов —
-`3,97–7,26%`; все сохраняют C2 и exact reference binding. Confirmatory
-независимая пара — ZeroGPT + Copyleaks, Scribbr служит guardrail, Sapling —
-только диагностикой с обязательным human control из-за известных false
-positives. Ни одного результата holdout пока нет; scope нельзя менять после
-первых scores, а блокировка Copyleaks не разрешает подменить его другим
-сервисом.
+`Holdout-03` затем проверил перенос точного восстановления цитаты на трёх
+ранее не сканированных formal-news парах. ZeroGPT не подтвердил эффект ни
+разу: median `100→100`, `49,8→51,5` и `50→50,5`. Copyleaks остановился на
+`scan limit reached` до первого score; Scribbr и Sapling не запускались после
+смены приоритета на реальные проекты. Поэтому multi-service holdout честно
+помечен incomplete, timestamps/captures не восстановлены задним числом, а
+production rule не допущено. Поскольку preregistered sample success требовал
+эффект ZeroGPT **и** Copyleaks, провал ZeroGPT на всех `3/3` уже отвергает
+перенос фактора. Точную цитату всё равно нужно восстанавливать ради fidelity,
+но не как detector-рецепт.
+
+Следующий этап — optional privacy-first shadow-validation на реальной работе.
+Original и все hypotheses замораживаются до новых scores; raw text остаётся
+только в private workspace. `delivery_only` не разрешает research reuse,
+`private_research` требует отдельного согласия и три повтора. Один реальный
+case может выбрать наименее изменённый проходящий вариант для этой работы, но
+никогда не допускает универсальное правило.
 
 См.
 [протокол](evals/research-v4/PROTOCOL.md),
@@ -123,7 +131,8 @@ positives. Ни одного результата holdout пока нет; scope
 [holdout-02](evals/research-v4/holdout-02-result.json) /
 [baseline scout-02](evals/research-v4/baseline-scout-02-result.json) /
 [micro-02](evals/research-v4/micro-02-result.json) /
-[holdout-03 preregistration](evals/research-v4/holdout-03-preregistration.json).
+[holdout-03 preregistration](evals/research-v4/holdout-03-preregistration.json) /
+[holdout-03 partial result](evals/research-v4/holdout-03-partial-result.json).
 
 Воспроизвести закреплённый corpus, варианты pilot-05 и проверку Pareto:
 
@@ -158,6 +167,8 @@ python3 scripts/research_micro.py \
   --result evals/research-v4/micro-02-result.json
 python3 scripts/research_holdout.py \
   --preregistration evals/research-v4/holdout-03-preregistration.json
+python3 scripts/research_holdout.py \
+  --partial-result evals/research-v4/holdout-03-partial-result.json
 ```
 
 ## Для чего нужен Palimpsest
@@ -179,7 +190,7 @@ python3 scripts/research_holdout.py \
 - `score_mandatory` автоматически включается с F1;
 - hard pass теперь строго `score <20%`, а не `<=20%`;
 - target `<15%` учитывается отдельно и честно отражается в отчёте;
-- repeatable EN-ядро без регистрации: ZeroGPT, Scribbr, GPTinf и Copyleaks;
+- no-account EN candidate profile: ZeroGPT, Scribbr, GPTinf и Copyleaks;
 - исходный набор из шести сервисов сохранён как явный optional profile;
 - пользователь перед работой явно включает или выключает сервисы;
 - GPTZero/QuillBot не включаются молча, когда live guest path требует sign-up;
@@ -250,18 +261,20 @@ Palimpsest не повышает B2 до «идеального академич
 
 ## F1 и детекторы
 
-Repeatable EN-профиль без обязательной регистрации:
+No-account EN candidate profile:
 
 | Сервис | Роль в процессе |
 |---|---|
 | [ZeroGPT](https://www.zerogpt.com/) | Обязателен по постоянному пользовательскому предпочтению |
 | [Scribbr](https://www.scribbr.com/ai-detector/) | Проверяется отдельно, но может дублировать QuillBot engine |
 | [GPTinf](https://gptinf.com/detector) | Агрегатор; не заменяет прямой сервис |
-| [Copyleaks](https://copyleaks.com/ai-content-detector) | Независимый прямой сигнал |
+| [Copyleaks](https://copyleaks.com/ai-content-detector) | Независимый прямой сигнал; guest quota-sensitive |
 
 Для RU default — ZeroGPT, GPTinf и Copyleaks. GPTZero и QuillBot остаются
 опциональными: текущий guest flow упирается в sign-up/лимит. Исходный
 six-service profile никуда не удалён и может быть выбран явно.
+Copyleaks ранее возвращал guest scores, но в holdout-03 достиг scan limit.
+Поэтому ни один стартовый список не заменяет свежий capability review.
 
 Перед началом F1 пользователь явно включает или выключает сервисы. Каждый
 оставленный сервис обязателен. Два бренда одного engine всё равно прогоняются,
@@ -356,7 +369,7 @@ python3 scripts/state.py --state workspace/STATE.json intake \
 python3 scripts/state.py --state workspace/STATE.json intake \
   --question Q3 \
   --services zerogpt,scribbr,gptinf,copyleaks \
-  --answer "Use the repeatable no-sign-up English profile." --source explicit
+  --answer "Use the no-account English candidate profile." --source explicit
 
 python3 scripts/state.py --state workspace/STATE.json intake \
   --question Q4 \
@@ -413,9 +426,14 @@ Suite объединяет broad regression, adversarial acceptance и heterogen
 
 Отдельно опубликован воспроизводимый отчёт о
 [живой EN-апробации](docs/LIVE_ACCEPTANCE_3.5.md): baseline fail
-63,1/100/100/100% после реального edit-cycle стал 5,3/0/0/0% на repeatable
-no-sign-up core. Отчёт отдельно показывает большой diff, optional sign-up
-blockers и границу DOM/screenshot evidence.
+63,1/100/100/100% после реального edit-cycle стал 5,3/0/0/0% на выбранном
+no-account candidate profile. Отчёт отдельно показывает большой diff,
+optional sign-up blockers и границу DOM/screenshot evidence.
+
+Для следующих реальных проектов предусмотрен
+[приватный shadow-протокол](references/shadow-validation.md). Он отделяет
+практический выбор кандидата от research admission, требует freeze до scores
+и запрещает коммитить raw client text.
 
 ## Честные ограничения
 

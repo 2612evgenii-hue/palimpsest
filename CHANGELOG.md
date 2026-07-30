@@ -65,6 +65,22 @@
 - confirmatory scope holdout-03 использует ZeroGPT + Copyleaks, Scribbr как
   guardrail и Sapling только как human-controlled diagnostic; registry group,
   guest access и repeat policy проверяются отдельным prereg validator;
+- partial run holdout-03 отклонил перенос `quote_integrity_restoration` во всех
+  трёх ZeroGPT ячейках (`100→100`, `49,8→51,5`, `50→50,5`); Copyleaks был
+  blocked на guest scan limit, поэтому multi-service holdout не объявлен
+  завершённым, а потерянные timestamps/captures не были восстановлены;
+- `research_holdout.py --partial-result` заново проверяет exact-SHA ZeroGPT
+  slice, frozen repeats, blocked Copyleaks attempt, evidence limitations и
+  отрицательный verdict;
+- Copyleaks переклассифицирован из безусловно repeatable в
+  `guest_quota_sensitive`; стартовый список теперь явно называется
+  no-account candidate profile и всегда требует live capability review;
+- добавлен privacy-first `shadow_case.py` для реальной работы: default
+  `delivery_only`, отдельное consent для private aggregate research,
+  digest-freeze кандидатов до scores, terminal exact-SHA observations и
+  complete-case Pareto;
+- один real-work case не допускает detector-рецепт; raw client text, captures
+  и shadow JSON запрещено коммитить;
 - variant builder связывает editorial justification с exact reference SHA,
   буквальным source excerpt и заранее вычисленным candidate SHA;
 - исправлен false positive fidelity screen: союз после года (`1919 but`) больше

@@ -402,10 +402,223 @@ def load_result(path: Path) -> dict:
     return data
 
 
+def partial_observation_map(
+    data: dict,
+    prereg: dict,
+) -> dict[tuple[str, str], dict]:
+    """Validate the complete ZeroGPT slice of an interrupted holdout.
+
+    A partial result is intentionally not accepted by ``load_result``.  This
+    narrower validator preserves a useful falsification signal without
+    pretending that the preregistered multi-service matrix was completed.
+    """
+    hashes = _role_hashes(prereg)
+    repeat_policy = prereg["repeat_policy"]["primary_effect"]
+    mapped: dict[tuple[str, str], dict] = {}
+    for observation in data.get("observations", []):
+        sample = observation.get("sample")
+        role = observation.get("role")
+        if observation.get("service") != "zerogpt":
+            raise ValueError("partial holdout observations are limited to ZeroGPT")
+        if (sample, role) not in hashes:
+            raise ValueError("partial holdout observation references unknown scope")
+        key = (sample, role)
+        if key in mapped:
+            raise ValueError("duplicate partial holdout sample/role observation")
+        expected_sha = hashes[key]
+        if (
+            observation.get("candidate_sha256") != expected_sha
+            or observation.get("post_visible_text_sha256") != expected_sha
+        ):
+            raise ValueError("partial holdout observation is not bound to frozen text")
+        expected_repeats = repeat_policy[role]
+        scores = observation.get("scores_pct")
+        states = observation.get("terminal_states")
+        transitions = observation.get("transition_signals")
+        if (
+            not isinstance(scores, list)
+            or len(scores) != expected_repeats
+            or any(
+                not isinstance(score, (int, float)) or not 0 <= score <= 100
+                for score in scores
+            )
+        ):
+            raise ValueError("partial holdout score count does not match frozen repeats")
+        if states != ["complete"] * expected_repeats:
+            raise ValueError("partial holdout scores require complete terminal states")
+        if (
+            not isinstance(transitions, list)
+            or len(transitions) != expected_repeats
+            or any(signal not in ALLOWED_TRANSITIONS for signal in transitions)
+        ):
+            raise ValueError("partial holdout scan lacks a valid transition signal")
+        if observation.get("included_in_analysis") is not True:
+            raise ValueError("completed partial observation was excluded")
+        if observation.get("capture_status") != "missing":
+            raise ValueError("partial holdout capture status is not honest")
+        if observation.get("timestamp_status") != (
+            "not_preserved_after_user_interruption"
+        ):
+            raise ValueError("partial holdout timestamp limitation is missing")
+        if "observed_at" in observation:
+            raise ValueError("partial holdout must not invent lost timestamps")
+        mapped[key] = observation
+    expected = {
+        (plan["sample"], role)
+        for plan in prereg["plans"]
+        for role in ("human", "ai", "candidate")
+    }
+    if set(mapped) != expected:
+        raise ValueError("partial holdout ZeroGPT matrix is incomplete")
+    return mapped
+
+
+def recompute_partial_analysis(data: dict, prereg: dict) -> dict:
+    mapped = partial_observation_map(data, prereg)
+    sample_results = []
+    successful = 0
+    for plan in prereg["plans"]:
+        sample = plan["sample"]
+        human = _summary(mapped[(sample, "human")]["scores_pct"])
+        baseline = _summary(mapped[(sample, "ai")]["scores_pct"])
+        candidate = _summary(mapped[(sample, "candidate")]["scores_pct"])
+        reduction = round(baseline["median_pct"] - candidate["median_pct"], 6)
+        required_reduction = max(
+            baseline["range_pct"],
+            candidate["range_pct"],
+            2.0,
+        )
+        eligible = baseline["median_pct"] >= 20
+        success = (
+            eligible
+            and baseline["range_pct"] <= 5
+            and candidate["range_pct"] <= 5
+            and reduction > required_reduction
+        )
+        if not eligible:
+            status = "ineligible_zerogpt_baseline_below_20"
+        elif reduction <= required_reduction:
+            status = "failed_no_effect_above_noise"
+        elif baseline["range_pct"] > 5 or candidate["range_pct"] > 5:
+            status = "failed_same_sha_instability"
+        else:
+            status = "zerogpt_effect_only"
+        successful += int(success)
+        sample_results.append(
+            {
+                "sample": sample,
+                "status": status,
+                "eligible": eligible,
+                "zerogpt_effect": success,
+                "edit_cost": plan["edit_cost"],
+                "zerogpt_human": human,
+                "zerogpt_baseline": baseline,
+                "zerogpt_candidate": candidate,
+                "zerogpt_reduction_pct": reduction,
+                "required_reduction_pct": required_reduction,
+            }
+        )
+
+    blocked = data.get("blocked_attempts")
+    if not isinstance(blocked, list) or len(blocked) != 1:
+        raise ValueError("partial holdout needs the single recorded blocked attempt")
+    attempt = blocked[0]
+    hashes = _role_hashes(prereg)
+    if (
+        attempt.get("service") != "copyleaks"
+        or attempt.get("sample") != "news-quote-01"
+        or attempt.get("role") != "human"
+        or attempt.get("candidate_sha256")
+        != hashes[("news-quote-01", "human")]
+        or attempt.get("post_visible_text_sha256")
+        != hashes[("news-quote-01", "human")]
+        or attempt.get("terminal_state") != "blocked"
+        or attempt.get("score_pct") is not None
+        or attempt.get("transition_signal") not in ALLOWED_TRANSITIONS
+        or attempt.get("included_in_analysis") is not False
+        or len(str(attempt.get("visible_terminal_message", ""))) < 20
+    ):
+        raise ValueError("Copyleaks blocked attempt is incomplete or unbound")
+    if attempt.get("timestamp_status") != "not_preserved_after_user_interruption":
+        raise ValueError("blocked attempt timestamp limitation is missing")
+    if "observed_at" in attempt:
+        raise ValueError("blocked attempt must not invent a lost timestamp")
+
+    zero_failed_all = len(sample_results) == 3 and all(
+        row["eligible"] and not row["zerogpt_effect"]
+        for row in sample_results
+    )
+    return {
+        "sample_results": sample_results,
+        "zerogpt_successful_samples": successful,
+        "zerogpt_transfer_rejected": zero_failed_all,
+        "confirmatory_holdout_completed": False,
+        "primary_pair_available": False,
+        "factor": prereg["hypothesis"]["factor"],
+        "production_rule_admitted": False,
+        "admission_reason": (
+            "all_three_zerogpt_effect_tests_failed_and_copyleaks_was_blocked"
+        ),
+    }
+
+
+def load_partial_result(path: Path) -> dict:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if data.get("schema") != "palimpsest.holdout-partial-result.v1":
+        raise ValueError("unsupported partial holdout result schema")
+    if data.get("status") != "stopped_incomplete_nonconfirmatory":
+        raise ValueError("partial holdout status overclaims completion")
+    prereg = load_preregistration(path, data)
+    prereg_path = (path.parent / data["preregistration"]["path"]).resolve()
+    validate_preregistration(prereg_path)
+    if data.get("evidence_limits") != {
+        "individual_timestamps_preserved": False,
+        "captures_preserved": False,
+        "multi_service_matrix_complete": False,
+        "safe_claim": (
+            "The preregistered quote-integrity factor failed all three "
+            "ZeroGPT effect tests; the full confirmatory holdout was not completed."
+        ),
+    }:
+        raise ValueError("partial holdout evidence limits changed")
+    expected_not_run = [
+        {
+            "service": "copyleaks",
+            "scope": "remaining preregistered cells",
+            "reason": "guest scan limit reached before the first score",
+        },
+        {
+            "service": "scribbr",
+            "scope": "all preregistered cells",
+            "reason": (
+                "first technical fill failed before submission; no result was "
+                "transmitted or inferred"
+            ),
+        },
+        {
+            "service": "sapling",
+            "scope": "all preregistered cells",
+            "reason": (
+                "user reprioritized the work after the confirmatory factor had "
+                "already failed all three ZeroGPT effect tests"
+            ),
+        },
+    ]
+    if data.get("not_run") != expected_not_run:
+        raise ValueError("partial holdout not-run scope changed")
+    if len(str(data.get("stop_reason", "")).strip()) < 80:
+        raise ValueError("partial holdout stop reason is missing")
+    computed = recompute_partial_analysis(data, prereg)
+    if data.get("analysis") != computed:
+        raise ValueError("declared partial holdout analysis does not recompute")
+    return data
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--result", type=Path)
+    group.add_argument("--partial-result", type=Path)
     group.add_argument("--preregistration", type=Path)
     args = parser.parse_args()
     if args.preregistration:
@@ -426,7 +639,11 @@ def main() -> int:
             )
         )
         return 0
-    data = load_result(args.result)
+    data = (
+        load_partial_result(args.partial_result)
+        if args.partial_result
+        else load_result(args.result)
+    )
     print(
         json.dumps(
             {

@@ -47,6 +47,21 @@ screen использует более широкий, но всё равно б
 пользователем уровень авторитетнее автоматической source estimate;
 `infer_from_source` сохраняет строгий source-relative envelope.
 
+### Shadow-case и согласие на research
+
+`shadow_case.py` связывает план digest и хранит SHA цитаты согласия, но не
+аутентифицирует человека и не расширяет его права на чужой текст. Поэтому
+default — `delivery_only`; raw project text, candidates, captures и case JSON
+остаются локальными и не коммитятся. Один consented case не доказывает перенос
+правила.
+
+### Guest-доступ
+
+No-account profile — стартовый список, не SLA. Например, Copyleaks ранее
+возвращал guest results, а затем показал `scan limit reached` без score.
+Capability review обязателен для каждой работы; blocked не интерпретируется
+как процент.
+
 ### Population accuracy
 
 Имеющийся EN pilot и один успешный forward edit-cycle не являются population

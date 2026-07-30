@@ -371,5 +371,29 @@ Copyleaks, поскольку ранее давал тяжёлые human false p
 Для transfer нужны `3/3` eligible successes. `2/3 = 66,7%` не округляется до
 протокольных 70%. Даже полный успех не допускает production-правило:
 калибровка пока содержит один текст, а evidence без capture остаётся
-ограниченным. Live scores ещё не получены. Frozen scope:
+ограниченным.
+
+Частичный live run дал достаточный отрицательный сигнал, но не полный
+confirmatory holdout:
+
+| Sample | ZeroGPT AI median | Candidate median | Effect |
+|---|---:|---:|---:|
+| news-quote-01 | 100% | 100% | 0 |
+| news-quote-02 | 49,8% | 51,5% | −1,7 п.п. reduction |
+| news-quote-03 | 50% | 50,5% | −0,5 п.п. reduction |
+
+Все exact-SHA AI/candidate ячейки повторены `n=3`; ranges `0–1,3 п.п.`.
+Ни один ZeroGPT effect не превысил preregistered minimum `2 п.п.` и
+same-SHA noise. Copyleaks вернул `scan limit reached` на первом human control
+и не дал score. Scribbr/Sapling не запускались после решения перейти к
+реальной работе. Individual timestamps и captures не сохранились при
+прерывании сессии и не были выдуманы задним числом.
+
+Следовательно, multi-service holdout остаётся incomplete, но
+`quote_integrity_restoration` отклонён как detector factor: preregistered
+sample success требовал ZeroGPT **и** Copyleaks, а ZeroGPT провалился на всех
+трёх текстах. Exact quote restoration остаётся обязательной source-fidelity
+правкой, не score-рецептом. Машиночитаемый partial result:
+[`holdout-03-partial-result.json`](holdout-03-partial-result.json); frozen
+scope:
 [`holdout-03-preregistration.json`](holdout-03-preregistration.json).

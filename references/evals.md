@@ -40,6 +40,12 @@
 34. live success manifest не совпадает с SHA passing fixture.
 35. после failed F1 локальный процесс повторно записывает Q2/Q3 и снимает
     обязательную функцию или сервис.
+36. incomplete holdout выдаётся за completed или потерянный timestamp
+    восстанавливается задним числом.
+37. real-work hypothesis переименовывается после scores либо её source
+    evidence подменяется.
+38. private research включается без отдельного consent или без двух
+    независимых detector groups.
 
 ## Автоматический набор
 
@@ -60,6 +66,8 @@ python3 /path/to/skill-creator/scripts/quick_validate.py .
   segment/overlap/English-level регрессий;
 - `test_stress.py` — гетерогенный синтетический 15k+ word longform,
   lossless sync/pack/sample, полный source-unit tail и bounded disk memory.
+- `test_research.py` — preregistration/holdout falsification, exact-SHA
+  observations, detector-family constraints и privacy-first shadow cases.
 
 Stress-слой проверяет инфраструктуру на синтетическом longform. Он не является
 book-scale редакторской апробацией, не доказывает качество смысла на рукописи и

@@ -29,9 +29,9 @@
 
 Если F1 включён, показать стартовый список:
 
-EN без регистрации: `zerogpt,scribbr,gptinf,copyleaks`.
+EN no-account candidate profile: `zerogpt,scribbr,gptinf,copyleaks`.
 
-RU без регистрации: `zerogpt,gptinf,copyleaks`.
+RU no-account candidate profile: `zerogpt,gptinf,copyleaks`.
 
 Отдельно предложить account/limit-sensitive `gptzero` и `quillbot`, а также
 исходный профиль из шести сервисов:
@@ -42,6 +42,11 @@ RU без регистрации: `zerogpt,gptinf,copyleaks`.
 в текущем live capability требует регистрации или перестал возвращать
 повторяемый guest-result. Каждый оставленный сервис должен пройти strict
 `<20%`; target `<15%`.
+
+Copyleaks — quota-sensitive кандидат, а не гарантированно repeatable guest:
+holdout-03 получил `scan limit reached` без score после предыдущих успешных
+guest-прогонов. Если свежий capability review блокируется, не редактировать
+текст ради access-проблемы; показать blocker и получить новый Q3.
 
 В state этот follow-up записывается как Q3.
 

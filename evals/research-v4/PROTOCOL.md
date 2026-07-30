@@ -239,3 +239,23 @@ verdict.
 `python3 scripts/research_holdout.py --preregistration <prereg.json>`:
 валидатор сверяет calibration/corpus/plan SHA, holdout partition, candidate
 binding, quality ceiling, registry independence groups и repeat policy.
+Прерванный holdout не подаётся как completed result. Его допустимая
+falsification-часть проходит
+`python3 scripts/research_holdout.py --partial-result <partial.json>`:
+отдельный schema требует честные missing timestamp/capture limits, полный
+зафиксированный service slice, exact SHA и заново вычисляет только тот вывод,
+который логически поддерживается неполной матрицей.
+
+## Shadow-validation на реальной работе
+
+Реальный проект не становится корпусом автоматически. По умолчанию
+`delivery_only`: raw text, варианты, captures и case JSON остаются локальными,
+а aggregate research запрещён. `private_research` требует отдельного согласия
+и хранит только SHA цитаты согласия.
+
+`scripts/shadow_case.py` замораживает original/candidate SHA, hypotheses,
+quality evidence, service scope, repeat policy и privacy до новых scores.
+Один `delivery_diagnostic` case помогает выбрать вариант в текущем проекте.
+`research_candidate` требует три повтора и может попасть лишь в aggregate
+review; production admission всё равно требует calibration/holdout по
+критериям выше.

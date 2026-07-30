@@ -8,6 +8,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
@@ -19,6 +20,7 @@ import research_holdout  # noqa: E402
 import research_pilot  # noqa: E402
 import research_scout  # noqa: E402
 import research_variants  # noqa: E402
+import shadow_case  # noqa: E402
 
 
 def digest(text: str) -> str:
@@ -1255,6 +1257,21 @@ class ResearchHoldoutTests(unittest.TestCase):
         prereg.write_text(json.dumps(data), encoding="utf-8")
         return prereg
 
+    def copied_holdout_three_partial(self, root: Path, data: dict) -> Path:
+        source = ROOT / "evals/research-v4"
+        prereg_data = json.loads(
+            (source / "holdout-03-preregistration.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        prereg = self.copied_holdout_three_prereg(root, prereg_data)
+        prereg.write_bytes(
+            (source / "holdout-03-preregistration.json").read_bytes()
+        )
+        result = prereg.parent / "partial.json"
+        result.write_text(json.dumps(data), encoding="utf-8")
+        return result
+
     def test_quote_integrity_holdout_three_is_frozen_and_registry_bound(
         self,
     ) -> None:
@@ -1299,6 +1316,45 @@ class ResearchHoldoutTests(unittest.TestCase):
             path = self.copied_holdout_three_prereg(Path(directory), data)
             with self.assertRaisesRegex(ValueError, "quote operation mismatch"):
                 research_holdout.validate_preregistration(path)
+
+    def test_quote_integrity_partial_result_rejects_transfer(self) -> None:
+        path = ROOT / "evals/research-v4/holdout-03-partial-result.json"
+        data = research_holdout.load_partial_result(path)
+        self.assertFalse(data["analysis"]["confirmatory_holdout_completed"])
+        self.assertFalse(data["analysis"]["primary_pair_available"])
+        self.assertTrue(data["analysis"]["zerogpt_transfer_rejected"])
+        self.assertEqual(data["analysis"]["zerogpt_successful_samples"], 0)
+        self.assertFalse(data["analysis"]["production_rule_admitted"])
+        self.assertTrue(
+            all(
+                row["status"] == "failed_no_effect_above_noise"
+                for row in data["analysis"]["sample_results"]
+            )
+        )
+
+    def test_quote_integrity_partial_result_rejects_forged_success(self) -> None:
+        source = ROOT / "evals/research-v4"
+        data = json.loads(
+            (source / "holdout-03-partial-result.json").read_text(encoding="utf-8")
+        )
+        data["analysis"]["zerogpt_successful_samples"] = 3
+        with tempfile.TemporaryDirectory() as directory:
+            result = self.copied_holdout_three_partial(Path(directory), data)
+            with self.assertRaisesRegex(ValueError, "does not recompute"):
+                research_holdout.load_partial_result(result)
+
+    def test_quote_integrity_partial_result_rejects_invented_timestamp(
+        self,
+    ) -> None:
+        source = ROOT / "evals/research-v4"
+        data = json.loads(
+            (source / "holdout-03-partial-result.json").read_text(encoding="utf-8")
+        )
+        data["observations"][0]["observed_at"] = "2026-07-30T20:00:00+00:00"
+        with tempfile.TemporaryDirectory() as directory:
+            result = self.copied_holdout_three_partial(Path(directory), data)
+            with self.assertRaisesRegex(ValueError, "must not invent"):
+                research_holdout.load_partial_result(result)
 
     def test_direct_claim_holdout_is_frozen_on_new_strict_texts(self) -> None:
         research_dir = ROOT / "evals/research-v4"
@@ -1663,3 +1719,229 @@ class ResearchMatrixTests(unittest.TestCase):
                 {"observed": 1, "required": 2},
             )
             self.assertIsNone(result["least_changed_hard_pass"])
+
+
+class ShadowCaseTests(unittest.TestCase):
+    def build_case(
+        self,
+        root: Path,
+        *,
+        privacy_mode: str = "delivery_only",
+        evidence_tier: str = "delivery_diagnostic",
+    ) -> Path:
+        original = root / "original.md"
+        candidate = root / "candidate.md"
+        original.write_text(
+            "The review may identify a bounded effect. Evidence remains limited.",
+            encoding="utf-8",
+        )
+        candidate.write_text(
+            "The review may identify a bounded effect; evidence remains limited.",
+            encoding="utf-8",
+        )
+        case = root / "shadow" / "case.json"
+        shadow_case.init_case(
+            SimpleNamespace(
+                case=case,
+                case_id="unit-en-001",
+                original=original,
+                language="en",
+                genre="technical_report",
+                english_level="B2",
+                services="zerogpt,scribbr",
+                privacy_mode=privacy_mode,
+                evidence_tier=evidence_tier,
+                consent_quote=(
+                    "I explicitly allow aggregate private research metrics."
+                    if privacy_mode == "private_research"
+                    else ""
+                ),
+            )
+        )
+        shadow_case.add_candidate(
+            SimpleNamespace(
+                case=case,
+                candidate=candidate,
+                id="C001",
+                hypothesis_id="punctuation_repair",
+                operation_summary=(
+                    "Replaced one sentence boundary with source-compatible punctuation."
+                ),
+                quality_status="pass",
+                fidelity_evidence=(
+                    "Both clauses, modality and evidence limitation remain unchanged."
+                ),
+                style_evidence=(
+                    "The compact coordination remains inside the source style envelope."
+                ),
+                english_level_evidence=(
+                    "Vocabulary and syntax remain at the source-relative B2 level."
+                ),
+            )
+        )
+        shadow_case.freeze_case(case)
+        frozen_at = json.loads(case.read_text(encoding="utf-8"))["freeze"][
+            "frozen_at"
+        ]
+        hashes = {
+            "baseline": digest(original.read_text(encoding="utf-8")),
+            "C001": digest(candidate.read_text(encoding="utf-8")),
+        }
+        scores = {
+            ("baseline", "zerogpt"): 80,
+            ("baseline", "scribbr"): 70,
+            ("C001", "zerogpt"): 10,
+            ("C001", "scribbr"): 15,
+        }
+        repeats = 3 if evidence_tier == "research_candidate" else 1
+        index = 0
+        for (candidate_id, service), score in scores.items():
+            for repeat in range(1, repeats + 1):
+                evidence = root / f"source-evidence-{index}.json"
+                evidence.write_text(
+                    json.dumps(
+                        {
+                            "service": service,
+                            "candidate_id": candidate_id,
+                            "repeat": repeat,
+                            "visible_result": f"{score}% AI",
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+                observation = root / f"observation-{index}.json"
+                observation.write_text(
+                    json.dumps(
+                        {
+                            "schema": "palimpsest.shadow-observation.v1",
+                            "candidate_id": candidate_id,
+                            "service": service,
+                            "repeat": repeat,
+                            "status": "scored",
+                            "candidate_sha256": hashes[candidate_id],
+                            "post_visible_text_sha256": hashes[candidate_id],
+                            "score_pct": score,
+                            "terminal_state": "complete",
+                            "transition_signal": "loading_or_disabled_observed",
+                            "observed_at": frozen_at,
+                            "result_url": (
+                                "https://www.zerogpt.com/"
+                                if service == "zerogpt"
+                                else "https://www.scribbr.com/ai-detector/"
+                            ),
+                            "visible_result_excerpt": (
+                                f"Visible result: {score}% AI."
+                            ),
+                            "evidence": {
+                                "kind": "browser_session_record",
+                                "path": shadow_case.relative_path(
+                                    evidence,
+                                    case.parent,
+                                ),
+                                "sha256": shadow_case.file_sha256(evidence),
+                            },
+                            "capture_status": "missing",
+                            "capture_limitation": (
+                                "DOM result was preserved but screenshot capture "
+                                "timed out."
+                            ),
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+                shadow_case.record_observation(case, observation)
+                index += 1
+        return case
+
+    def test_shadow_case_selects_least_changed_complete_pass(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            result = shadow_case.summarize(self.build_case(Path(directory)))
+            self.assertEqual(result["least_changed_hard_pass"], "C001")
+            self.assertIn("C001", result["pareto_frontier"])
+            self.assertFalse(
+                result["research_admission"]["eligible_for_aggregate_review"]
+            )
+            self.assertFalse(
+                result["research_admission"]["production_rule_admitted"]
+            )
+
+    def test_shadow_case_freeze_rejects_post_score_candidate_mutation(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            case = self.build_case(Path(directory))
+            data = json.loads(case.read_text(encoding="utf-8"))
+            data["candidates"][1]["hypothesis_id"] = "post_score_relabel"
+            case.write_text(json.dumps(data), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "digest-frozen"):
+                shadow_case.summarize(case)
+
+    def test_shadow_private_research_full_matrix_is_aggregate_eligible(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            result = shadow_case.summarize(
+                self.build_case(
+                    Path(directory),
+                    privacy_mode="private_research",
+                    evidence_tier="research_candidate",
+                )
+            )
+            self.assertTrue(
+                result["research_admission"]["eligible_for_aggregate_review"]
+            )
+            self.assertFalse(
+                result["research_admission"]["production_rule_admitted"]
+            )
+
+    def test_shadow_case_rejects_tampered_source_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            case = self.build_case(Path(directory))
+            data = json.loads(case.read_text(encoding="utf-8"))
+            evidence_path = shadow_case.resolve_case_file(
+                case,
+                data["observations"][0]["evidence"]["path"],
+            )
+            evidence_path.write_text('{"forged": true}', encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "evidence hash mismatch"):
+                shadow_case.summarize(case)
+
+    def test_shadow_private_research_requires_consent(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            original = root / "original.md"
+            original.write_text("A private source text.", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "specific 20"):
+                shadow_case.init_case(
+                    SimpleNamespace(
+                        case=root / "case.json",
+                        case_id="unit-en-002",
+                        original=original,
+                        language="en",
+                        genre="report",
+                        english_level="B2",
+                        services="zerogpt,scribbr",
+                        privacy_mode="private_research",
+                        evidence_tier="research_candidate",
+                        consent_quote="",
+                    )
+                )
+
+    def test_shadow_research_candidate_needs_independent_groups(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            original = root / "original.md"
+            original.write_text("A private source text.", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "two independent"):
+                shadow_case.init_case(
+                    SimpleNamespace(
+                        case=root / "case.json",
+                        case_id="unit-en-003",
+                        original=original,
+                        language="en",
+                        genre="report",
+                        english_level="B2",
+                        services="zerogpt,gptinf",
+                        privacy_mode="private_research",
+                        evidence_tier="research_candidate",
+                        consent_quote=(
+                            "I explicitly allow aggregate private research metrics."
+                        ),
+                    )
+                )

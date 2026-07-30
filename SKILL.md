@@ -54,6 +54,7 @@ reference when its phase becomes active:
 | diagnosis and edit design | [references/patterns.md](references/patterns.md), [references/surgery.md](references/surgery.md) |
 | marks and detector rounds | [references/annotation.md](references/annotation.md), [references/detectors.md](references/detectors.md) |
 | semantic reconciliation | [references/fidelity.md](references/fidelity.md) |
+| consented real-work research | [references/shadow-validation.md](references/shadow-validation.md) |
 | F3 | [references/factcheck.md](references/factcheck.md) |
 | F4 | [references/anti-plagiarism.md](references/anti-plagiarism.md) |
 | regression work | [references/evals.md](references/evals.md) |
@@ -73,13 +74,14 @@ always obtain the reference decision.
    - `F3`: deeply verify claims against primary/official sources;
    - `F4`: resolve close paraphrase, quotation, citation, and attribution risk.
 3. **F1 detector scope.** If F1 is selected, ask which detectors to enable or
-   disable. Start from the repeatable no-sign-up English profile:
+   disable. Start from the no-account English candidate profile:
    `zerogpt,scribbr,gptinf,copyleaks` (Russian:
    `zerogpt,gptinf,copyleaks`). Also offer GPTZero and QuillBot as optional
    account/limit-sensitive services and show the original six-service profile
-   when requested. ZeroGPT remains mandatory by user preference. Every service
-   retained by this answer becomes mandatory for the current job. Without F1,
-   record `none`.
+   when requested. Copyleaks itself is guest-quota-sensitive: selection never
+   substitutes for a fresh capability review. ZeroGPT remains mandatory by
+   user preference. Every service retained by this answer becomes mandatory
+   for the current job. Without F1, record `none`.
 4. **Writing requirements.** Ask for audience, genre, structure, length,
    citation style, forbidden wording, protected fragments, and other rules.
 
@@ -104,7 +106,7 @@ python3 scripts/state.py --state workspace/STATE.json intake \
 python3 scripts/state.py --state workspace/STATE.json intake \
   --question Q3 \
   --services zerogpt,scribbr,gptinf,copyleaks \
-  --answer "Use the repeatable no-sign-up English profile." --source explicit
+  --answer "Use the no-account English candidate profile." --source explicit
 python3 scripts/state.py --state workspace/STATE.json intake \
   --question Q4 --answer "Technical report; preserve headings and citations." \
   --source explicit
@@ -187,7 +189,9 @@ threshold:
    hypotheses, not causal edit recipes; never apply blanket split/merge rules.
    Do not make claims or subjects more direct merely to influence a detector:
    `direct_claim_restoration` failed its preregistered transfer holdout.
-   Change directness only for a source-supported editorial or fidelity reason.
+   Restoring an exact quote also failed all three eligible ZeroGPT transfer
+   tests in the interrupted holdout-03. Change directness or quotation only
+   for a source-supported editorial or fidelity reason, never as a score rule.
 8. **Run fidelity, English-level, and style screens before live recheck.**
    Reject unsupported claim, logic, modality, unit, actor, chronology,
    citation, English-level, or voice drift before sending the candidate to a
@@ -246,6 +250,47 @@ A validated plateau documents a blocker and prevents repeated cosmetic edits.
 It never turns a score of 20% or more green or yellow. Continue with a
 materially different meaning-safe hypothesis, ask the user to change F1/scope,
 or report the reproducible blocker while leaving the task open.
+
+## Optional shadow-validation on real work
+
+Real projects may be used as a private validation layer only after reading
+`references/shadow-validation.md`. This is optional and never delays delivery.
+Default to `delivery_only`: keep raw text, candidates, captures, and case JSON
+inside the private workspace and never commit them.
+
+Ask for separate consent only if aggregate research reuse is actually useful.
+Without explicit consent, do not retain or aggregate project metrics as
+research. Consent does not authorize publication; shadow-case public export is
+always disabled.
+
+Freeze original/candidate SHA, one-factor hypotheses, quality evidence,
+services, repeats, and privacy **before** reading new detector results:
+
+```bash
+python3 scripts/shadow_case.py init \
+  --case workspace/shadow/case.json --case-id real-en-001 \
+  --original workspace/original.md \
+  --language en --genre technical_report --english-level B2 \
+  --services zerogpt,scribbr,gptinf,copyleaks \
+  --privacy-mode delivery_only --evidence-tier delivery_diagnostic
+python3 scripts/shadow_case.py add-candidate \
+  --case workspace/shadow/case.json \
+  --candidate workspace/candidate-C001.md --id C001 \
+  --hypothesis-id local_editorial_mechanism \
+  --operation-summary "One bounded source-preserving editorial operation." \
+  --quality-status pass \
+  --fidelity-evidence "Exact source-unit review preserves claims and modality." \
+  --style-evidence "Candidate remains inside the source handwriting envelope." \
+  --english-level-evidence "Candidate remains at the recorded source level."
+python3 scripts/shadow_case.py freeze --case workspace/shadow/case.json
+```
+
+After freeze, record only exact-SHA terminal observations; blocked/error is not
+a score. Use `shadow_case.py summary` to compute the complete-case Pareto
+frontier and least-changed hard pass. A one-shot delivery case is diagnostic.
+Even a three-repeat consented case can only enter aggregate review; it cannot
+admit a production detector recipe without multi-text calibration and a new
+preregistered holdout.
 
 ## F2, F3, and F4
 
