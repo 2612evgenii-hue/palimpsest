@@ -68,8 +68,17 @@ Preregistered `micro-01` затем проверил шесть естестве
 прошли calibration screen ZeroGPT без regression в Scribbr, однако cross-family
 подтверждения нет: Scribbr остался на своих исходных крайних `100%`/`0%`, а
 одна same-SHA ячейка ZeroGPT дала диапазон `0–76,2%`. Поэтому ни одно правило
-не добавлено в production skill; следующий шаг — transition-safe rerun и новый
-holdout. Copyleaks снова честно записан как `scan_limit_reached`.
+не было добавлено в production skill. Copyleaks снова честно записан как
+`scan_limit_reached`.
+
+Transition-safe `holdout-02` затем отверг перенос
+`direct_claim_restoration` на двух новых строгих EN-текстах. На scientific
+образце ZeroGPT дал `0%` baseline и кандидату, поэтому эффект был
+неизмерим; Scribbr изменился лишь `27% → 25%`. На formal-news human control и
+AI baseline получили одинаковые `41,6%` ZeroGPT, а кандидат — `41,7%`;
+Scribbr остался на полу `0%`. Результат — `0/2`, правило не допущено.
+Это также запрещает трактовать «сделать claim прямее» как универсальный
+detector-рецепт: такая правка остаётся только редакторским инструментом.
 
 См.
 [протокол](evals/research-v4/PROTOCOL.md),
@@ -79,7 +88,8 @@ holdout. Copyleaks снова честно записан как `scan_limit_rea
 [pilot-05](evals/research-v4/pilot-05-tech-canonical.json) /
 [holdout-01](evals/research-v4/holdout-01-pubmed-canonical.json) /
 [baseline scout-01](evals/research-v4/baseline-scout-01-result.json) /
-[micro-01](evals/research-v4/micro-01-result.json).
+[micro-01](evals/research-v4/micro-01-result.json) /
+[holdout-02](evals/research-v4/holdout-02-result.json).
 
 Воспроизвести закреплённый corpus, варианты pilot-05 и проверку Pareto:
 
@@ -101,6 +111,8 @@ python3 scripts/research_scout.py \
   --result evals/research-v4/baseline-scout-01-result.json
 python3 scripts/research_micro.py \
   --result evals/research-v4/micro-01-result.json
+python3 scripts/research_holdout.py \
+  --result evals/research-v4/holdout-02-result.json
 ```
 
 ## Для чего нужен Palimpsest

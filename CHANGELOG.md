@@ -29,6 +29,15 @@
   кандидатов, frozen repeat policy, Copyleaks scope и заново вычисляет эффекты;
 - Copyleaks micro-диагностика снова записана как `scan_limit_reached`, без
   выдуманного score;
+- завершён transition-bound `holdout-02` на двух новых строгих EN-текстах:
+  перенос `direct_claim_restoration` отвергнут (`0/2`);
+- на formal-news human control и AI baseline получили одинаковые `41,6%`
+  ZeroGPT, а кандидат — `41,7%`; scientific ZeroGPT baseline оказался на полу;
+- новый `research_holdout.py` заново проверяет preregistration/commit binding,
+  exact-SHA матрицу, три повтора, transition signals, technical exclusions и
+  вычисляет verdict, не доверяя заявленному analysis;
+- production skill прямо запрещает использовать «сделать claim прямее» как
+  detector-рецепт; это допустимо только по смысловой/редакторской причине;
 - skill запрещает blanket split/merge по vendor-подсказке и требует
   quality-first screening до live recheck;
 - полный selftest расширен новыми holdout/scout/anti-forgery слоями.

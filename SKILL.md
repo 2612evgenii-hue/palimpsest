@@ -185,6 +185,9 @@ threshold:
    repair. Do not repeat one trick across the text. Vendor feature names,
    highlights, and generic advice such as “increase sentence variation” are
    hypotheses, not causal edit recipes; never apply blanket split/merge rules.
+   Do not make claims or subjects more direct merely to influence a detector:
+   `direct_claim_restoration` failed its preregistered transfer holdout.
+   Change directness only for a source-supported editorial or fidelity reason.
 8. **Run fidelity, English-level, and style screens before live recheck.**
    Reject unsupported claim, logic, modality, unit, actor, chronology,
    citation, English-level, or voice drift before sending the candidate to a

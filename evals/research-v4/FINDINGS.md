@@ -232,3 +232,31 @@ Same-SHA диапазон `0–76,2` у news/direct-subject нельзя мас�
 точный SHA самого дешёвого advancing-кандидата и вернул
 `scan_limit_reached`; score отсутствует. Screenshot capture также отсутствует.
 Итог: `rule_admission = none_holdout_required`.
+
+## Holdout-02: перенос direct claim отвергнут
+
+План был опубликован commit `659edea` до первого score. Он заморозил два новых
+строгих AI-polish текста, их human controls, одну точную
+`direct_claim_restoration` на образец, SHA всех текстов, три повтора и
+transition-safe инструментирование. Все 36 включённых сканов привязаны к
+точному SHA и имеют доказанный переход от предыдущего результата; один timeout
+до submit сохранён отдельно и исключён.
+
+| Sample | Edit cost | ZeroGPT human | ZeroGPT AI → candidate | Scribbr AI → candidate | Verdict |
+|---|---:|---:|---:|---:|---|
+| arxiv-polish-02 | 7,81% | 0% ×3 | 0% → 0% ×3 | 27% → 25% ×3 | ineligible: ZeroGPT floor |
+| news-polish-02 | 2,76% | 41,6% ×3 | 41,6% → 41,7% ×3 | 0% → 0% ×3 | failed: no effect above noise |
+
+Заранее заданный критерий требовал baseline ZeroGPT не ниже 20%, снижение
+строго больше same-SHA range и 1 п.п., range не выше 5 п.п. и отсутствие
+Scribbr regression больше 5 п.п. Ни один образец не прошёл: итог `0/2`.
+Scientific-ячейка не доказывает пользу правки, потому что измерительный сервис
+был на полу. Formal-news ячейка не различила human и AI baseline и после
+правки ухудшилась на 0,1 п.п.
+
+Следствие для skill отрицательное, но прикладное:
+`direct_claim_restoration` не является detector-рецептом. Более прямое
+утверждение допустимо только как source-supported редакторская или fidelity
+правка. Калибровочный успех `micro-01` не переносится и правило в production
+не допускается. Полный результат:
+[`holdout-02-result.json`](holdout-02-result.json).

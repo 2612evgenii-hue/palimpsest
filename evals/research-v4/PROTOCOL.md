@@ -209,3 +209,8 @@ Micro-edit result обязан проходить
 `python3 scripts/research_micro.py --result <result.json>`: валидатор заново
 проверяет frozen commit/SHA, первый score, repeat policy, diagnostic scope и
 declared effect summary.
+Transition-bound holdout обязан проходить
+`python3 scripts/research_holdout.py --result <result.json>`: валидатор заново
+проверяет preregistration/commit binding, полную exact-SHA матрицу, три
+повтора, transition signals, исключённые технические попытки и вычисленный
+verdict.

@@ -15,6 +15,7 @@ sys.path.insert(0, str(SCRIPTS))
 import research_matrix  # noqa: E402
 import research_micro  # noqa: E402
 import research_corpus  # noqa: E402
+import research_holdout  # noqa: E402
 import research_pilot  # noqa: E402
 import research_scout  # noqa: E402
 import research_variants  # noqa: E402
@@ -692,6 +693,16 @@ class ResearchHoldoutTests(unittest.TestCase):
     PILOT = ROOT / "evals/research-v4/holdout-01-pubmed-canonical.json"
     PREREG = ROOT / "evals/research-v4/holdout-01-preregistration.json"
 
+    def holdout_two_result(self) -> Path:
+        return ROOT / "evals/research-v4/holdout-02-result.json"
+
+    def copied_holdout_two(self, root: Path, data: dict) -> Path:
+        prereg = ROOT / "evals/research-v4/holdout-02-preregistration.json"
+        (root / prereg.name).write_bytes(prereg.read_bytes())
+        result = root / "result.json"
+        result.write_text(json.dumps(data), encoding="utf-8")
+        return result
+
     def test_direct_claim_holdout_is_frozen_on_new_strict_texts(self) -> None:
         research_dir = ROOT / "evals/research-v4"
         prereg = json.loads(
@@ -756,6 +767,68 @@ class ResearchHoldoutTests(unittest.TestCase):
             "additional independent detector group",
             prereg["success_criteria"]["production_admission"],
         )
+
+    def test_direct_claim_holdout_rejects_transfer(self) -> None:
+        data = research_holdout.load_result(self.holdout_two_result())
+        results = {
+            row["sample"]: row for row in data["analysis"]["sample_results"]
+        }
+        self.assertEqual(
+            results["arxiv-polish-02"]["status"],
+            "ineligible_zerogpt_baseline_below_20",
+        )
+        self.assertEqual(
+            results["news-polish-02"]["status"],
+            "failed_no_effect_above_noise",
+        )
+        self.assertEqual(
+            results["news-polish-02"]["zerogpt_human"]["median_pct"],
+            results["news-polish-02"]["zerogpt_baseline"]["median_pct"],
+        )
+        self.assertEqual(data["analysis"]["successful_samples"], 0)
+        self.assertFalse(data["analysis"]["holdout_success"])
+        self.assertFalse(data["analysis"]["production_rule_admitted"])
+
+    def test_direct_claim_holdout_rejects_missing_transition(self) -> None:
+        data = json.loads(
+            self.holdout_two_result().read_text(encoding="utf-8")
+        )
+        data["observations"][0]["transition_signals"][1] = "missing"
+        with tempfile.TemporaryDirectory() as directory:
+            path = self.copied_holdout_two(Path(directory), data)
+            with self.assertRaisesRegex(ValueError, "transition signal"):
+                research_holdout.load_result(path)
+
+    def test_direct_claim_holdout_rejects_forged_success(self) -> None:
+        data = json.loads(
+            self.holdout_two_result().read_text(encoding="utf-8")
+        )
+        data["analysis"]["successful_samples"] = 2
+        data["analysis"]["holdout_success"] = True
+        with tempfile.TemporaryDirectory() as directory:
+            path = self.copied_holdout_two(Path(directory), data)
+            with self.assertRaisesRegex(ValueError, "does not recompute"):
+                research_holdout.load_result(path)
+
+    def test_direct_claim_holdout_rejects_forged_text_binding(self) -> None:
+        data = json.loads(
+            self.holdout_two_result().read_text(encoding="utf-8")
+        )
+        data["observations"][0]["post_visible_text_sha256"] = "f" * 64
+        with tempfile.TemporaryDirectory() as directory:
+            path = self.copied_holdout_two(Path(directory), data)
+            with self.assertRaisesRegex(ValueError, "not bound"):
+                research_holdout.load_result(path)
+
+    def test_direct_claim_holdout_rejects_included_click_timeout(self) -> None:
+        data = json.loads(
+            self.holdout_two_result().read_text(encoding="utf-8")
+        )
+        data["excluded_technical_attempts"][0]["included_in_analysis"] = True
+        with tempfile.TemporaryDirectory() as directory:
+            path = self.copied_holdout_two(Path(directory), data)
+            with self.assertRaisesRegex(ValueError, "excluded"):
+                research_holdout.load_result(path)
 
     def test_pubmed_holdout_is_preregistered_and_rejects_split_transfer(self) -> None:
         pilot = json.loads(self.PILOT.read_text(encoding="utf-8"))
