@@ -1,0 +1,90 @@
+{
+  "schema": "palimpsest.research-corpus.v3",
+  "canonicalization": {
+    "id": "plain_text_v1",
+    "rules": [
+      "Unicode NFC",
+      "CRLF and CR become LF",
+      "trailing spaces and tabs are removed from each line",
+      "visible prose, paragraph breaks, and terminal newline state are preserved"
+    ]
+  },
+  "datasets": {
+    "aigc-text-bank-polish-deepseek": {
+      "id": "bmbgsj/AIGC-text-bank",
+      "revision": "38d3e0e23fc9997d26929f1fecf9b46eeae567be",
+      "license": "cc-by-nc-sa-4.0",
+      "source_url": "https://huggingface.co/datasets/bmbgsj/AIGC-text-bank",
+      "retrieval": {
+        "type": "jsonl_range",
+        "file_path": "ai_polish/deepseek.jsonl"
+      }
+    }
+  },
+  "samples": [
+    {
+      "id": "arxiv-polish-02-human",
+      "dataset": "aigc-text-bank-polish-deepseek",
+      "row_id": "arxiv_001213",
+      "range_start": 0,
+      "range_length": 2000000,
+      "field": "text",
+      "model": "DeepSeek",
+      "authorship": "human",
+      "genre": "scientific_abstract",
+      "topic_pair": "arxiv-polish-02",
+      "partition": "holdout",
+      "word_count": 124,
+      "sha256": "5fb96a2c22f5330ec3d817c43827a9db5c88844be88fe8958fdd61016f14cb54"
+    },
+    {
+      "id": "arxiv-polish-02-ai",
+      "dataset": "aigc-text-bank-polish-deepseek",
+      "row_id": "arxiv_001213",
+      "range_start": 0,
+      "range_length": 2000000,
+      "field": "text_ai",
+      "model": "DeepSeek",
+      "authorship": "ai",
+      "generation_mode": "ai_polish",
+      "genre": "scientific_abstract",
+      "topic_pair": "arxiv-polish-02",
+      "partition": "holdout",
+      "word_count": 138,
+      "sha256": "4a235ee71c843d5bf588f0e4b1d5a9f47ee35cb976ed59c3c5252953917d660b"
+    },
+    {
+      "id": "news-polish-02-human",
+      "dataset": "aigc-text-bank-polish-deepseek",
+      "row_id": "news_004384",
+      "range_start": 0,
+      "range_length": 2000000,
+      "field": "text",
+      "model": "DeepSeek",
+      "authorship": "human",
+      "genre": "formal_news",
+      "topic_pair": "news-polish-02",
+      "partition": "holdout",
+      "word_count": 339,
+      "sha256": "0aa30afc8ff8f78005b5b91ef5013e6bb5502552871b5c45acee9de4cb8f3df7",
+      "canonical_sha256": "6c60113c6362888c8625ef35595ca59aca65706dbd7d981790d81dbe471858db"
+    },
+    {
+      "id": "news-polish-02-ai",
+      "dataset": "aigc-text-bank-polish-deepseek",
+      "row_id": "news_004384",
+      "range_start": 0,
+      "range_length": 2000000,
+      "field": "text_ai",
+      "model": "DeepSeek",
+      "authorship": "ai",
+      "generation_mode": "ai_polish",
+      "genre": "formal_news",
+      "topic_pair": "news-polish-02",
+      "partition": "holdout",
+      "word_count": 311,
+      "sha256": "1bd74c07de38b1fe819549f5521eb7095344a5c2510d2ce9f6247fe1abf9bb40",
+      "canonical_sha256": "ce10b72538b8c181c0dd62877bc9ab6f7641a794083d7e88b1e259b0a87033e2"
+    }
+  ]
+}

@@ -116,3 +116,12 @@ B2 AI-polish-кандидат был исключён до detector scores: upst
 указывала B2, но локальный source-relative screen оценил переход B2 → C2.
 В scout включён другой AI-native essay, у которого исходная и AI-версии обе
 остаются в измеряемой полосе B2.
+
+Holdout-02 использует отдельный hash-bound manifest, чтобы не изменять уже
+замороженный `corpus-manifest.json`. До live scores выбраны две ранее
+непроверенные строки AI-polish subset: `arxiv_001213` и `news_004384`.
+Критерии выбора были содержательными, а не detector-facing: строгий научный
+abstract и formal news, полный связанный human source, достаточная длина и
+возможность одной source-supported meaning-equivalent правки. Upstream
+revision остаётся тем же pinned commit; SHA human/AI полей и canonical form
+записаны в `holdout-02-corpus-manifest.json`.

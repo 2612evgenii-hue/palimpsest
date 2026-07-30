@@ -692,6 +692,71 @@ class ResearchHoldoutTests(unittest.TestCase):
     PILOT = ROOT / "evals/research-v4/holdout-01-pubmed-canonical.json"
     PREREG = ROOT / "evals/research-v4/holdout-01-preregistration.json"
 
+    def test_direct_claim_holdout_is_frozen_on_new_strict_texts(self) -> None:
+        research_dir = ROOT / "evals/research-v4"
+        prereg = json.loads(
+            (research_dir / "holdout-02-preregistration.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(
+            prereg["schema"],
+            "palimpsest.holdout-preregistration.v2",
+        )
+        self.assertEqual(prereg["status"], "frozen_before_live_scores")
+        self.assertEqual(
+            prereg["calibration_binding"]["git_commit"],
+            "f0efab0d41781d4df28d01d22e470757a3dd8d0d",
+        )
+        for binding_name in ("calibration_binding", "corpus_binding"):
+            binding = prereg[binding_name]
+            path = research_dir / binding["path"]
+            self.assertEqual(
+                hashlib.sha256(path.read_bytes()).hexdigest(),
+                binding["sha256"],
+            )
+        corpus = json.loads(
+            (research_dir / prereg["corpus_binding"]["path"]).read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(len(corpus["samples"]), 4)
+        self.assertTrue(
+            all(sample["partition"] == "holdout" for sample in corpus["samples"])
+        )
+        self.assertEqual(
+            {sample["topic_pair"] for sample in corpus["samples"]},
+            {"arxiv-polish-02", "news-polish-02"},
+        )
+        self.assertEqual(len(prereg["plans"]), 2)
+        for binding in prereg["plans"]:
+            plan_path = research_dir / binding["path"]
+            self.assertEqual(
+                hashlib.sha256(plan_path.read_bytes()).hexdigest(),
+                binding["sha256"],
+            )
+            plan = json.loads(plan_path.read_text(encoding="utf-8"))
+            self.assertEqual(plan["original_sha256"], binding["ai_sha256"])
+            self.assertEqual(plan["reference_sha256"], binding["human_sha256"])
+            self.assertEqual(len(plan["operations"]), 1)
+            self.assertEqual(
+                plan["operations"][0]["factor"],
+                "direct_claim_restoration",
+            )
+            self.assertLessEqual(binding["edit_cost"], 0.18)
+            self.assertEqual(binding["quality"]["fidelity_screen"], "pass")
+            self.assertEqual(binding["quality"]["english_level"], "pass_C2")
+            self.assertTrue(
+                binding["quality"]["semantic_review"].startswith("pass_")
+            )
+        procedure = " ".join(prereg["procedure"])
+        self.assertIn("transition signal", procedure)
+        self.assertIn("Do not create, alter, combine, or replace", procedure)
+        self.assertIn(
+            "additional independent detector group",
+            prereg["success_criteria"]["production_admission"],
+        )
+
     def test_pubmed_holdout_is_preregistered_and_rejects_split_transfer(self) -> None:
         pilot = json.loads(self.PILOT.read_text(encoding="utf-8"))
         self.assertEqual(pilot["status"], "completed_holdout")

@@ -55,6 +55,11 @@ calibration. Для каждой AI-записи есть тематически
 в baseline-scout-01; human controls продолжают сканироваться вместе с каждой
 AI/AI-polish записью.
 
+После hash-binding основного manifest новые независимые тексты добавляются
+только отдельным supplemental manifest. Holdout-02 закрепляет так две ранее
+непроверенные AI-polish пары (`arxiv_001213`, `news_004384`) и не переписывает
+корпус, на который уже ссылаются прежние preregistration-файлы.
+
 Перед экспериментом source text проходит только `plain_text_v1`: NFC, LF и
 удаление хвостовых пробелов/табов на строках. Абзацы, видимые символы и
 terminal newline сохраняются. Manifest фиксирует upstream source SHA и
