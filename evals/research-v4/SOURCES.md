@@ -99,7 +99,8 @@ vendor-оценка общего false-positive rate не заменяет жа�
   каждого используемого текста.
 - [AIGC-text-bank](https://huggingface.co/datasets/bmbgsj/AIGC-text-bank)
   предоставляет связанные human/AI версии разных жанров и метаданные
-  non-native essays. Исследование использует pinned DeepSeek JSONL revision
+  non-native essays, а также отдельный AI-polish subset. Исследование использует
+  pinned DeepSeek JSONL revision
   `38d3e0e23fc9997d26929f1fecf9b46eeae567be`, exact row id и SHA каждого поля;
   лицензия источника — CC BY-NC-SA 4.0. Upstream SHA сохраняется отдельно от
   канонической plain-text формы, чтобы транспортные trailing spaces не
@@ -108,3 +109,10 @@ vendor-оценка общего false-positive rate не заменяет жа�
 Вывод: perturbation, сработавшая один раз, является наблюдением о хрупкости,
 а не профессиональным правилом редактирования. Для допуска нужны repeats,
 human controls, independent groups и holdout.
+
+В baseline-scout-01 AI-polish рассматривается как отдельный режим реального
+совместного письма, а не как заранее успешная «гуманизация». Один найденный
+B2 AI-polish-кандидат был исключён до detector scores: upstream metadata
+указывала B2, но локальный source-relative screen оценил переход B2 → C2.
+В scout включён другой AI-native essay, у которого исходная и AI-версии обе
+остаются в измеряемой полосе B2.

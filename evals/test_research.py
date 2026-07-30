@@ -61,6 +61,50 @@ class ResearchCorpusTests(unittest.TestCase):
         genres = {sample.get("genre") for sample in samples if sample.get("genre")}
         self.assertGreaterEqual(len(genres), 3)
 
+    def test_baseline_scout_is_frozen_and_bound_before_live_scores(self) -> None:
+        manifest_path = ROOT / "evals/research-v4/corpus-manifest.json"
+        manifest_bytes = manifest_path.read_bytes()
+        manifest = json.loads(manifest_bytes)
+        prereg = json.loads(
+            (
+                ROOT
+                / "evals/research-v4/baseline-scout-01-preregistration.json"
+            ).read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            prereg["schema"],
+            "palimpsest.baseline-scout-preregistration.v1",
+        )
+        self.assertEqual(prereg["status"], "frozen_before_live_scores")
+        self.assertEqual(
+            prereg["corpus_binding"]["sha256"],
+            hashlib.sha256(manifest_bytes).hexdigest(),
+        )
+        samples = {sample["id"]: sample for sample in manifest["samples"]}
+        self.assertEqual(len(prereg["ordered_pairs"]), 5)
+        self.assertEqual(
+            [pair["pair"] for pair in prereg["ordered_pairs"]],
+            [
+                "essay-b2-01",
+                "arxiv-polish-01",
+                "news-polish-01",
+                "pubmed-02",
+                "pubmed-05",
+            ],
+        )
+        for pair in prereg["ordered_pairs"]:
+            for role in ("human", "ai"):
+                sample = samples[f"{pair['pair']}-{role}"]
+                expected = sample.get("canonical_sha256", sample["sha256"])
+                self.assertEqual(pair[f"{role}_sha256"], expected)
+                self.assertEqual(sample["partition"], "calibration")
+        rule = prereg["resolvability_rule"]
+        self.assertEqual(rule["ai_score_min_inclusive"], 20)
+        self.assertEqual(rule["ai_score_max_inclusive"], 90)
+        self.assertEqual(rule["human_score_max_inclusive"], 40)
+        self.assertEqual(rule["minimum_ai_minus_human_gap"], 20)
+        self.assertEqual(rule["maximum_selected_pairs"], 3)
+
     def test_partial_jsonl_range_finds_one_complete_pinned_row(self) -> None:
         payload = (
             b'partial-prefix\n'

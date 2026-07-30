@@ -1,0 +1,120 @@
+{
+  "schema": "palimpsest.baseline-scout-preregistration.v1",
+  "experiment_id": "baseline-scout-01-resolvable-window",
+  "status": "frozen_before_live_scores",
+  "frozen_at": "2026-07-30T19:37:37+03:00",
+  "purpose": "Find strict English calibration texts on which small score changes are observable; this scout does not test or admit an editing rule.",
+  "corpus_binding": {
+    "path": "corpus-manifest.json",
+    "sha256": "81de111526ffe6e476d3bcdb32140ebbdbf3c2a4cd755da07c7274ecf23c6370",
+    "canonicalization": "plain_text_v1"
+  },
+  "ordered_pairs": [
+    {
+      "pair": "essay-b2-01",
+      "reason": "AI-native non-native learner essay whose declared and measured source level are both B2.",
+      "human_sha256": "fde002808f4d2dc4de38eecbb95afe140f59225b0ec85bcc122b649ec930f413",
+      "ai_sha256": "fa57294f03f196a85ceab6b8c7cfac6de7e33ebabf10672e4d2da7f6b2ca0e37",
+      "genre": "nonnative_essay",
+      "source_level": "B2",
+      "ai_level": "B2"
+    },
+    {
+      "pair": "arxiv-polish-01",
+      "reason": "Strict scientific AI-polish sample, paired with the exact human source row.",
+      "human_sha256": "beeb53b69015e5433c32cafb47f0468c0ecd6f2800c1f8ffe790dc2973fa4672",
+      "ai_sha256": "49ce9ed9f3889e5c230c501e76bb0bbcece879750d23e00302e9ef67b1548892",
+      "genre": "scientific_abstract",
+      "generation_mode": "ai_polish",
+      "source_level": "C2",
+      "ai_level": "C2"
+    },
+    {
+      "pair": "news-polish-01",
+      "reason": "Formal-news AI-polish sample, paired with the exact human source row.",
+      "human_sha256": "1fdbbfdba75ea5fd72c0c89f16e57f0ef3d294739e1c21165ab19c8f20341cb5",
+      "ai_sha256": "9d643193ce1c5068120c9fad4eebc9a9027f2b36f62a86ce830efd3f7734c200",
+      "genre": "formal_news",
+      "generation_mode": "ai_polish",
+      "source_level": "C2",
+      "ai_level": "C2"
+    },
+    {
+      "pair": "pubmed-02",
+      "reason": "Previously pinned but unscanned strict GPT-4 scientific calibration pair.",
+      "human_sha256": "0bba6436453f19d0bb72faea4a22b7ab4dbd76e52f836ff793d380bd44e98e66",
+      "ai_sha256": "1a5598d6eceb9bb912f78a1ca68bffaa21f4dc94f6750dbfafcee853e348bf79",
+      "genre": "scientific_abstract",
+      "source_level": "C2",
+      "ai_level": "C2"
+    },
+    {
+      "pair": "pubmed-05",
+      "reason": "Previously pinned but unscanned strict GPT-4 scientific calibration pair.",
+      "human_sha256": "c30401eb87bb9f50d560c950a4ec3bb279f872228bd613f73a1441a5f331932e",
+      "ai_sha256": "3d78f3cb35d03ebacb5fab9b1e9ea73d9160d9de2dcd99af9d3638bd8d9070dd",
+      "genre": "scientific_abstract",
+      "source_level": "C2",
+      "ai_level": "C2"
+    }
+  ],
+  "services": {
+    "primary_accessible": [
+      {
+        "id": "zerogpt",
+        "independence_group": "zerogpt"
+      },
+      {
+        "id": "scribbr",
+        "independence_group": "quillbot-learneo"
+      }
+    ],
+    "diagnostic_if_guest_ui_is_terminal": [
+      {
+        "id": "copyleaks",
+        "independence_group": "copyleaks",
+        "selection_driver": false
+      }
+    ],
+    "excluded_from_scout": [
+      {
+        "id": "gptzero",
+        "reason": "signup-gated in the current public flow"
+      },
+      {
+        "id": "quillbot",
+        "reason": "signup-gated and not independent of Scribbr"
+      },
+      {
+        "id": "gptinf",
+        "reason": "aggregator rather than an independent primary family"
+      }
+    ]
+  },
+  "procedure": [
+    "Scan every human control and AI candidate exactly once in both primary accessible services, in ordered_pairs order.",
+    "Wait for a terminal UI state, then bind the observation to the post-visible full-text SHA-256.",
+    "Do not write, alter, or scan an edit variant during this scout.",
+    "Classify pair/service cells with the frozen resolvability rule.",
+    "For selected cells only, repeat the unchanged human and AI baselines until n=3 to estimate display noise.",
+    "Attempt Copyleaks once per selected AI candidate only if its guest UI reaches a terminal state; blocked/loading is recorded as an error, never as a score."
+  ],
+  "resolvability_rule": {
+    "ai_score_min_inclusive": 20,
+    "ai_score_max_inclusive": 90,
+    "human_score_max_inclusive": 40,
+    "minimum_ai_minus_human_gap": 20,
+    "cell_pass": "terminal complete and all numeric thresholds pass in the same service",
+    "pair_pass": "at least one primary accessible service cell passes",
+    "selection_order": "first three passing pairs in ordered_pairs order",
+    "maximum_selected_pairs": 3,
+    "no_passing_pairs": "stop without creating edit variants and report that current services/corpus do not resolve micro-effects"
+  },
+  "interpretation_limits": [
+    "Selection on detector baselines is allowed only for calibration instrumentation; it creates selection bias and cannot support a detector-generalization claim.",
+    "A score of 100 is a ceiling observation, not evidence that every local edit is ineffective.",
+    "A human false positive is evidence about detector validity on this genre, not a reason to edit the human control.",
+    "The AI-polish rows are useful near-boundary candidates but their upstream transformation is not itself a Palimpsest recommendation.",
+    "Any later edit experiment requires a second frozen preregistration with exact candidate operations and quality envelopes."
+  ]
+}

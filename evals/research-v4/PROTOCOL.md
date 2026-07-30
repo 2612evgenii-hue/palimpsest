@@ -43,13 +43,17 @@ Turnitin изучается по первичной документации, н
 
 - пары PubMed human/GPT-4 из MAGE;
 - human/DeepSeek пары из AIGC-text-bank: строгий научный abstract, формальный
-  news report, non-native student essay с исходной меткой B1 и техническое
-  объяснение.
+  news report, non-native student essays с исходными метками B1/B2 и
+  техническое объяснение;
+- human/DeepSeek AI-polish пары из того же pinned dataset для научного abstract
+  и формального news: они нужны как отдельный near-boundary режим, а не как
+  замена AI-native корпусу.
 
 PubMed 03–04 и news-01 зарезервированы как holdout. Остальные пары относятся к
 calibration. Для каждой AI-записи есть тематически связанный human control.
-Следующая итерация обязана добавить аналитический memo, B2 essay и human
-controls с подтверждённым ложноположительным baseline.
+Следующая итерация обязана добавить аналитический memo. B2 essay уже закреплён
+в baseline-scout-01; human controls продолжают сканироваться вместе с каждой
+AI/AI-polish записью.
 
 Перед экспериментом source text проходит только `plain_text_v1`: NFC, LF и
 удаление хвостовых пробелов/табов на строках. Абзацы, видимые символы и
@@ -59,6 +63,13 @@ canonical SHA. Это не edit-вариант и не detector strategy: одн
 
 Нельзя подбирать операции на holdout и затем называть тот же текст независимой
 проверкой.
+
+До подбора микроправок допустим отдельный baseline scout. Его единственная
+задача — найти calibration-тексты без потолка/пола, на которых UI способен
+показать малый эффект. Список текстов, их порядок, сервисы и числовое окно
+resolvability замораживаются до первого score. Отбор по baseline не является
+доказательством эффективности: он создаёт selection bias, поэтому последующий
+эффект всё равно обязан пройти новые тексты и независимые detector groups.
 
 До первого live-score holdout обязан иметь отдельный preregistration-файл:
 закреплённые sample/plan SHA, confirmatory factor, quality-first порядок,
