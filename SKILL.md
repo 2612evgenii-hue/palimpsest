@@ -1,6 +1,6 @@
 ---
 name: palimpsest
-description: Professional RU/EN editing, rewriting, and copywriting with an iterative check→mark→minimal edit→recheck workflow, optional external or source-as-reference handwriting control, preserved English proficiency, strict user-selected AI-detector thresholds, fact-checking, originality review, semantic fidelity, and lossless long-document memory. Use for humanizing drafts, reducing current detector scores, matching an author's writing habits without copying phrases, restructuring prose, verifying facts or attribution, and editing dissertations, reports, essays, manuscripts, or other text across context resets.
+description: Professional RU/EN editing, rewriting, and copywriting with an iterative diagnose→minimal edit→verify workflow, optional external or source-as-reference handwriting control, preserved English proficiency, fact-checking, bounded originality review, semantic fidelity, and lossless long-document memory. For permitted non-assessed contexts it can also run user-selected AI-detector measurements; for dissertations, theses, assignments, and other assessed work it disables detector-score optimisation and limits itself to quality, source, attribution, formatting, and minimal-proofreading support.
 ---
 
 # Palimpsest v3.5
@@ -34,21 +34,29 @@ while pursuing the exact functions and detector scope selected by the user.
    deliberate errors, citation laundering, or cosmetic synonym spinning.
 9. Detector scores are current external measurements, not proof of authorship
    and not a promise about future detector versions.
-10. With F1 enabled, every mandatory detector result must be **strictly below
+10. Classify the content context before offering F1. For a dissertation,
+    thesis, assessed essay, assignment, or comparable student submission,
+    disable F1 and do not rewrite to conceal AI authorship or lower an
+    AI-detector score. Use only quality-first F2/F3/F4 support and flag the
+    applicable AI-use/disclosure rules for confirmation.
+11. With F1 enabled in a permitted non-assessed context, every mandatory detector result must be **strictly below
     20% AI** on every full-coverage target. Aim for **strictly below 15%**.
     Exactly 20% fails.
-11. A high score, missing/stale evidence, blocked service, sampled coverage,
+12. A high score, missing/stale evidence, blocked service, sampled coverage,
     waiver, or plateau never completes F1. `READY_WITH_LIMITS` is not success
     for a detector score at or above 20%.
-12. Close only through current green evidence. There is no force-close or
+13. Close only through current green evidence. There is no force-close or
     local quote-based detector bypass.
 
 Read [references/doctrine.md](references/doctrine.md) and
-[references/memory.md](references/memory.md) before editing. Read the routed
+[references/memory.md](references/memory.md) before editing. Classify the
+content context with
+[references/academic-integrity.md](references/academic-integrity.md), then read the routed
 reference when its phase becomes active:
 
 | Phase | Read |
 |---|---|
+| content context and assessed work | [references/academic-integrity.md](references/academic-integrity.md) |
 | intake and goal | [references/intake.md](references/intake.md) |
 | reference handwriting | [references/ductus.md](references/ductus.md) |
 | diagnosis and edit design | [references/patterns.md](references/patterns.md), [references/surgery.md](references/surgery.md) |
@@ -62,14 +70,17 @@ reference when its phase becomes active:
 ## Intake: three user questions plus the F1 scope
 
 Ask one question at a time. Do not repeat information already explicit, but
-always obtain the reference decision.
+always obtain the reference decision. First infer `content_context`. If the
+source is assessed academic work, state briefly that F1 is unavailable and
+offer only F2–F4. Never accept a `general` label that conflicts with strong
+assessment signals.
 
 1. **Style reference and English level.** Ask whether style-reference files
    exist. Select `external_reference` or `source_as_reference`. For English,
    record A1–C2/native or `infer_from_source`.
 2. **Functions.** Ask which functions to enable:
-   - `F1`: humanize and reduce current AI-detector scores through
-     `score_mandatory`;
+   - `F1`: in permitted non-assessed contexts only, measure and reduce current
+     AI-detector scores through `score_mandatory`;
    - `F2`: make structure less mechanical while preserving genre clarity;
    - `F3`: deeply verify claims against primary/official sources;
    - `F4`: resolve close paraphrase, quotation, citation, and attribution risk.
@@ -94,7 +105,7 @@ goal is unmet.
 ```bash
 python3 scripts/state.py --state workspace/STATE.json init \
   --original workspace/original.md --working workspace/working.md \
-  --flags F1,F2
+  --flags F1,F2 --content-context general
 
 python3 scripts/state.py --state workspace/STATE.json intake \
   --question Q1 --style-mode source_as_reference --english-level B2 \
@@ -161,6 +172,9 @@ reference may inform decision habits in a dissertation, but it must not inject
 conversational phrasing into academic prose.
 
 ## Core F1 loop: check → mark → edit → recheck
+
+Use this section only when the content context is permitted and non-assessed.
+It must never be used to conceal AI authorship in assessed academic work.
 
 Repeat the following cycle until every mandatory service is below the hard
 threshold:
@@ -305,9 +319,9 @@ preregistered holdout.
 - **F4:** distinguish shared ideas, quotation, acceptable paraphrase, and close
   paraphrase. Preserve required attribution. Do not disguise plagiarism.
 
-After any F2/F3/F4 work, run and register a new full mandatory detector round,
-even if the text digest did not change. The state machine rejects a final round
-registered before those artifacts.
+When F1 is enabled, run and register a new full mandatory detector round after
+any F2/F3/F4 work, even if the text digest did not change. Without F1, do not
+create detector evidence merely to satisfy this workflow.
 
 ## Long documents and context resets
 
@@ -329,18 +343,20 @@ whole-text completion from a sample or the current context window.
 
 ## Final reconciliation and closure
 
-After the first all-service hard pass:
+With F1, begin after the first all-service hard pass. Without F1, begin
+directly with reconciliation:
 
 1. Compare original and working side by side across every source unit.
 2. Repair any loss of meaning, facts, logic, modality, chronology, purpose,
    style handwriting, or English level.
 3. Complete F2/F3/F4 if selected.
-4. Run every mandatory detector again on the final full text.
-5. Register the final passing `detector_round` after all optional-function
-   artifacts.
+4. If F1 is enabled, run every mandatory detector again on the final full text.
+5. If F1 is enabled, register the final passing `detector_round` after all
+   optional-function artifacts.
 6. Remove working annotations; complete constraints review and proofreading.
-7. Register a report containing before/after scores for every service and
-   target, highlight/edit rounds, fidelity checks, changes, and limitations.
+7. Register a report containing the applicable source/structure/overlap,
+   fidelity, style, change, and limitation evidence. Include detector
+   before/after scores only when F1 was permitted and selected.
 8. Run `verify`, inspect every detail, then run `close`.
 
 ```bash

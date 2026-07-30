@@ -2,6 +2,17 @@
 
 ## Research 4.0 — в работе, версия skill не повышена
 
+- реальный dissertation-case выявил отсутствующую границу академической
+  добросовестности: `academic_assessment` теперь определяется до intake;
+- F1 отклоняется при init и при попытке включить его через Q2 для оцениваемой
+  работы; конфликтующий `--content-context general` не снимает сильные сигналы;
+- quality-only академический маршрут сохраняет F2/F3/F4 и использует
+  консервативный default edit envelope 10% document / 25% paragraph;
+- документация различает DOI/citation audit, bounded overlap check,
+  institutional similarity report и noisy AI-detector score;
+- F4 overlap screen получил `--exclude-reference-list`: реальный
+  dissertation-case показал, что библиографическая запись иначе может
+  ошибочно считаться совпадением с reference list источника;
 - добавлена hash-pinned human/DeepSeek пара технического EN-текста;
 - проведён `pilot-05`: human controls, три baseline repeats, десять
   однофакторных правок и progressive ceiling/cliff probe;

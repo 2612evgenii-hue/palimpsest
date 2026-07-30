@@ -23,6 +23,7 @@ SEGMENT = SCRIPTS / "segment.py"
 MEMORY = SCRIPTS / "memory.py"
 OVERLAP = SCRIPTS / "source_overlap.py"
 ENGLISH_LEVEL = SCRIPTS / "english_level.py"
+STATE = SCRIPTS / "state.py"
 sys.path.insert(0, str(SCRIPTS))
 import state as STATE_MODULE  # noqa: E402
 
@@ -122,6 +123,106 @@ class FixtureSensitivityTests(unittest.TestCase):
         codes = {item["code"] for item in data(fidelity)["findings"]}
         self.assertTrue(codes)
         self.assertLessEqual(codes, {"CLAIM_DROPPED", "CLAIM_ADDED"})
+
+
+class AcademicIntegrityContextTests(unittest.TestCase):
+    ACADEMIC_TEXT = (
+        "A dissertation submitted in partial fulfilment of the requirements "
+        "of the Degree of Bachelor of Arts at Example University. This chapter "
+        "reviews hospitality design research for supervision.\n"
+    )
+
+    def init(
+        self,
+        root: Path,
+        *,
+        flags: str,
+        context: str = "auto",
+    ) -> tuple[subprocess.CompletedProcess[str], Path]:
+        original = write(root / "original.md", self.ACADEMIC_TEXT)
+        working = write(root / "working.md", self.ACADEMIC_TEXT)
+        state = root / "STATE.json"
+        proc = run(
+            STATE,
+            "--state",
+            state,
+            "init",
+            "--original",
+            original,
+            "--working",
+            working,
+            "--flags",
+            flags,
+            "--content-context",
+            context,
+        )
+        return proc, state
+
+    def test_academic_assessment_blocks_f1_at_init(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            proc, _ = self.init(Path(raw), flags="F1,F3")
+            self.assertNotEqual(proc.returncode, 0)
+            self.assertIn("disabled for assessed academic work", proc.stderr)
+
+    def test_academic_assessment_allows_quality_functions_with_small_defaults(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            proc, state = self.init(Path(raw), flags="F2,F3,F4")
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            payload = json.loads(state.read_text(encoding="utf-8"))
+            self.assertEqual(
+                payload["integrity_policy"]["context"],
+                "academic_assessment",
+            )
+            self.assertFalse(
+                payload["integrity_policy"]["detector_score_optimization_allowed"]
+            )
+            self.assertEqual(payload["budgets"]["document_change_ratio"], 0.10)
+            self.assertEqual(payload["budgets"]["paragraph_change_ratio"], 0.25)
+            self.assertFalse(payload["flags"]["F1"])
+            self.assertEqual(payload["detector_policy"]["selected_services"], [])
+
+    def test_general_assertion_cannot_downgrade_strong_academic_signals(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            proc, _ = self.init(Path(raw), flags="F3", context="general")
+            self.assertNotEqual(proc.returncode, 0)
+            self.assertIn("conflicts with strong academic-assessment signals", proc.stderr)
+
+    def test_intake_cannot_enable_f1_after_academic_init(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            proc, state = self.init(Path(raw), flags="F2")
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            q1 = run(
+                STATE,
+                "--state",
+                state,
+                "intake",
+                "--question",
+                "Q1",
+                "--answer",
+                "Use the source as its own style reference.",
+                "--style-mode",
+                "source_as_reference",
+                "--english-level",
+                "infer_from_source",
+            )
+            self.assertEqual(q1.returncode, 0, q1.stderr)
+            q2 = run(
+                STATE,
+                "--state",
+                state,
+                "intake",
+                "--question",
+                "Q2",
+                "--answer",
+                "Enable F1 and F3.",
+                "--functions",
+                "F1,F3",
+            )
+            self.assertNotEqual(q2.returncode, 0)
+            self.assertIn(
+                "cannot be enabled for assessed academic work",
+                q2.stderr,
+            )
 
 
 PATTERN_CASES = {
@@ -698,6 +799,41 @@ class OverlapRegressionTests(unittest.TestCase):
             proc = run(OVERLAP, "--draft", draft, "--source", source, "--json")
             self.assertEqual(proc.returncode, 0)
             self.assertEqual(data(proc)["high_risk_count"], 0)
+
+    def test_terminal_reference_list_can_be_excluded(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            source = write(root / "source.md", self.SOURCE)
+            draft = write(
+                root / "draft.md",
+                "The body contains independently written analysis.\n\n"
+                "REFERENCES\n\n"
+                f"{self.SOURCE}\n",
+            )
+            baseline = run(
+                OVERLAP,
+                "--draft",
+                draft,
+                "--source",
+                source,
+                "--json",
+            )
+            self.assertEqual(baseline.returncode, 1)
+            proc = run(
+                OVERLAP,
+                "--draft",
+                draft,
+                "--source",
+                source,
+                "--exclude-reference-list",
+                "--json",
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            result = data(proc)
+            self.assertEqual(result["high_risk_count"], 0)
+            self.assertTrue(
+                result["configuration"]["terminal_reference_list_excluded"]
+            )
 
     def test_invalid_ngram_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

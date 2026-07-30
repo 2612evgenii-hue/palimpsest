@@ -47,6 +47,20 @@ PLATEAU_MECHANISMS = {
 DEFAULT_STATE = Path("workspace/STATE.json")
 SCRIPTS = Path(__file__).resolve().parent
 REGISTRY_PATH = SCRIPTS.parent / "assets" / "service-registry.json"
+ACADEMIC_DIRECT_MARKERS = {
+    "dissertation": r"\bdissertation\b",
+    "thesis": r"\bthesis\b",
+    "assessment_brief": r"\bassessment\s+brief\b",
+    "submitted_for_degree": r"\bsubmitted\b.{0,120}\bdegree\b",
+}
+ACADEMIC_SUPPORT_MARKERS = {
+    "supervisor": r"\bsupervisor\b",
+    "university": r"\buniversity\b",
+    "assignment": r"\bassignment\b",
+    "module": r"\bmodule\b",
+    "marking": r"\bmarking\s+(?:grid|criteria|rubric)\b",
+    "academic_integrity": r"\bacademic\s+integrity\b",
+}
 
 ATTESTATIONS: dict[str, dict] = {
     "master_brief": {
@@ -145,6 +159,47 @@ def fail(message: str, code: int = 2) -> int:
 
 def state_path(raw: Path) -> Path:
     return raw.expanduser().resolve()
+
+
+def integrity_context_profile(text: str, asserted: str = "auto") -> dict:
+    """Classify assessed academic work before any detector workflow is enabled."""
+    direct = [
+        name
+        for name, pattern in ACADEMIC_DIRECT_MARKERS.items()
+        if re.search(pattern, text, flags=re.IGNORECASE | re.DOTALL)
+    ]
+    supporting = [
+        name
+        for name, pattern in ACADEMIC_SUPPORT_MARKERS.items()
+        if re.search(pattern, text, flags=re.IGNORECASE | re.DOTALL)
+    ]
+    detected = (
+        "academic_assessment"
+        if direct or len(supporting) >= 3
+        else "general"
+    )
+    if asserted == "general" and detected == "academic_assessment":
+        raise StateError(
+            "--content-context general conflicts with strong academic-assessment "
+            f"signals: {', '.join(direct + supporting)}"
+        )
+    context = detected if asserted == "auto" else asserted
+    return {
+        "asserted": asserted,
+        "detected": detected,
+        "context": context,
+        "signals": {
+            "direct": direct,
+            "supporting": supporting,
+        },
+        "detector_score_optimization_allowed": context != "academic_assessment",
+        "policy": (
+            "feedback_fact_check_originality_and_minimal_proofreading_only"
+            if context == "academic_assessment"
+            else "general_quality_first_editing"
+        ),
+        "disclosure_review_required": context == "academic_assessment",
+    }
 
 
 def load_state(path: Path) -> dict:
@@ -314,6 +369,21 @@ def cmd_init(args: argparse.Namespace) -> int:
             return fail(f"unknown function {item}; expected F1..F4")
         flags[name] = True
     source_words = word_count(original)
+    original_text = V.read_text(original)
+    try:
+        integrity = integrity_context_profile(original_text, args.content_context)
+    except StateError as exc:
+        return fail(str(exc))
+    if (
+        integrity["context"] == "academic_assessment"
+        and flags["F1"]
+    ):
+        return fail(
+            "F1 detector-score optimization is disabled for assessed academic "
+            "work; use F2/F3/F4 for structure, fact/source, originality, "
+            "fidelity, and minimal proofreading, then follow the institution's "
+            "AI-use and disclosure rules"
+        )
     route = args.route
     if route == "auto":
         # In score-mandatory mode, switch to stable chunks before the smallest
@@ -327,19 +397,30 @@ def cmd_init(args: argparse.Namespace) -> int:
     default_budget = (
         0.30
         if flags["F1"]
-        else (0.12 if route == "surgical" else 0.18)
+        else (
+            0.10
+            if integrity["context"] == "academic_assessment"
+            else (0.12 if route == "surgical" else 0.18)
+        )
     )
     budget = args.budget if args.budget is not None else default_budget
     para_budget = (
         args.para_budget
         if args.para_budget is not None
-        else (0.60 if flags["F1"] else (0.35 if route == "surgical" else 0.45))
+        else (
+            0.60
+            if flags["F1"]
+            else (
+                0.25
+                if integrity["context"] == "academic_assessment"
+                else (0.35 if route == "surgical" else 0.45)
+            )
+        )
     )
     if not 0 <= budget <= 1:
         return fail("--budget must be between 0 and 1")
     if not 0 <= para_budget <= 1:
         return fail("--para-budget must be between 0 and 1")
-    original_text = V.read_text(original)
     source_language = language_profile(original_text)
     detected_language = source_language["detected"]
     if args.language and args.language != detected_language:
@@ -391,6 +472,7 @@ def cmd_init(args: argparse.Namespace) -> int:
         "route": route,
         "language": language,
         "source_language": source_language,
+        "integrity_policy": integrity,
         "style_mode": "unselected",
         "english_level": {
             "requested": "unselected" if language == "en" else "not_applicable",
@@ -471,7 +553,10 @@ def cmd_init(args: argparse.Namespace) -> int:
     refresh_goal(st)
     V.atomic_write_json(target, st)
     print(f"Palimpsest v{VERSION} state: {target}")
-    print(f"route={route} language={language} words={source_words}")
+    print(
+        f"route={route} language={language} words={source_words} "
+        f"context={integrity['context']}"
+    )
     print(f"functions={','.join(k for k, v in flags.items() if v) or 'none'}")
     if services:
         print(f"detectors={','.join(services)} (live capability review still required)")
@@ -586,6 +671,15 @@ def cmd_intake(args: argparse.Namespace) -> int:
                         raise StateError(f"unknown function {item}; expected F1..F4 or none")
                     if name not in normalized:
                         normalized.append(name)
+                if (
+                    "F1" in normalized
+                    and st.get("integrity_policy", {}).get("context")
+                    == "academic_assessment"
+                ):
+                    raise StateError(
+                        "F1 detector-score optimization cannot be enabled for "
+                        "assessed academic work; keep F1 off and use F2/F3/F4"
+                    )
                 old_f1 = st["flags"]["F1"]
                 st["flags"] = {name: name in normalized for name in st["flags"]}
                 if old_f1 != st["flags"]["F1"]:
@@ -3323,6 +3417,15 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--ref", action="append")
     p.add_argument("--task")
     p.add_argument("--route", choices=["auto", "surgical", "standard", "longform"], default="auto")
+    p.add_argument(
+        "--content-context",
+        choices=["auto", "general", "academic_assessment"],
+        default="auto",
+        help=(
+            "integrity context; auto is fail-closed when dissertation/thesis/"
+            "assessment signals are present"
+        ),
+    )
     p.add_argument(
         "--language",
         choices=["en", "ru"],
