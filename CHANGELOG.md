@@ -53,6 +53,12 @@
 - micro v2 требует свежие human/AI start controls, transition-bound evidence,
   эффект больше `2 п.п.`, cross-family success после `n=3` и автоматически
   выбирает самый дешёвый полный успех;
+- завершён live `micro-02`: 34 exact-SHA scans, стабильные start controls и
+  два cross-family успеха; минимальный `f7-quote-date` (`0,188%`) дал ZeroGPT
+  `46,7→39%`, Scribbr `29→15%`, оба range `0`;
+- более глубокое восстановление цитаты (`6,61%`) дало `38,1%/15%` и проиграло
+  минимальному кандидату; другой date-removal повысил ZeroGPT до `71,3%`,
+  поэтому общий date-removal factor отклонён;
 - variant builder связывает editorial justification с exact reference SHA,
   буквальным source excerpt и заранее вычисленным candidate SHA;
 - исправлен false positive fidelity screen: союз после года (`1919 but`) больше

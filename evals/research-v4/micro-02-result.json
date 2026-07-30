@@ -1,0 +1,648 @@
+{
+  "schema": "palimpsest.micro-edit-result.v1",
+  "experiment_id": "micro-02-source-grounded-news-edits",
+  "status": "completed_calibration_only",
+  "completed_at": "2026-07-30T22:04:53+03:00",
+  "preregistration": {
+    "path": "micro-02-preregistration.json",
+    "sha256": "0536ba9cd4efb7294a3048d07ec0e8258be889296a767d502e66114464b0f262",
+    "git_commit": "6923c50fd5c5c90b851da664c6c9027ec2fe138b"
+  },
+  "controls": [
+    {
+      "sample": "news-polish-04",
+      "role": "human",
+      "service": "zerogpt",
+      "scores_pct": [30.3],
+      "candidate_sha256": "cbe30469b6e1fff0c65961e7d5dcaeb6b8f7d5f53fb92209a285604d6f3de5b1",
+      "post_visible_text_sha256": "cbe30469b6e1fff0c65961e7d5dcaeb6b8f7d5f53fb92209a285604d6f3de5b1",
+      "transition_signals": ["result_text_changed_after_submit"],
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T18:47:00.336Z"]
+    },
+    {
+      "sample": "news-polish-04",
+      "role": "human",
+      "service": "scribbr",
+      "scores_pct": [0],
+      "ai_generated_pct": [0],
+      "ai_refined_pct": [0],
+      "human_pct": [100],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "cbe30469b6e1fff0c65961e7d5dcaeb6b8f7d5f53fb92209a285604d6f3de5b1",
+      "post_visible_text_sha256": "cbe30469b6e1fff0c65961e7d5dcaeb6b8f7d5f53fb92209a285604d6f3de5b1",
+      "transition_signals": ["analysis_complete_after_submit"],
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T18:47:00.336Z"]
+    },
+    {
+      "sample": "news-polish-04",
+      "role": "ai",
+      "service": "zerogpt",
+      "scores_pct": [46.7],
+      "candidate_sha256": "f5c0cd5c83d96ea141adcb3998448c3ca70d56577aa959f3db2b405e1bb36159",
+      "post_visible_text_sha256": "f5c0cd5c83d96ea141adcb3998448c3ca70d56577aa959f3db2b405e1bb36159",
+      "transition_signals": ["result_text_changed_after_submit"],
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T18:48:30.938Z"]
+    },
+    {
+      "sample": "news-polish-04",
+      "role": "ai",
+      "service": "scribbr",
+      "scores_pct": [29],
+      "ai_generated_pct": [29],
+      "ai_refined_pct": [0],
+      "human_pct": [71],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "f5c0cd5c83d96ea141adcb3998448c3ca70d56577aa959f3db2b405e1bb36159",
+      "post_visible_text_sha256": "f5c0cd5c83d96ea141adcb3998448c3ca70d56577aa959f3db2b405e1bb36159",
+      "transition_signals": ["analysis_complete_after_meta_enter"],
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T18:48:30.938Z"]
+    }
+  ],
+  "observations": [
+    {
+      "sample": "news-polish-04",
+      "id": "f7-quote-date",
+      "service": "zerogpt",
+      "scores_pct": [39, 39, 39],
+      "candidate_sha256": "90aa7f42af556a85c691862311313e02280b0a7235c1c6ea79120ecfbb0dc2d3",
+      "post_visible_text_sha256": "90aa7f42af556a85c691862311313e02280b0a7235c1c6ea79120ecfbb0dc2d3",
+      "transition_signals": [
+        "result_text_changed_after_submit",
+        "disabled_state_observed",
+        "disabled_state_observed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T18:53:32.946Z",
+        "2026-07-30T18:53:41.910Z",
+        "2026-07-30T18:55:26.829Z"
+      ]
+    },
+    {
+      "sample": "news-polish-04",
+      "id": "f7-quote-date",
+      "service": "scribbr",
+      "scores_pct": [15, 15, 15],
+      "ai_generated_pct": [15, 15, 15],
+      "ai_refined_pct": [0, 0, 0],
+      "human_pct": [85, 85, 85],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "90aa7f42af556a85c691862311313e02280b0a7235c1c6ea79120ecfbb0dc2d3",
+      "post_visible_text_sha256": "90aa7f42af556a85c691862311313e02280b0a7235c1c6ea79120ecfbb0dc2d3",
+      "transition_signals": [
+        "loading_or_result_transition_observed",
+        "analysis_state_started",
+        "analysis_state_started"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T18:52:58.817Z",
+        "2026-07-30T18:55:17.733Z",
+        "2026-07-30T18:55:27.932Z"
+      ]
+    },
+    {
+      "sample": "news-polish-04",
+      "id": "f6-armistice-date",
+      "service": "zerogpt",
+      "scores_pct": [71.3],
+      "candidate_sha256": "31c4c6d3702f3188c0b31fc5f77950208cc2fed202e3a4da735f0556b24e1cc1",
+      "post_visible_text_sha256": "31c4c6d3702f3188c0b31fc5f77950208cc2fed202e3a4da735f0556b24e1cc1",
+      "transition_signals": ["disabled_state_observed"],
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T18:55:57.207Z"]
+    },
+    {
+      "sample": "news-polish-04",
+      "id": "f6-armistice-date",
+      "service": "scribbr",
+      "scores_pct": [29],
+      "ai_generated_pct": [29],
+      "ai_refined_pct": [0],
+      "human_pct": [71],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "31c4c6d3702f3188c0b31fc5f77950208cc2fed202e3a4da735f0556b24e1cc1",
+      "post_visible_text_sha256": "31c4c6d3702f3188c0b31fc5f77950208cc2fed202e3a4da735f0556b24e1cc1",
+      "transition_signals": ["disabled_state_observed"],
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T18:55:59.886Z"]
+    },
+    {
+      "sample": "news-polish-04",
+      "id": "f1-title-accuracy",
+      "service": "zerogpt",
+      "scores_pct": [38.4, 38.4, 38.4],
+      "candidate_sha256": "73d1d9cc2417a8bf8768afbb4827a9405eee1d0ddcb0b3fbaa98f7b4bf0d4faf",
+      "post_visible_text_sha256": "73d1d9cc2417a8bf8768afbb4827a9405eee1d0ddcb0b3fbaa98f7b4bf0d4faf",
+      "transition_signals": [
+        "disabled_state_observed",
+        "disabled_state_observed",
+        "disabled_state_observed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T18:56:02.718Z",
+        "2026-07-30T18:57:21.918Z",
+        "2026-07-30T18:59:09.237Z"
+      ]
+    },
+    {
+      "sample": "news-polish-04",
+      "id": "f1-title-accuracy",
+      "service": "scribbr",
+      "scores_pct": [29, 29, 29],
+      "ai_generated_pct": [29, 29, 29],
+      "ai_refined_pct": [0, 0, 0],
+      "human_pct": [71, 71, 71],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "73d1d9cc2417a8bf8768afbb4827a9405eee1d0ddcb0b3fbaa98f7b4bf0d4faf",
+      "post_visible_text_sha256": "73d1d9cc2417a8bf8768afbb4827a9405eee1d0ddcb0b3fbaa98f7b4bf0d4faf",
+      "transition_signals": [
+        "disabled_state_observed",
+        "analysis_complete_after_fresh_submit",
+        "analysis_complete_after_fresh_submit"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T18:56:06.779Z",
+        "2026-07-30T18:59:06.521Z",
+        "2026-07-30T19:00:29.898Z"
+      ]
+    },
+    {
+      "sample": "news-polish-04",
+      "id": "f2-lead-frame-removal",
+      "service": "zerogpt",
+      "scores_pct": [24.1, 24.1, 24.1],
+      "candidate_sha256": "a8f9cd209ec8738786ff88c2e1f8bd43e412ac3a34124c826df37650f123ebea",
+      "post_visible_text_sha256": "a8f9cd209ec8738786ff88c2e1f8bd43e412ac3a34124c826df37650f123ebea",
+      "transition_signals": [
+        "disabled_state_observed",
+        "disabled_state_observed",
+        "disabled_state_observed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T18:56:42.334Z",
+        "2026-07-30T19:01:03.175Z",
+        "2026-07-30T19:02:39.012Z"
+      ]
+    },
+    {
+      "sample": "news-polish-04",
+      "id": "f2-lead-frame-removal",
+      "service": "scribbr",
+      "scores_pct": [30, 30, 30],
+      "ai_generated_pct": [30, 30, 30],
+      "ai_refined_pct": [0, 0, 0],
+      "human_pct": [70, 70, 70],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "a8f9cd209ec8738786ff88c2e1f8bd43e412ac3a34124c826df37650f123ebea",
+      "post_visible_text_sha256": "a8f9cd209ec8738786ff88c2e1f8bd43e412ac3a34124c826df37650f123ebea",
+      "transition_signals": [
+        "disabled_state_observed",
+        "analysis_complete_after_fresh_submit",
+        "analysis_complete_after_fresh_tab_submit"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T18:56:42.334Z",
+        "2026-07-30T19:01:54.402Z",
+        "2026-07-30T19:02:43.581Z"
+      ]
+    },
+    {
+      "sample": "news-polish-04",
+      "id": "f5-event-status",
+      "service": "zerogpt",
+      "scores_pct": [46.8],
+      "candidate_sha256": "92b970d8a63d7008cbf4198ed47304b2e9732b7ffb24879650c3bd0cc36de427",
+      "post_visible_text_sha256": "92b970d8a63d7008cbf4198ed47304b2e9732b7ffb24879650c3bd0cc36de427",
+      "transition_signals": ["disabled_state_observed"],
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T18:56:54.629Z"]
+    },
+    {
+      "sample": "news-polish-04",
+      "id": "f5-event-status",
+      "service": "scribbr",
+      "scores_pct": [29],
+      "ai_generated_pct": [29],
+      "ai_refined_pct": [0],
+      "human_pct": [71],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "92b970d8a63d7008cbf4198ed47304b2e9732b7ffb24879650c3bd0cc36de427",
+      "post_visible_text_sha256": "92b970d8a63d7008cbf4198ed47304b2e9732b7ffb24879650c3bd0cc36de427",
+      "transition_signals": ["disabled_state_observed"],
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T18:56:56.868Z"]
+    },
+    {
+      "sample": "news-polish-04",
+      "id": "f4-record-accuracy",
+      "service": "zerogpt",
+      "scores_pct": [46.8],
+      "candidate_sha256": "816c670a17590ae20e0497c25350850c724cc131451d42890d71bcb88cc190d1",
+      "post_visible_text_sha256": "816c670a17590ae20e0497c25350850c724cc131451d42890d71bcb88cc190d1",
+      "transition_signals": ["disabled_state_observed"],
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T18:56:58.642Z"]
+    },
+    {
+      "sample": "news-polish-04",
+      "id": "f4-record-accuracy",
+      "service": "scribbr",
+      "scores_pct": [29],
+      "ai_generated_pct": [29],
+      "ai_refined_pct": [0],
+      "human_pct": [71],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "816c670a17590ae20e0497c25350850c724cc131451d42890d71bcb88cc190d1",
+      "post_visible_text_sha256": "816c670a17590ae20e0497c25350850c724cc131451d42890d71bcb88cc190d1",
+      "transition_signals": ["disabled_state_observed"],
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T18:57:00.997Z"]
+    },
+    {
+      "sample": "news-polish-04",
+      "id": "f8-quote-integrity",
+      "service": "zerogpt",
+      "scores_pct": [38.1, 38.1, 38.1],
+      "candidate_sha256": "b5090bdea7300fb29531e5df3bcffc1eb2cf3cb5e6b89258e29aade1f212469b",
+      "post_visible_text_sha256": "b5090bdea7300fb29531e5df3bcffc1eb2cf3cb5e6b89258e29aade1f212469b",
+      "transition_signals": [
+        "disabled_state_observed",
+        "disabled_state_observed",
+        "disabled_state_observed"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T18:57:09.663Z",
+        "2026-07-30T19:03:03.087Z",
+        "2026-07-30T19:03:09.598Z"
+      ]
+    },
+    {
+      "sample": "news-polish-04",
+      "id": "f8-quote-integrity",
+      "service": "scribbr",
+      "scores_pct": [15, 15, 15],
+      "ai_generated_pct": [15, 15, 15],
+      "ai_refined_pct": [0, 0, 0],
+      "human_pct": [85, 85, 85],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "b5090bdea7300fb29531e5df3bcffc1eb2cf3cb5e6b89258e29aade1f212469b",
+      "post_visible_text_sha256": "b5090bdea7300fb29531e5df3bcffc1eb2cf3cb5e6b89258e29aade1f212469b",
+      "transition_signals": [
+        "disabled_state_observed",
+        "analysis_complete_after_fresh_tab_submit",
+        "analysis_complete_after_fresh_tab_submit"
+      ],
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T18:57:12.092Z",
+        "2026-07-30T19:03:07.390Z",
+        "2026-07-30T19:03:13.870Z"
+      ]
+    }
+  ],
+  "excluded_technical_attempts": [
+    {
+      "service": "zerogpt",
+      "candidate": "f7-quote-date",
+      "reason": "playwright_click_timeout_before_a_new_terminal_result",
+      "included_in_analysis": false
+    },
+    {
+      "service": "scribbr",
+      "candidate": "f7-quote-date",
+      "reason": "orphan_parallel_attempt_without_returned_bound_observation",
+      "included_in_analysis": false
+    },
+    {
+      "service": "scribbr",
+      "candidate": "f7-quote-date",
+      "reason": "same_text_resubmit_without_observed_transition",
+      "included_in_analysis": false
+    },
+    {
+      "service": "scribbr",
+      "candidate": "f1-title-accuracy",
+      "reason": "editor_not_ready_after_navigation; no text submitted",
+      "included_in_analysis": false
+    }
+  ],
+  "analysis": {
+    "advancing_candidates": [
+      {"sample": "news-polish-04", "id": "f1-title-accuracy"},
+      {"sample": "news-polish-04", "id": "f2-lead-frame-removal"},
+      {"sample": "news-polish-04", "id": "f7-quote-date"},
+      {"sample": "news-polish-04", "id": "f8-quote-integrity"}
+    ],
+    "factor_results": [
+      {
+        "factor": "factual_title_restoration",
+        "screen_success": false,
+        "samples": [
+          {
+            "sample": "news-polish-04",
+            "id": "f1-title-accuracy",
+            "edit_cost": 0.0108,
+            "advanced": true,
+            "cross_family_success": false,
+            "services": [
+              {
+                "service": "zerogpt",
+                "baseline_median_pct": 46.7,
+                "scores_pct": [38.4, 38.4, 38.4],
+                "median_pct": 38.4,
+                "range_pct": 0.0,
+                "score_delta_pct": -8.3,
+                "reduction_per_changed_percent": 7.685185
+              },
+              {
+                "service": "scribbr",
+                "baseline_median_pct": 29.0,
+                "scores_pct": [29, 29, 29],
+                "median_pct": 29.0,
+                "range_pct": 0.0,
+                "score_delta_pct": 0.0,
+                "reduction_per_changed_percent": -0.0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "factor": "unsupported_evaluative_frame_removal",
+        "screen_success": false,
+        "samples": [
+          {
+            "sample": "news-polish-04",
+            "id": "f2-lead-frame-removal",
+            "edit_cost": 0.010926,
+            "advanced": true,
+            "cross_family_success": false,
+            "services": [
+              {
+                "service": "zerogpt",
+                "baseline_median_pct": 46.7,
+                "scores_pct": [24.1, 24.1, 24.1],
+                "median_pct": 24.1,
+                "range_pct": 0.0,
+                "score_delta_pct": -22.6,
+                "reduction_per_changed_percent": 20.684606
+              },
+              {
+                "service": "scribbr",
+                "baseline_median_pct": 29.0,
+                "scores_pct": [30, 30, 30],
+                "median_pct": 30.0,
+                "range_pct": 0.0,
+                "score_delta_pct": 1.0,
+                "reduction_per_changed_percent": -0.915248
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "factor": "unsupported_metaphor_removal",
+        "screen_success": false,
+        "samples": []
+      },
+      {
+        "factor": "record_claim_restoration",
+        "screen_success": false,
+        "samples": [
+          {
+            "sample": "news-polish-04",
+            "id": "f4-record-accuracy",
+            "edit_cost": 0.046747,
+            "advanced": false,
+            "cross_family_success": false,
+            "services": [
+              {
+                "service": "zerogpt",
+                "baseline_median_pct": 46.7,
+                "scores_pct": [46.8],
+                "median_pct": 46.8,
+                "range_pct": 0.0,
+                "score_delta_pct": 0.1,
+                "reduction_per_changed_percent": -0.021392
+              },
+              {
+                "service": "scribbr",
+                "baseline_median_pct": 29.0,
+                "scores_pct": [29],
+                "median_pct": 29.0,
+                "range_pct": 0.0,
+                "score_delta_pct": 0.0,
+                "reduction_per_changed_percent": -0.0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "factor": "event_status_restoration",
+        "screen_success": false,
+        "samples": [
+          {
+            "sample": "news-polish-04",
+            "id": "f5-event-status",
+            "edit_cost": 0.0417,
+            "advanced": false,
+            "cross_family_success": false,
+            "services": [
+              {
+                "service": "zerogpt",
+                "baseline_median_pct": 46.7,
+                "scores_pct": [46.8],
+                "median_pct": 46.8,
+                "range_pct": 0.0,
+                "score_delta_pct": 0.1,
+                "reduction_per_changed_percent": -0.023981
+              },
+              {
+                "service": "scribbr",
+                "baseline_median_pct": 29.0,
+                "scores_pct": [29],
+                "median_pct": 29.0,
+                "range_pct": 0.0,
+                "score_delta_pct": 0.0,
+                "reduction_per_changed_percent": -0.0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "factor": "unsupported_date_removal",
+        "screen_success": false,
+        "samples": [
+          {
+            "sample": "news-polish-04",
+            "id": "f6-armistice-date",
+            "edit_cost": 0.006619,
+            "advanced": false,
+            "cross_family_success": false,
+            "services": [
+              {
+                "service": "zerogpt",
+                "baseline_median_pct": 46.7,
+                "scores_pct": [71.3],
+                "median_pct": 71.3,
+                "range_pct": 0.0,
+                "score_delta_pct": 24.6,
+                "reduction_per_changed_percent": -37.165735
+              },
+              {
+                "service": "scribbr",
+                "baseline_median_pct": 29.0,
+                "scores_pct": [29],
+                "median_pct": 29.0,
+                "range_pct": 0.0,
+                "score_delta_pct": 0.0,
+                "reduction_per_changed_percent": -0.0
+              }
+            ]
+          },
+          {
+            "sample": "news-polish-04",
+            "id": "f7-quote-date",
+            "edit_cost": 0.001883,
+            "advanced": true,
+            "cross_family_success": true,
+            "services": [
+              {
+                "service": "zerogpt",
+                "baseline_median_pct": 46.7,
+                "scores_pct": [39, 39, 39],
+                "median_pct": 39.0,
+                "range_pct": 0.0,
+                "score_delta_pct": -7.7,
+                "reduction_per_changed_percent": 40.892193
+              },
+              {
+                "service": "scribbr",
+                "baseline_median_pct": 29.0,
+                "scores_pct": [15, 15, 15],
+                "median_pct": 15.0,
+                "range_pct": 0.0,
+                "score_delta_pct": -14.0,
+                "reduction_per_changed_percent": 74.349442
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "factor": "quote_integrity_restoration",
+        "screen_success": true,
+        "samples": [
+          {
+            "sample": "news-polish-04",
+            "id": "f8-quote-integrity",
+            "edit_cost": 0.0661,
+            "advanced": true,
+            "cross_family_success": true,
+            "services": [
+              {
+                "service": "zerogpt",
+                "baseline_median_pct": 46.7,
+                "scores_pct": [38.1, 38.1, 38.1],
+                "median_pct": 38.1,
+                "range_pct": 0.0,
+                "score_delta_pct": -8.6,
+                "reduction_per_changed_percent": 1.301059
+              },
+              {
+                "service": "scribbr",
+                "baseline_median_pct": 29.0,
+                "scores_pct": [15, 15, 15],
+                "median_pct": 15.0,
+                "range_pct": 0.0,
+                "score_delta_pct": -14.0,
+                "reduction_per_changed_percent": 2.118003
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "rule_admission": "none_holdout_required",
+    "start_controls": [
+      {
+        "role": "ai",
+        "service": "scribbr",
+        "frozen_median_pct": 29.0,
+        "current_pct": 29.0,
+        "drift_pct": 0.0
+      },
+      {
+        "role": "ai",
+        "service": "zerogpt",
+        "frozen_median_pct": 46.7,
+        "current_pct": 46.7,
+        "drift_pct": 0.0
+      },
+      {
+        "role": "human",
+        "service": "scribbr",
+        "frozen_median_pct": 0.0,
+        "current_pct": 0.0,
+        "drift_pct": 0.0
+      },
+      {
+        "role": "human",
+        "service": "zerogpt",
+        "frozen_median_pct": 30.3,
+        "current_pct": 30.3,
+        "drift_pct": 0.0
+      }
+    ],
+    "cross_family_successes": [
+      {
+        "sample": "news-polish-04",
+        "id": "f7-quote-date",
+        "edit_cost": 0.001883,
+        "worst_service_reduction_pct": 7.7
+      },
+      {
+        "sample": "news-polish-04",
+        "id": "f8-quote-integrity",
+        "edit_cost": 0.0661,
+        "worst_service_reduction_pct": 8.6
+      }
+    ],
+    "selected_minimal_candidate": {
+      "sample": "news-polish-04",
+      "id": "f7-quote-date",
+      "edit_cost": 0.001883,
+      "worst_service_reduction_pct": 7.7
+    }
+  }
+}

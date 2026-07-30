@@ -90,15 +90,16 @@ detector-рецепт: такая правка остаётся только р�
 Итоговый следующий scope — только стабильный formal-news текст; правил
 редактирования scout не проверял и не допустил.
 
-На этом окне до новых scores заморожен `micro-02`: восемь отдельных
-source-grounded правок стоимостью от `0,188%` до `6,61%`. Семь допущены к
-live-проверке; удаление метафоры исключено заранее из-за ухудшения
-source-relative style distance. План идёт строго от меньшей правки к большей,
-повторяет только эффект больше `2 п.п.` без cross-family regression и считает
-успехом лишь повторяемое улучшение одновременно в ZeroGPT и Scribbr.
-Исправления выдуманных годов и изменённой цитаты разрешены только через
-exact-SHA reference и буквальный source excerpt. Live-результатов micro-02
-пока нет, production-правил он не содержит.
+На этом окне завершён preregistered `micro-02`: восемь отдельных
+source-grounded правок стоимостью от `0,188%` до `6,61%`. Семь прошли
+quality-first допуск, 34 live scans имели exact-SHA и transition signal.
+Минимальный кандидат удалил только выдуманный `2022` из attribution
+(`0,188%`) и стабильно снизил ZeroGPT `46,7 → 39%`, Scribbr `29 → 15%`
+(`n=3`, range `0`). Полное восстановление цитаты за `6,61%` дало почти тот же
+результат (`38,1% / 15%`), поэтому проиграло по minimality. Но общий фактор
+«удалять неподтверждённые даты» провалился: удаление другого выдуманного года
+подняло ZeroGPT до `71,3%`. Это location-specific calibration signal, а не
+production-рецепт; требуется новый holdout и дополнительная detector family.
 
 См.
 [протокол](evals/research-v4/PROTOCOL.md),
@@ -111,7 +112,7 @@ exact-SHA reference и буквальный source excerpt. Live-результ�
 [micro-01](evals/research-v4/micro-01-result.json) /
 [holdout-02](evals/research-v4/holdout-02-result.json) /
 [baseline scout-02](evals/research-v4/baseline-scout-02-result.json) /
-[micro-02 preregistration](evals/research-v4/micro-02-preregistration.json).
+[micro-02](evals/research-v4/micro-02-result.json).
 
 Воспроизвести закреплённый corpus, варианты pilot-05 и проверку Pareto:
 
@@ -142,6 +143,8 @@ python3 scripts/research_scout.py \
   --result evals/research-v4/baseline-scout-02-result.json
 python3 scripts/research_micro.py \
   --preregistration evals/research-v4/micro-02-preregistration.json
+python3 scripts/research_micro.py \
+  --result evals/research-v4/micro-02-result.json
 ```
 
 ## Для чего нужен Palimpsest

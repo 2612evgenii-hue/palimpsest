@@ -583,11 +583,27 @@ class ResearchMicroEditTests(unittest.TestCase):
     def result_path(self) -> Path:
         return ROOT / "evals/research-v4/micro-01-result.json"
 
+    def result_path_two(self) -> Path:
+        return ROOT / "evals/research-v4/micro-02-result.json"
+
     def copied_result(self, root: Path, data: dict) -> Path:
         research_dir = ROOT / "evals/research-v4"
         for name in (
             "micro-01-preregistration.json",
             "baseline-scout-01-result.json",
+        ):
+            (root / name).write_bytes((research_dir / name).read_bytes())
+        result = root / "result.json"
+        result.write_text(json.dumps(data), encoding="utf-8")
+        return result
+
+    def copied_result_two(self, root: Path, data: dict) -> Path:
+        research_dir = ROOT / "evals/research-v4"
+        for name in (
+            "micro-02-preregistration.json",
+            "baseline-scout-02-result.json",
+            "scout-02-corpus-manifest.json",
+            "news-polish-04-micro-plan.json",
         ):
             (root / name).write_bytes((research_dir / name).read_bytes())
         result = root / "result.json"
@@ -940,6 +956,57 @@ class ResearchMicroEditTests(unittest.TestCase):
                     "cross_family_success"
                 ]
             )
+
+    def test_micro_two_live_result_selects_true_minimum_only(self) -> None:
+        data = research_micro.load_result(self.result_path_two())
+        self.assertEqual(
+            data["analysis"]["selected_minimal_candidate"],
+            {
+                "sample": "news-polish-04",
+                "id": "f7-quote-date",
+                "edit_cost": 0.001883,
+                "worst_service_reduction_pct": 7.7,
+            },
+        )
+        self.assertEqual(
+            [item["id"] for item in data["analysis"]["cross_family_successes"]],
+            ["f7-quote-date", "f8-quote-integrity"],
+        )
+        dates = next(
+            item
+            for item in data["analysis"]["factor_results"]
+            if item["factor"] == "unsupported_date_removal"
+        )
+        self.assertFalse(dates["screen_success"])
+
+    def test_micro_two_rejects_forged_minimal_winner(self) -> None:
+        data = json.loads(self.result_path_two().read_text(encoding="utf-8"))
+        data["analysis"]["selected_minimal_candidate"]["id"] = (
+            "f8-quote-integrity"
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = self.copied_result_two(Path(directory), data)
+            with self.assertRaisesRegex(ValueError, "does not recompute"):
+                research_micro.load_result(path)
+
+    def test_micro_two_rejects_missing_transition_and_control_drift(self) -> None:
+        data = json.loads(self.result_path_two().read_text(encoding="utf-8"))
+        data["observations"][0]["transition_signals"][0] = "missing"
+        with tempfile.TemporaryDirectory() as directory:
+            path = self.copied_result_two(Path(directory), data)
+            with self.assertRaisesRegex(ValueError, "transition signal"):
+                research_micro.load_result(path)
+        data = json.loads(self.result_path_two().read_text(encoding="utf-8"))
+        control = next(
+            item
+            for item in data["controls"]
+            if item["role"] == "ai" and item["service"] == "zerogpt"
+        )
+        control["scores_pct"] = [60]
+        with tempfile.TemporaryDirectory() as directory:
+            path = self.copied_result_two(Path(directory), data)
+            with self.assertRaisesRegex(ValueError, "drift limit"):
+                research_micro.load_result(path)
 
 
 class ResearchVariantTests(unittest.TestCase):

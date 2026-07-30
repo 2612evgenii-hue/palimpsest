@@ -152,3 +152,10 @@ Micro-02 использует только stable pair `news_003652`. Сопос
 editorial corrections, а не произвольными detector perturbations. Каждая
 операция хранит буквальный source excerpt и проверяется против canonical
 reference SHA.
+
+В live micro-02 минимальная коррекция выдуманного `2022` внутри attribution
+снизила обе доступные семьи, но удаление выдуманного `2023` в другом месте
+сильно повысило ZeroGPT. Это показывает, что source correctness и detector
+response нельзя смешивать: исправление факта оправдывает редакцию, но один
+локальный score effect не создаёт переносимого языкового правила. Результат
+остаётся calibration-only до нового holdout.

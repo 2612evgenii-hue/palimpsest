@@ -321,5 +321,30 @@ low reliability; это явно записано, а не выдаётся за
 (human/AI × ZeroGPT/Scribbr). Любой drift больше `5 п.п.` останавливает run.
 Первичный эффект должен быть больше `2 п.п.`; repeats идут до `n=3`, а полный
 успех требует снижения в обеих семьях и range не больше `5 п.п.`. Среди
-полных успехов валидатор выбирает минимальный edit cost. Это preregistration,
-live scores ещё не получены и ни один фактор в production не допущен.
+полных успехов валидатор выбирает минимальный edit cost.
+
+### Live-результат
+
+Все четыре start controls точно совпали с frozen median. Семь eligible
+кандидатов дали 30 candidate scans; вместе с controls — 34 включённых
+exact-SHA наблюдения. Четыре технические попытки без достаточного evidence
+записаны отдельно и исключены.
+
+| Candidate | ZeroGPT | Δ | Scribbr | Δ | Verdict |
+|---|---:|---:|---:|---:|---|
+| f7-quote-date, 0,188% | 39 / 39 / 39% | −7,7 | 15 / 15 / 15% | −14 | cross-family success; **minimal winner** |
+| f6-armistice-date, 0,662% | 71,3% | +24,6 | 29% | 0 | fail, strong ZeroGPT regression |
+| f1-title-accuracy, 1,08% | 38,4% ×3 | −8,3 | 29% ×3 | 0 | single-family only |
+| f2-lead-frame, 1,093% | 24,1% ×3 | −22,6 | 30% ×3 | +1 | single-family only |
+| f5-event-status, 4,17% | 46,8% | +0,1 | 29% | 0 | no effect |
+| f4-record-accuracy, 4,675% | 46,8% | +0,1 | 29% | 0 | no effect |
+| f8-quote-integrity, 6,61% | 38,1% ×3 | −8,6 | 15% ×3 | −14 | cross-family success, dominated by f7 |
+
+Главный отрицательный вывод не менее важен положительного: два удаления
+выдуманного года дали противоположный ZeroGPT effect, поэтому
+`unsupported_date_removal` как общий factor имеет `screen_success=false`.
+Нельзя превращать наблюдение в правило «удаляй даты». Минимальный `f7`
+исправляет конкретную source-proven ошибку внутри altered quote attribution;
+он остаётся calibration signal на выбранном тексте. Production admission —
+`none_holdout_required`. Полный машиночитаемый результат:
+[`micro-02-result.json`](micro-02-result.json).
