@@ -1,16 +1,32 @@
 {
-  "schema": "palimpsest.research-corpus.v1",
-  "dataset": {
-    "id": "yaful/MAGE",
-    "revision": "342663f0a2b775455c023f5d36a1341ff0ec5402",
-    "config": "default",
-    "split": "test",
-    "license": "apache-2.0",
-    "source_url": "https://huggingface.co/datasets/yaful/MAGE"
+  "schema": "palimpsest.research-corpus.v2",
+  "datasets": {
+    "mage": {
+      "id": "yaful/MAGE",
+      "revision": "342663f0a2b775455c023f5d36a1341ff0ec5402",
+      "license": "apache-2.0",
+      "source_url": "https://huggingface.co/datasets/yaful/MAGE",
+      "retrieval": {
+        "type": "rows_api",
+        "config": "default",
+        "split": "test"
+      }
+    },
+    "aigc-text-bank-deepseek": {
+      "id": "bmbgsj/AIGC-text-bank",
+      "revision": "38d3e0e23fc9997d26929f1fecf9b46eeae567be",
+      "license": "cc-by-nc-sa-4.0",
+      "source_url": "https://huggingface.co/datasets/bmbgsj/AIGC-text-bank",
+      "retrieval": {
+        "type": "jsonl_range",
+        "file_path": "ai_native/ai_data/deepseek.jsonl"
+      }
+    }
   },
   "samples": [
     {
       "id": "pubmed-01-human",
+      "dataset": "mage",
       "row_index": 57986,
       "source": "pubmed_human",
       "authorship": "human",
@@ -21,6 +37,7 @@
     },
     {
       "id": "pubmed-01-ai",
+      "dataset": "mage",
       "row_index": 58186,
       "source": "pubmed_gpt4",
       "authorship": "ai",
@@ -31,6 +48,7 @@
     },
     {
       "id": "pubmed-02-human",
+      "dataset": "mage",
       "row_index": 57987,
       "source": "pubmed_human",
       "authorship": "human",
@@ -41,6 +59,7 @@
     },
     {
       "id": "pubmed-02-ai",
+      "dataset": "mage",
       "row_index": 58187,
       "source": "pubmed_gpt4",
       "authorship": "ai",
@@ -51,6 +70,7 @@
     },
     {
       "id": "pubmed-03-human",
+      "dataset": "mage",
       "row_index": 57988,
       "source": "pubmed_human",
       "authorship": "human",
@@ -61,6 +81,7 @@
     },
     {
       "id": "pubmed-03-ai",
+      "dataset": "mage",
       "row_index": 58188,
       "source": "pubmed_gpt4",
       "authorship": "ai",
@@ -71,6 +92,7 @@
     },
     {
       "id": "pubmed-04-human",
+      "dataset": "mage",
       "row_index": 57989,
       "source": "pubmed_human",
       "authorship": "human",
@@ -81,6 +103,7 @@
     },
     {
       "id": "pubmed-04-ai",
+      "dataset": "mage",
       "row_index": 58189,
       "source": "pubmed_gpt4",
       "authorship": "ai",
@@ -91,6 +114,7 @@
     },
     {
       "id": "pubmed-05-human",
+      "dataset": "mage",
       "row_index": 57992,
       "source": "pubmed_human",
       "authorship": "human",
@@ -101,6 +125,7 @@
     },
     {
       "id": "pubmed-05-ai",
+      "dataset": "mage",
       "row_index": 58192,
       "source": "pubmed_gpt4",
       "authorship": "ai",
@@ -108,6 +133,102 @@
       "partition": "calibration",
       "word_count": 199,
       "sha256": "3d78f3cb35d03ebacb5fab9b1e9ea73d9160d9de2dcd99af9d3638bd8d9070dd"
+    },
+    {
+      "id": "arxiv-01-human",
+      "dataset": "aigc-text-bank-deepseek",
+      "row_id": "arxiv_004084",
+      "range_start": 9500000,
+      "range_length": 1500000,
+      "field": "text",
+      "model": "DeepSeek",
+      "authorship": "human",
+      "genre": "scientific_abstract",
+      "topic_pair": "arxiv-01",
+      "partition": "calibration",
+      "word_count": 183,
+      "sha256": "ddbb5f5dadc5951e733fc33792a592c7829325164fc3109ce3be6391f1c60eb9"
+    },
+    {
+      "id": "arxiv-01-ai",
+      "dataset": "aigc-text-bank-deepseek",
+      "row_id": "arxiv_004084",
+      "range_start": 9500000,
+      "range_length": 1500000,
+      "field": "text_ai",
+      "model": "DeepSeek",
+      "authorship": "ai",
+      "genre": "scientific_abstract",
+      "topic_pair": "arxiv-01",
+      "partition": "calibration",
+      "word_count": 205,
+      "sha256": "23065d210d3ea2d28ca55c2253da6593fabefafb75eb15eb005751f6365d1933"
+    },
+    {
+      "id": "essay-b1-01-human",
+      "dataset": "aigc-text-bank-deepseek",
+      "row_id": "essay_nonnative_001011",
+      "range_start": 44500000,
+      "range_length": 1500000,
+      "field": "text",
+      "model": "DeepSeek",
+      "authorship": "human",
+      "genre": "nonnative_essay",
+      "cefr_level": "B1",
+      "country": "China",
+      "source_corpus": "ICNALE",
+      "topic_pair": "essay-b1-01",
+      "partition": "calibration",
+      "word_count": 206,
+      "sha256": "f76cdd616ca7e50684a2679806577fd19b527acf870e3f1ea22942015e0caf66"
+    },
+    {
+      "id": "essay-b1-01-ai",
+      "dataset": "aigc-text-bank-deepseek",
+      "row_id": "essay_nonnative_001011",
+      "range_start": 44500000,
+      "range_length": 1500000,
+      "field": "text_ai",
+      "model": "DeepSeek",
+      "authorship": "ai",
+      "genre": "nonnative_essay",
+      "cefr_level": "B1",
+      "country": "China",
+      "source_corpus": "ICNALE",
+      "topic_pair": "essay-b1-01",
+      "partition": "calibration",
+      "word_count": 196,
+      "sha256": "185a9fd7f234074bfee67c4ffbc7baf1b889ba44adec6a218c3c25eee1872049"
+    },
+    {
+      "id": "news-01-human",
+      "dataset": "aigc-text-bank-deepseek",
+      "row_id": "news_000636",
+      "range_start": 33500000,
+      "range_length": 1500000,
+      "field": "text",
+      "model": "DeepSeek",
+      "authorship": "human",
+      "genre": "formal_news",
+      "topic_pair": "news-01",
+      "partition": "holdout",
+      "word_count": 369,
+      "sha256": "65b08d1212b6287dee7a79df92f059aee1c8af326ea900eb8a892bba3821754a"
+    },
+    {
+      "id": "news-01-ai",
+      "dataset": "aigc-text-bank-deepseek",
+      "row_id": "news_000636",
+      "range_start": 33500000,
+      "range_length": 1500000,
+      "field": "text_ai",
+      "model": "DeepSeek",
+      "authorship": "ai",
+      "genre": "formal_news",
+      "topic_pair": "news-01",
+      "partition": "holdout",
+      "word_count": 435,
+      "sha256": "7ac3eb755d06cbc1d61504b1dceff534ba094e084a23c236d1a52786203a111a"
     }
   ]
 }

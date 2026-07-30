@@ -57,6 +57,11 @@
 - [MAGE dataset](https://huggingface.co/datasets/yaful/MAGE) предоставляет
   multi-domain human/machine corpus; исследование фиксирует revision и SHA
   каждого используемого текста.
+- [AIGC-text-bank](https://huggingface.co/datasets/bmbgsj/AIGC-text-bank)
+  предоставляет связанные human/AI версии разных жанров и метаданные
+  non-native essays. Исследование использует pinned DeepSeek JSONL revision
+  `38d3e0e23fc9997d26929f1fecf9b46eeae567be`, exact row id и SHA каждого поля;
+  лицензия источника — CC BY-NC-SA 4.0.
 
 Вывод: perturbation, сработавшая один раз, является наблюдением о хрупкости,
 а не профессиональным правилом редактирования. Для допуска нужны repeats,

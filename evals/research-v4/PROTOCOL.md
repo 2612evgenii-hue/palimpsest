@@ -36,18 +36,17 @@ Turnitin изучается по первичной документации, н
 
 ## Корпус и разделение
 
-Первый calibration corpus зафиксирован в `corpus-manifest.json`. Он использует
-пары PubMed human/GPT-4 из MAGE с известным revision и SHA-256 каждого текста.
-Пары 01–02 относятся к calibration, пары 03–04 зарезервированы как holdout.
+Корпус зафиксирован в `corpus-manifest.json` и использует два независимых
+публичных источника с известными revision и SHA-256 каждого текста:
 
-Следующая итерация обязана добавить минимум:
+- пары PubMed human/GPT-4 из MAGE;
+- human/DeepSeek пары из AIGC-text-bank: строгий научный abstract, формальный
+  news report и non-native student essay с исходной меткой B1.
 
-- научный abstract;
-- аналитический memo;
-- техническое объяснение;
-- формальный студенческий essay;
-- non-native English на уровнях B1/B2;
-- human controls, включая тексты с ложноположительным baseline.
+PubMed 03–04 и news-01 зарезервированы как holdout. Остальные пары относятся к
+calibration. Для каждой AI-записи есть тематически связанный human control.
+Следующая итерация обязана добавить аналитический memo, техническое объяснение,
+B2 essay и human controls с подтверждённым ложноположительным baseline.
 
 Нельзя подбирать операции на holdout и затем называть тот же текст независимой
 проверкой.
@@ -105,7 +104,8 @@ Turnitin изучается по первичной документации, н
 ## Метрики
 
 - `doc_change_ratio` и paragraph ratio из `scripts/minimality.py`;
-- число изменённых spans и токенов;
+- `char_change_ratio`, `edit_cost=max(word,char)` и число изменённых spans:
+  пунктуационная перестройка не может считаться нулевой правкой;
 - median/min/max score по сервису;
 - `worst_core_score` по обязательным независимым группам;
 - `delta_score / changed_percent` как эффективность, но не самостоятельная

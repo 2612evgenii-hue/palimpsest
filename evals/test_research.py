@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 import research_matrix  # noqa: E402
+import research_corpus  # noqa: E402
 import research_variants  # noqa: E402
 
 
@@ -25,18 +26,81 @@ class ResearchCorpusTests(unittest.TestCase):
         manifest = json.loads(
             (ROOT / "evals/research-v4/corpus-manifest.json").read_text(encoding="utf-8")
         )
+        self.assertEqual(manifest["schema"], "palimpsest.research-corpus.v2")
         self.assertEqual(
-            manifest["dataset"]["revision"],
+            manifest["datasets"]["mage"]["revision"],
             "342663f0a2b775455c023f5d36a1341ff0ec5402",
+        )
+        self.assertEqual(
+            manifest["datasets"]["aigc-text-bank-deepseek"]["revision"],
+            "38d3e0e23fc9997d26929f1fecf9b46eeae567be",
         )
         samples = manifest["samples"]
         self.assertEqual(len({sample["id"] for sample in samples}), len(samples))
+        self.assertTrue(
+            all(sample["dataset"] in manifest["datasets"] for sample in samples)
+        )
         pairs = {}
         for sample in samples:
             pairs.setdefault(sample["topic_pair"], set()).add(sample["authorship"])
         self.assertTrue(all(authorship == {"human", "ai"} for authorship in pairs.values()))
         self.assertTrue(any(sample["partition"] == "holdout" for sample in samples))
         self.assertTrue(any(sample["partition"] == "calibration" for sample in samples))
+        self.assertTrue(
+            any(
+                sample.get("genre") == "nonnative_essay"
+                and sample.get("cefr_level") == "B1"
+                for sample in samples
+            )
+        )
+        genres = {sample.get("genre") for sample in samples if sample.get("genre")}
+        self.assertGreaterEqual(len(genres), 3)
+
+    def test_partial_jsonl_range_finds_one_complete_pinned_row(self) -> None:
+        payload = (
+            b'partial-prefix\n'
+            b'{"id":"other","model":"DeepSeek","text":"x"}\n'
+            b'{"id":"wanted","model":"DeepSeek","text":"human","text_ai":"ai"}\n'
+            b'{"id":"cut'
+        )
+        row = research_corpus.find_jsonl_row(payload, "wanted")
+        self.assertEqual(row["text"], "human")
+        self.assertEqual(row["text_ai"], "ai")
+
+    def test_b1_pilot_is_bound_and_rejects_cross_detector_regression(self) -> None:
+        pilot = json.loads(
+            (ROOT / "evals/research-v4/pilot-02-b1.json").read_text(encoding="utf-8")
+        )
+        for observation in pilot["observations"]:
+            self.assertEqual(
+                observation["candidate_sha256"],
+                observation["visible_text_sha256"],
+            )
+            self.assertEqual(observation["terminal_state"], "complete")
+
+        def scores(candidate: str, service: str) -> list[float]:
+            matches = [
+                observation["scores_pct"]
+                for observation in pilot["observations"]
+                if observation["candidate"] == candidate
+                and observation["service"] == service
+            ]
+            self.assertEqual(len(matches), 1)
+            return matches[0]
+
+        self.assertEqual(scores("human-control", "zerogpt"), [25.5, 25.5, 25.5])
+        self.assertLess(
+            scores("s4-merge-smell-frame", "zerogpt")[0],
+            scores("baseline", "zerogpt")[0],
+        )
+        self.assertGreater(
+            scores("s4-merge-smell-frame", "scribbr")[0],
+            scores("baseline", "scribbr")[0],
+        )
+        self.assertEqual(
+            pilot["quality_screen"]["s3-rhetorical-to-declarative"]["disposition"],
+            "not_scanned",
+        )
 
 
 class ResearchVariantTests(unittest.TestCase):
@@ -91,6 +155,14 @@ class ResearchVariantTests(unittest.TestCase):
             )
             with self.assertRaisesRegex(ValueError, "expected one source span"):
                 research_variants.build(original, plan, root / "variants")
+
+    def test_surface_metric_counts_punctuation_only_edit(self) -> None:
+        metrics = research_variants.character_change_metrics(
+            "One frame. Another follows.",
+            "One frame: another follows.",
+        )
+        self.assertGreater(metrics["char_change_ratio"], 0)
+        self.assertEqual(metrics["changed_spans"], 2)
 
 
 class ResearchMatrixTests(unittest.TestCase):

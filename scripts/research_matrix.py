@@ -12,6 +12,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import minimality  # noqa: E402
+import research_variants  # noqa: E402
 import _textlib as T  # noqa: E402
 
 
@@ -84,6 +85,8 @@ def summarize(experiment_path: Path) -> dict:
         cid = candidate["id"]
         current = T.read_text(root / candidate["path"])
         ratio = minimality.analyze(original, current, 1.0, 1.0)["doc_change_ratio"]
+        character_metrics = research_variants.character_change_metrics(original, current)
+        edit_cost = max(ratio, character_metrics["char_change_ratio"])
         services = {}
         missing = []
         for service in sorted(mandatory):
@@ -105,6 +108,8 @@ def summarize(experiment_path: Path) -> dict:
                 "id": cid,
                 "operation": candidate["operation"],
                 "doc_change_ratio": ratio,
+                **character_metrics,
+                "edit_cost": edit_cost,
                 "services": services,
                 "missing": missing,
                 "blocked": sorted(blocked[cid]),
@@ -118,10 +123,10 @@ def summarize(experiment_path: Path) -> dict:
     for row in comparable:
         dominated = any(
             other["id"] != row["id"]
-            and other["doc_change_ratio"] <= row["doc_change_ratio"]
+            and other["edit_cost"] <= row["edit_cost"]
             and other["worst_core_score"] <= row["worst_core_score"]
             and (
-                other["doc_change_ratio"] < row["doc_change_ratio"]
+                other["edit_cost"] < row["edit_cost"]
                 or other["worst_core_score"] < row["worst_core_score"]
             )
             for other in comparable
@@ -131,7 +136,12 @@ def summarize(experiment_path: Path) -> dict:
 
     passing = sorted(
         (row for row in comparable if row["hard_pass"]),
-        key=lambda row: (row["doc_change_ratio"], row["worst_core_score"], row["id"]),
+        key=lambda row: (
+            row["edit_cost"],
+            row["changed_spans"],
+            row["worst_core_score"],
+            row["id"],
+        ),
     )
     return {
         "experiment_id": data["experiment_id"],
@@ -154,7 +164,7 @@ def main() -> int:
         print(f"EXPERIMENT: {result['experiment_id']}")
         for row in result["rows"]:
             print(
-                f"{row['id']}: change={row['doc_change_ratio']:.4f} "
+                f"{row['id']}: change={row['edit_cost']:.4f} "
                 f"worst={row['worst_core_score']} pass={row['hard_pass']}"
             )
         print("PARETO:", ", ".join(result["pareto_frontier"]) or "none")

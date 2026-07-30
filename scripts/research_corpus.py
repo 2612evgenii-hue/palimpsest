@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Fetch a hash-pinned public research corpus from Hugging Face rows API.
+"""Fetch a hash-pinned public research corpus from Hugging Face.
 
-The manifest pins the dataset revision and every row hash. A mutable upstream
-row can therefore never silently enter an experiment.
+The manifest pins every dataset revision and row hash. Sources may use the
+Hugging Face rows API or a bounded byte range from a pinned JSONL file. A
+mutable upstream row can therefore never silently enter an experiment.
 """
 from __future__ import annotations
 
@@ -27,6 +28,39 @@ def read_json(url: str) -> dict:
         return json.load(response)
 
 
+def read_range(url: str, start: int, length: int) -> bytes:
+    if start < 0 or not 1 <= length <= 2_000_000:
+        raise ValueError(f"unsafe byte range: start={start}, length={length}")
+    request = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": "Palimpsest research/1",
+            "Range": f"bytes={start}-{start + length - 1}",
+        },
+    )
+    context = ssl.create_default_context(cafile=certifi.where()) if certifi else None
+    with urllib.request.urlopen(request, timeout=60, context=context) as response:
+        payload = response.read(2_000_001)
+    if len(payload) > 2_000_000:
+        raise RuntimeError("range response exceeded the research safety limit")
+    return payload
+
+
+def find_jsonl_row(payload: bytes, row_id: str) -> dict:
+    """Return one complete JSONL row from a possibly partial byte-range payload."""
+    matches = []
+    for raw_line in payload.splitlines():
+        try:
+            row = json.loads(raw_line)
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            continue
+        if isinstance(row, dict) and row.get("id") == row_id:
+            matches.append(row)
+    if len(matches) != 1:
+        raise RuntimeError(f"expected one complete JSONL row for {row_id}, got {len(matches)}")
+    return matches[0]
+
+
 def sha256_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
@@ -37,9 +71,7 @@ def safe_id(value: str) -> str:
     return value
 
 
-def fetch(manifest_path: Path, out_dir: Path) -> list[dict]:
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    dataset = manifest["dataset"]
+def verify_dataset(dataset: dict) -> None:
     identity = read_json(
         "https://huggingface.co/api/datasets/"
         + urllib.parse.quote(dataset["id"], safe="/")
@@ -49,29 +81,74 @@ def fetch(manifest_path: Path, out_dir: Path) -> list[dict]:
             f"dataset revision changed: {identity.get('sha')} != {dataset['revision']}"
         )
 
+
+def fetch_rows_api(dataset: dict, sample: dict) -> str:
+    retrieval = dataset["retrieval"]
+    query = urllib.parse.urlencode(
+        {
+            "dataset": dataset["id"],
+            "config": retrieval["config"],
+            "split": retrieval["split"],
+            "offset": sample["row_index"],
+            "length": 1,
+        }
+    )
+    payload = read_json("https://datasets-server.huggingface.co/rows?" + query)
+    rows = payload.get("rows", [])
+    if len(rows) != 1 or rows[0].get("row_idx") != sample["row_index"]:
+        raise RuntimeError(f"unexpected row response for {sample['id']}")
+    row = rows[0]["row"]
+    if row.get("src") != sample["source"]:
+        raise RuntimeError(f"source mismatch for {sample['id']}")
+    text = row.get("text")
+    if not isinstance(text, str):
+        raise RuntimeError(f"missing text for {sample['id']}")
+    return text
+
+
+def fetch_jsonl_range(dataset: dict, sample: dict) -> str:
+    retrieval = dataset["retrieval"]
+    file_url = (
+        "https://huggingface.co/datasets/"
+        + dataset["id"]
+        + "/resolve/"
+        + dataset["revision"]
+        + "/"
+        + urllib.parse.quote(retrieval["file_path"], safe="/")
+    )
+    payload = read_range(file_url, sample["range_start"], sample["range_length"])
+    row = find_jsonl_row(payload, sample["row_id"])
+    if row.get("model") != sample["model"]:
+        raise RuntimeError(f"model mismatch for {sample['id']}")
+    text = row.get(sample["field"])
+    if not isinstance(text, str):
+        raise RuntimeError(f"missing {sample['field']} for {sample['id']}")
+    return text
+
+
+def fetch(manifest_path: Path, out_dir: Path) -> list[dict]:
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if manifest.get("schema") != "palimpsest.research-corpus.v2":
+        raise ValueError("unsupported research corpus schema")
+    datasets = manifest["datasets"]
+    for dataset in datasets.values():
+        verify_dataset(dataset)
+
     out_dir.mkdir(parents=True, exist_ok=True)
     written = []
     for sample in manifest["samples"]:
         sample_id = safe_id(sample["id"])
-        query = urllib.parse.urlencode(
-            {
-                "dataset": dataset["id"],
-                "config": dataset["config"],
-                "split": dataset["split"],
-                "offset": sample["row_index"],
-                "length": 1,
-            }
-        )
-        payload = read_json("https://datasets-server.huggingface.co/rows?" + query)
-        rows = payload.get("rows", [])
-        if len(rows) != 1 or rows[0].get("row_idx") != sample["row_index"]:
-            raise RuntimeError(f"unexpected row response for {sample_id}")
-        row = rows[0]["row"]
-        text = row.get("text")
-        if not isinstance(text, str):
-            raise RuntimeError(f"missing text for {sample_id}")
-        if row.get("src") != sample["source"]:
-            raise RuntimeError(f"source mismatch for {sample_id}")
+        try:
+            dataset = datasets[sample["dataset"]]
+        except KeyError as error:
+            raise ValueError(f"unknown dataset for {sample_id}") from error
+        retrieval_type = dataset["retrieval"]["type"]
+        if retrieval_type == "rows_api":
+            text = fetch_rows_api(dataset, sample)
+        elif retrieval_type == "jsonl_range":
+            text = fetch_jsonl_range(dataset, sample)
+        else:
+            raise ValueError(f"unsupported retrieval type: {retrieval_type}")
         digest = sha256_text(text)
         if digest != sample["sha256"]:
             raise RuntimeError(f"hash mismatch for {sample_id}: {digest}")
@@ -81,6 +158,7 @@ def fetch(manifest_path: Path, out_dir: Path) -> list[dict]:
         written.append(
             {
                 "id": sample_id,
+                "dataset": sample["dataset"],
                 "path": str(destination),
                 "sha256": digest,
                 "partition": sample["partition"],

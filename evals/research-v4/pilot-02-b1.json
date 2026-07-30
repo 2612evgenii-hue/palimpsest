@@ -1,0 +1,170 @@
+{
+  "schema": "palimpsest.live-research-pilot.v1",
+  "observed_at": "2026-07-30",
+  "purpose": "B1 calibration and false-positive control; not a release claim",
+  "sample_pair": "essay-b1-01",
+  "source": {
+    "dataset": "bmbgsj/AIGC-text-bank",
+    "revision": "38d3e0e23fc9997d26929f1fecf9b46eeae567be",
+    "row_id": "essay_nonnative_001011",
+    "declared_cefr": "B1",
+    "source_corpus": "ICNALE"
+  },
+  "services": {
+    "zerogpt": {
+      "independence_group": "zerogpt",
+      "status": "scored"
+    },
+    "scribbr": {
+      "independence_group": "quillbot-family",
+      "status": "scored",
+      "model_version": "v7.1.0"
+    }
+  },
+  "quality_screen": {
+    "s1-local-thesis-clause": {
+      "cefr": "pass_B1",
+      "fidelity": "pass",
+      "style_distance": 1.2,
+      "style_reliability": "low_short_text"
+    },
+    "s2-split-balanced-frame": {
+      "cefr": "pass_B1",
+      "fidelity": "pass",
+      "style_distance": 5.6,
+      "style_reliability": "low_short_text"
+    },
+    "s3-rhetorical-to-declarative": {
+      "cefr": "pass_B1",
+      "fidelity": "fail_NEGATION_CHANGED",
+      "style_distance": 2.2,
+      "disposition": "not_scanned"
+    },
+    "s4-merge-smell-frame": {
+      "cefr": "pass_B1",
+      "fidelity": "pass",
+      "style_distance": 7.0,
+      "style_reliability": "low_short_text"
+    },
+    "s5-remove-agreement-frame": {
+      "cefr": "pass_B1",
+      "fidelity": "pass",
+      "style_distance": 8.0,
+      "style_reliability": "low_short_text"
+    }
+  },
+  "observations": [
+    {
+      "sample_id": "essay-b1-01-human",
+      "candidate": "human-control",
+      "candidate_sha256": "f76cdd616ca7e50684a2679806577fd19b527acf870e3f1ea22942015e0caf66",
+      "visible_text_sha256": "f76cdd616ca7e50684a2679806577fd19b527acf870e3f1ea22942015e0caf66",
+      "service": "zerogpt",
+      "scores_pct": [25.5, 25.5, 25.5],
+      "terminal_state": "complete",
+      "capture_status": "missing"
+    },
+    {
+      "sample_id": "essay-b1-01-ai",
+      "candidate": "baseline",
+      "candidate_sha256": "185a9fd7f234074bfee67c4ffbc7baf1b889ba44adec6a218c3c25eee1872049",
+      "visible_text_sha256": "185a9fd7f234074bfee67c4ffbc7baf1b889ba44adec6a218c3c25eee1872049",
+      "service": "zerogpt",
+      "scores_pct": [51.0, 51.0, 51.0],
+      "terminal_state": "complete",
+      "capture_status": "missing"
+    },
+    {
+      "sample_id": "essay-b1-01-ai",
+      "candidate": "s1-local-thesis-clause",
+      "candidate_sha256": "df4f97386a70a73efef485054211760dc28ea73fad45233f33790cd68fad709a",
+      "visible_text_sha256": "df4f97386a70a73efef485054211760dc28ea73fad45233f33790cd68fad709a",
+      "doc_change_ratio": 0.0177,
+      "char_change_ratio": 0.009789,
+      "changed_spans": 5,
+      "service": "zerogpt",
+      "scores_pct": [53.6, 53.6, 53.6],
+      "terminal_state": "complete",
+      "capture_status": "missing"
+    },
+    {
+      "sample_id": "essay-b1-01-ai",
+      "candidate": "s2-split-balanced-frame",
+      "candidate_sha256": "e2632538ac9b635ea4d0f71eb2546f127d544292876d3041fc106730d53ac690",
+      "visible_text_sha256": "e2632538ac9b635ea4d0f71eb2546f127d544292876d3041fc106730d53ac690",
+      "doc_change_ratio": 0.0226,
+      "char_change_ratio": 0.008975,
+      "changed_spans": 6,
+      "service": "zerogpt",
+      "scores_pct": [52.4, 52.4, 52.4],
+      "terminal_state": "complete",
+      "capture_status": "missing"
+    },
+    {
+      "sample_id": "essay-b1-01-ai",
+      "candidate": "s4-merge-smell-frame",
+      "candidate_sha256": "3c76fbdd37dc4db5c2d40c332901f6356ff89a8dad4bdb7ebe16b939793c4b01",
+      "visible_text_sha256": "3c76fbdd37dc4db5c2d40c332901f6356ff89a8dad4bdb7ebe16b939793c4b01",
+      "doc_change_ratio": 0.0,
+      "char_change_ratio": 0.0015,
+      "changed_spans": 2,
+      "service": "zerogpt",
+      "scores_pct": [50.6, 50.6, 50.6],
+      "terminal_state": "complete",
+      "capture_status": "missing"
+    },
+    {
+      "sample_id": "essay-b1-01-ai",
+      "candidate": "s5-remove-agreement-frame",
+      "candidate_sha256": "fbe1b2a690e9c21c3abbe65beb79dbef2783b8ddd3fa9e642d75ff8172a5961d",
+      "visible_text_sha256": "fbe1b2a690e9c21c3abbe65beb79dbef2783b8ddd3fa9e642d75ff8172a5961d",
+      "doc_change_ratio": 0.0176,
+      "char_change_ratio": 0.009367,
+      "changed_spans": 6,
+      "service": "zerogpt",
+      "scores_pct": [60.3, 60.3, 60.3],
+      "terminal_state": "complete",
+      "capture_status": "missing"
+    },
+    {
+      "sample_id": "essay-b1-01-human",
+      "candidate": "human-control",
+      "candidate_sha256": "f76cdd616ca7e50684a2679806577fd19b527acf870e3f1ea22942015e0caf66",
+      "visible_text_sha256": "f76cdd616ca7e50684a2679806577fd19b527acf870e3f1ea22942015e0caf66",
+      "service": "scribbr",
+      "scores_pct": [0, 0, 0],
+      "terminal_state": "complete",
+      "capture_status": "missing"
+    },
+    {
+      "sample_id": "essay-b1-01-ai",
+      "candidate": "baseline",
+      "candidate_sha256": "185a9fd7f234074bfee67c4ffbc7baf1b889ba44adec6a218c3c25eee1872049",
+      "visible_text_sha256": "185a9fd7f234074bfee67c4ffbc7baf1b889ba44adec6a218c3c25eee1872049",
+      "service": "scribbr",
+      "scores_pct": [28, 28, 28],
+      "terminal_state": "complete",
+      "capture_status": "missing"
+    },
+    {
+      "sample_id": "essay-b1-01-ai",
+      "candidate": "s4-merge-smell-frame",
+      "candidate_sha256": "3c76fbdd37dc4db5c2d40c332901f6356ff89a8dad4bdb7ebe16b939793c4b01",
+      "visible_text_sha256": "3c76fbdd37dc4db5c2d40c332901f6356ff89a8dad4bdb7ebe16b939793c4b01",
+      "doc_change_ratio": 0.0,
+      "char_change_ratio": 0.0015,
+      "changed_spans": 2,
+      "service": "scribbr",
+      "scores_pct": [32, 32, 32, 32],
+      "terminal_state": "complete",
+      "capture_status": "missing"
+    }
+  ],
+  "preliminary_findings": [
+    "ZeroGPT produced a stable 25.5 percent false positive on the human B1 control while Scribbr returned 0 percent.",
+    "The smallest admissible edit reduced ZeroGPT by 0.4 points but increased Scribbr by 4 points.",
+    "Three other natural edits increased ZeroGPT by 1.4 to 9.3 points.",
+    "The apparent local ZeroGPT improvement does not transfer across detector groups and is rejected as a skill rule.",
+    "Both services were stable across repeats, but missing raw captures keep this at calibration evidence."
+  ]
+}

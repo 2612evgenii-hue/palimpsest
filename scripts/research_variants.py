@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import difflib
 import hashlib
 import json
 from pathlib import Path
@@ -12,6 +13,19 @@ import minimality
 
 def digest(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def character_change_metrics(original: str, candidate: str) -> dict:
+    matcher = difflib.SequenceMatcher(a=original, b=candidate, autojunk=False)
+    matched = sum(block.size for block in matcher.get_matching_blocks())
+    ratio = 1 - (2 * matched) / (len(original) + len(candidate) or 1)
+    changed_spans = sum(
+        tag != "equal" for tag, _a1, _a2, _b1, _b2 in matcher.get_opcodes()
+    )
+    return {
+        "char_change_ratio": round(ratio, 6),
+        "changed_spans": changed_spans,
+    }
 
 
 def build(original_path: Path, plan_path: Path, out_dir: Path) -> dict:
@@ -31,6 +45,7 @@ def build(original_path: Path, plan_path: Path, out_dir: Path) -> dict:
         destination = out_dir / f"{operation['id']}.txt"
         destination.write_text(candidate, encoding="utf-8")
         metrics = minimality.analyze(original, candidate, 1.0, 1.0)
+        character_metrics = character_change_metrics(original, candidate)
         rows.append(
             {
                 "id": operation["id"],
@@ -38,6 +53,11 @@ def build(original_path: Path, plan_path: Path, out_dir: Path) -> dict:
                 "path": str(destination),
                 "sha256": digest(candidate),
                 "doc_change_ratio": metrics["doc_change_ratio"],
+                **character_metrics,
+                "edit_cost": max(
+                    metrics["doc_change_ratio"],
+                    character_metrics["char_change_ratio"],
+                ),
                 "words": metrics["words"],
             }
         )
