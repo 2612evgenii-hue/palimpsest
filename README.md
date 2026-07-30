@@ -43,12 +43,14 @@ Plateau, waiver, средний score, один прошедший сервис 
 human/AI corpus, calibration/holdout split, однофакторные варианты, повторы,
 human controls, CEFR/fidelity/style screens и Pareto-отбор.
 
-Исследование публикует и отрицательные результаты. Текущий B1-пилот показал
-ложноположительные 25,5% ZeroGPT на человеческом тексте и противоположную
-реакцию ZeroGPT/Scribbr на микроправку 0,15%. Поэтому эта правка отвергнута, а
-не превращена в «рецепт». См. [протокол](evals/research-v4/PROTOCOL.md),
+Исследование публикует и отрицательные результаты. Текущий canonical
+scientific pilot нашёл вариант с edit cost 0,73%, который прошёл ZeroGPT и
+Scribbr, но остался 99,6% в Sapling; human control в Sapling получил 100%.
+Поэтому вариант не превращён в «рецепт». Прежний B1 pilot помечен superseded
+после обнаружения transport whitespace. См.
+[протокол](evals/research-v4/PROTOCOL.md),
 [текущие результаты](evals/research-v4/FINDINGS.md) и
-[машиночитаемый pilot-02](evals/research-v4/pilot-02-b1.json).
+[машиночитаемый pilot-03](evals/research-v4/pilot-03-canonical.json).
 
 ## Для чего нужен Palimpsest
 

@@ -26,7 +26,11 @@ class ResearchCorpusTests(unittest.TestCase):
         manifest = json.loads(
             (ROOT / "evals/research-v4/corpus-manifest.json").read_text(encoding="utf-8")
         )
-        self.assertEqual(manifest["schema"], "palimpsest.research-corpus.v2")
+        self.assertEqual(manifest["schema"], "palimpsest.research-corpus.v3")
+        self.assertEqual(
+            manifest["canonicalization"]["id"],
+            "plain_text_v1",
+        )
         self.assertEqual(
             manifest["datasets"]["mage"]["revision"],
             "342663f0a2b775455c023f5d36a1341ff0ec5402",
@@ -67,10 +71,22 @@ class ResearchCorpusTests(unittest.TestCase):
         self.assertEqual(row["text"], "human")
         self.assertEqual(row["text_ai"], "ai")
 
+    def test_plain_text_canonicalization_removes_only_transport_artifacts(self) -> None:
+        self.assertEqual(
+            research_corpus.canonicalize_text("Alpha \t\r\n\r\nBeta  "),
+            "Alpha\n\nBeta",
+        )
+        self.assertEqual(
+            research_corpus.canonicalize_text("Alpha\n\nBeta\n"),
+            "Alpha\n\nBeta\n",
+        )
+
     def test_b1_pilot_is_bound_and_rejects_cross_detector_regression(self) -> None:
         pilot = json.loads(
             (ROOT / "evals/research-v4/pilot-02-b1.json").read_text(encoding="utf-8")
         )
+        self.assertEqual(pilot["status"], "superseded")
+        self.assertEqual(pilot["superseded_by"], "pilot-03-canonical.json")
         for observation in pilot["observations"]:
             self.assertEqual(
                 observation["candidate_sha256"],
@@ -101,6 +117,36 @@ class ResearchCorpusTests(unittest.TestCase):
             pilot["quality_screen"]["s3-rhetorical-to-declarative"]["disposition"],
             "not_scanned",
         )
+
+    def test_canonical_pilot_rejects_two_service_success_after_sapling_failure(self) -> None:
+        pilot = json.loads(
+            (ROOT / "evals/research-v4/pilot-03-canonical.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(pilot["status"], "current_calibration")
+        candidates = pilot["candidates"]
+        for observation in pilot["observations"]:
+            expected_sha = candidates[observation["candidate"]]["canonical_sha256"]
+            self.assertEqual(observation["post_visible_text_sha256"], expected_sha)
+            self.assertEqual(observation["terminal_state"], "complete")
+
+        def scores(candidate: str, service: str) -> list[float]:
+            matches = [
+                observation["scores_pct"]
+                for observation in pilot["observations"]
+                if observation["candidate"] == candidate
+                and observation["service"] == service
+            ]
+            self.assertEqual(len(matches), 1)
+            return matches[0]
+
+        self.assertEqual(scores("s2-split-mechanism", "zerogpt"), [0, 0, 0])
+        self.assertEqual(scores("s2-split-mechanism", "scribbr"), [19, 19, 19])
+        self.assertEqual(scores("s2-split-mechanism", "sapling"), [99.6])
+        self.assertEqual(scores("human-control", "sapling"), [100])
+        self.assertFalse(pilot["admission"]["passes_all_observed_services"])
+        self.assertFalse(pilot["admission"]["rule_admitted"])
 
 
 class ResearchVariantTests(unittest.TestCase):
@@ -166,7 +212,12 @@ class ResearchVariantTests(unittest.TestCase):
 
 
 class ResearchMatrixTests(unittest.TestCase):
-    def fixture(self, root: Path, stale: bool = False) -> Path:
+    def fixture(
+        self,
+        root: Path,
+        stale: bool = False,
+        minimum_repeats: int = 1,
+    ) -> Path:
         original_text = "Alpha beta gamma delta."
         edited_text = "Alpha beta gamma epsilon."
         original = root / "original.txt"
@@ -185,7 +236,7 @@ class ResearchMatrixTests(unittest.TestCase):
                         "repeat": 1,
                         "status": "scored",
                         "terminal_state": "complete",
-                        "visible_text_sha256": original_hash,
+                        "post_visible_text_sha256": original_hash,
                         "score_pct": 80,
                         "capture_status": "missing",
                     },
@@ -195,30 +246,36 @@ class ResearchMatrixTests(unittest.TestCase):
                         "repeat": 1,
                         "status": "scored",
                         "terminal_state": "complete",
-                        "visible_text_sha256": original_hash if stale else edited_hash,
+                        "post_visible_text_sha256": (
+                            original_hash if stale else edited_hash
+                        ),
                         "score_pct": 10,
                         "capture_status": "missing",
                     },
                 ]
             )
         experiment = {
-            "schema": "palimpsest.detector-research.v1",
+            "schema": "palimpsest.detector-research.v2",
             "experiment_id": "unit",
+            "canonicalization": "plain_text_v1",
             "original": {"path": "original.txt", "sha256": original_hash},
             "policy": {
                 "mandatory_services": ["zerogpt", "copyleaks"],
                 "hard_threshold_pct": 20,
+                "minimum_repeats": minimum_repeats,
             },
             "candidates": [
                 {
                     "id": "base",
                     "operation": "none",
+                    "quality_status": "pass",
                     "path": "original.txt",
                     "sha256": original_hash,
                 },
                 {
                     "id": "edited",
                     "operation": "one-factor",
+                    "quality_status": "pass",
                     "path": "edited.txt",
                     "sha256": edited_hash,
                 },
@@ -238,5 +295,18 @@ class ResearchMatrixTests(unittest.TestCase):
 
     def test_matrix_rejects_stale_visible_text_binding(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
-            with self.assertRaisesRegex(ValueError, "visible text hash"):
+            with self.assertRaisesRegex(ValueError, "post-terminal visible text hash"):
                 research_matrix.summarize(self.fixture(Path(temp), stale=True))
+
+    def test_matrix_does_not_pass_below_minimum_repeats(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            result = research_matrix.summarize(
+                self.fixture(Path(temp), minimum_repeats=2)
+            )
+            edited = next(row for row in result["rows"] if row["id"] == "edited")
+            self.assertFalse(edited["hard_pass"])
+            self.assertEqual(
+                edited["insufficient_repeats"]["zerogpt"],
+                {"observed": 1, "required": 2},
+            )
+            self.assertIsNone(result["least_changed_hard_pass"])

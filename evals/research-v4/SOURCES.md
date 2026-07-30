@@ -35,6 +35,17 @@
 В live-интерфейсе 2026-07-30 Scribbr сообщил model `v7.1.0`. Это одна связанная
 семья, а не независимый голос сверх QuillBot.
 
+## Sapling
+
+- [Официальный AI Detector](https://sapling.ai/ai-content-detector) описывает
+  Transformer token probabilities, отдельные sentence perplexity scores,
+  guest limit 2000 символов и прямо предупреждает о false positives.
+
+Вывод: Sapling полезен как дополнительная research-family для коротких EN
+текстов, но human control обязателен. В pilot-03 он дал 100% на человеческом
+scientific abstract, поэтому единичный Sapling score нельзя трактовать как
+авторство.
+
 ## Turnitin
 
 - [Как читать AI Writing report](https://guides.turnitin.com/hc/en-us/articles/27139000787853-How-should-I-review-the-AI-Writing-report)
@@ -61,7 +72,9 @@
   предоставляет связанные human/AI версии разных жанров и метаданные
   non-native essays. Исследование использует pinned DeepSeek JSONL revision
   `38d3e0e23fc9997d26929f1fecf9b46eeae567be`, exact row id и SHA каждого поля;
-  лицензия источника — CC BY-NC-SA 4.0.
+  лицензия источника — CC BY-NC-SA 4.0. Upstream SHA сохраняется отдельно от
+  канонической plain-text формы, чтобы транспортные trailing spaces не
+  становились частью detector-эксперимента.
 
 Вывод: perturbation, сработавшая один раз, является наблюдением о хрупкости,
 а не профессиональным правилом редактирования. Для допуска нужны repeats,

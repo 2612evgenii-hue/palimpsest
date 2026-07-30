@@ -22,8 +22,10 @@ def file_sha256(path: Path) -> str:
 
 def load_experiment(path: Path) -> dict:
     data = json.loads(path.read_text(encoding="utf-8"))
-    if data.get("schema") != "palimpsest.detector-research.v1":
+    if data.get("schema") != "palimpsest.detector-research.v2":
         raise ValueError("unsupported experiment schema")
+    if data.get("canonicalization") != "plain_text_v1":
+        raise ValueError("experiment must use plain_text_v1 canonicalization")
     root = path.parent
     original_path = root / data["original"]["path"]
     if file_sha256(original_path) != data["original"]["sha256"]:
@@ -35,6 +37,8 @@ def load_experiment(path: Path) -> dict:
         cid = candidate["id"]
         if cid in candidate_ids:
             raise ValueError(f"duplicate candidate id: {cid}")
+        if candidate.get("quality_status") not in {"pass", "rejected"}:
+            raise ValueError(f"candidate needs quality_status: {cid}")
         candidate_ids.add(cid)
         candidate_path = root / candidate["path"]
         if file_sha256(candidate_path) != candidate["sha256"]:
@@ -51,8 +55,13 @@ def load_experiment(path: Path) -> dict:
                 raise ValueError("scored observation needs score_pct in [0,100]")
             if observation.get("terminal_state") != "complete":
                 raise ValueError("scored observation needs terminal_state=complete")
-            if observation.get("visible_text_sha256") != candidate_hashes[candidate_id]:
-                raise ValueError("visible text hash does not bind the scored candidate")
+            if (
+                observation.get("post_visible_text_sha256")
+                != candidate_hashes[candidate_id]
+            ):
+                raise ValueError(
+                    "post-terminal visible text hash does not bind the scored candidate"
+                )
         elif status not in {"blocked", "missing"}:
             raise ValueError(f"unsupported observation status: {status}")
         capture = observation.get("capture")
@@ -68,6 +77,9 @@ def summarize(experiment_path: Path) -> dict:
     root = experiment_path.parent
     original = T.read_text(root / data["original"]["path"])
     mandatory = set(data["policy"]["mandatory_services"])
+    minimum_repeats = data["policy"].get("minimum_repeats")
+    if not isinstance(minimum_repeats, int) or minimum_repeats < 1:
+        raise ValueError("policy.minimum_repeats must be a positive integer")
     by_candidate_service: dict[tuple[str, str], list[float]] = defaultdict(list)
     blocked: dict[str, set[str]] = defaultdict(set)
     for observation in data["observations"]:
@@ -89,6 +101,7 @@ def summarize(experiment_path: Path) -> dict:
         edit_cost = max(ratio, character_metrics["char_change_ratio"])
         services = {}
         missing = []
+        insufficient = {}
         for service in sorted(mandatory):
             scores = by_candidate_service.get((cid, service), [])
             if not scores:
@@ -101,7 +114,17 @@ def summarize(experiment_path: Path) -> dict:
                 "max": max(scores),
                 "noise_range": round(max(scores) - min(scores), 3),
             }
-        complete = not missing and not blocked[cid]
+            if len(scores) < minimum_repeats:
+                insufficient[service] = {
+                    "observed": len(scores),
+                    "required": minimum_repeats,
+                }
+        complete = (
+            not missing
+            and not blocked[cid]
+            and not insufficient
+            and candidate["quality_status"] == "pass"
+        )
         worst = max((entry["median"] for entry in services.values()), default=None)
         rows.append(
             {
@@ -112,13 +135,23 @@ def summarize(experiment_path: Path) -> dict:
                 "edit_cost": edit_cost,
                 "services": services,
                 "missing": missing,
+                "insufficient_repeats": insufficient,
                 "blocked": sorted(blocked[cid]),
+                "quality_status": candidate["quality_status"],
                 "worst_core_score": worst,
                 "hard_pass": bool(complete and worst is not None and worst < data["policy"]["hard_threshold_pct"]),
             }
         )
 
-    comparable = [row for row in rows if row["worst_core_score"] is not None and not row["missing"] and not row["blocked"]]
+    comparable = [
+        row
+        for row in rows
+        if row["worst_core_score"] is not None
+        and not row["missing"]
+        and not row["blocked"]
+        and not row["insufficient_repeats"]
+        and row["quality_status"] == "pass"
+    ]
     frontier = []
     for row in comparable:
         dominated = any(
@@ -146,6 +179,7 @@ def summarize(experiment_path: Path) -> dict:
     return {
         "experiment_id": data["experiment_id"],
         "hard_threshold_pct": data["policy"]["hard_threshold_pct"],
+        "minimum_repeats": minimum_repeats,
         "rows": rows,
         "pareto_frontier": sorted(frontier),
         "least_changed_hard_pass": passing[0]["id"] if passing else None,

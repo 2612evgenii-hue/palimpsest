@@ -1,7 +1,10 @@
 {
   "schema": "palimpsest.live-research-pilot.v1",
   "observed_at": "2026-07-30",
-  "purpose": "B1 calibration and false-positive control; not a release claim",
+  "status": "superseded",
+  "superseded_by": "pilot-03-canonical.json",
+  "purpose": "historical B1 calibration on upstream raw text; not admissible evidence",
+  "binding_limit": "The input SHA was checked before scanning. A later forward-test found service-specific trailing-whitespace normalization, so post-terminal identity was not proven.",
   "sample_pair": "essay-b1-01",
   "source": {
     "dataset": "bmbgsj/AIGC-text-bank",
@@ -165,6 +168,7 @@
     "The smallest admissible edit reduced ZeroGPT by 0.4 points but increased Scribbr by 4 points.",
     "Three other natural edits increased ZeroGPT by 1.4 to 9.3 points.",
     "The apparent local ZeroGPT improvement does not transfer across detector groups and is rejected as a skill rule.",
-    "Both services were stable across repeats, but missing raw captures keep this at calibration evidence."
+    "Both services were stable across repeats, but missing raw captures keep this at calibration evidence.",
+    "This pilot is superseded because upstream raw text contained trailing spaces and post-terminal identity was not verified."
   ]
 }

@@ -11,6 +11,7 @@ import argparse
 import hashlib
 import json
 import ssl
+import unicodedata
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -63,6 +64,13 @@ def find_jsonl_row(payload: bytes, row_id: str) -> dict:
 
 def sha256_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def canonicalize_text(text: str) -> str:
+    """Normalize transport artifacts without changing visible prose structure."""
+    normalized = unicodedata.normalize("NFC", text)
+    normalized = normalized.replace("\r\n", "\n").replace("\r", "\n")
+    return "\n".join(line.rstrip(" \t") for line in normalized.split("\n"))
 
 
 def safe_id(value: str) -> str:
@@ -128,8 +136,10 @@ def fetch_jsonl_range(dataset: dict, sample: dict) -> str:
 
 def fetch(manifest_path: Path, out_dir: Path) -> list[dict]:
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    if manifest.get("schema") != "palimpsest.research-corpus.v2":
+    if manifest.get("schema") != "palimpsest.research-corpus.v3":
         raise ValueError("unsupported research corpus schema")
+    if manifest.get("canonicalization", {}).get("id") != "plain_text_v1":
+        raise ValueError("unsupported corpus canonicalization")
     datasets = manifest["datasets"]
     for dataset in datasets.values():
         verify_dataset(dataset)
@@ -149,18 +159,24 @@ def fetch(manifest_path: Path, out_dir: Path) -> list[dict]:
             text = fetch_jsonl_range(dataset, sample)
         else:
             raise ValueError(f"unsupported retrieval type: {retrieval_type}")
-        digest = sha256_text(text)
-        if digest != sample["sha256"]:
-            raise RuntimeError(f"hash mismatch for {sample_id}: {digest}")
+        source_digest = sha256_text(text)
+        if source_digest != sample["sha256"]:
+            raise RuntimeError(f"source hash mismatch for {sample_id}: {source_digest}")
+        canonical = canonicalize_text(text)
+        digest = sha256_text(canonical)
+        expected_canonical = sample.get("canonical_sha256", sample["sha256"])
+        if digest != expected_canonical:
+            raise RuntimeError(f"canonical hash mismatch for {sample_id}: {digest}")
 
         destination = out_dir / f"{sample_id}.txt"
-        destination.write_text(text, encoding="utf-8")
+        destination.write_text(canonical, encoding="utf-8")
         written.append(
             {
                 "id": sample_id,
                 "dataset": sample["dataset"],
                 "path": str(destination),
                 "sha256": digest,
+                "source_sha256": source_digest,
                 "partition": sample["partition"],
                 "authorship": sample["authorship"],
             }

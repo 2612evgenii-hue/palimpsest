@@ -1,7 +1,7 @@
 {
   "schema": "palimpsest.variant-plan.v1",
   "sample_id": "essay-b1-01-ai",
-  "original_sha256": "185a9fd7f234074bfee67c4ffbc7baf1b889ba44adec6a218c3c25eee1872049",
+  "original_sha256": "e8a5e18a2a1944171e06f0a6843ef49a802b0823eab8a4235082dd5506ed1e59",
   "operations": [
     {
       "id": "s1-local-thesis-clause",
