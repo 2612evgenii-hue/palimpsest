@@ -435,6 +435,147 @@ class ResearchVariantTests(unittest.TestCase):
         self.assertEqual(metrics["changed_spans"], 2)
 
 
+class ResearchHoldoutTests(unittest.TestCase):
+    PILOT = ROOT / "evals/research-v4/holdout-01-pubmed-canonical.json"
+    PREREG = ROOT / "evals/research-v4/holdout-01-preregistration.json"
+
+    def test_pubmed_holdout_is_preregistered_and_rejects_split_transfer(self) -> None:
+        pilot = json.loads(self.PILOT.read_text(encoding="utf-8"))
+        self.assertEqual(pilot["status"], "completed_holdout")
+        self.assertEqual(
+            pilot["preregistration"]["sha256"],
+            hashlib.sha256(self.PREREG.read_bytes()).hexdigest(),
+        )
+        self.assertEqual(
+            pilot["preregistration"]["git_commit_before_live_scores"],
+            "0adc16146030a830e5b606fea4ace4f8b975627b",
+        )
+        candidates = pilot["candidates"]
+        confirmatory = [
+            candidate
+            for candidate in candidates.values()
+            if candidate.get("role") == "confirmatory"
+        ]
+        self.assertEqual(len(confirmatory), 2)
+        self.assertTrue(
+            all(
+                candidate["quality"]["status"] == "rejected"
+                and candidate["quality"]["failed_signal"] == "reading_grade"
+                for candidate in confirmatory
+            )
+        )
+        observed_candidates = {
+            observation["candidate"] for observation in pilot["observations"]
+        }
+        self.assertTrue(
+            all(
+                candidate_id not in observed_candidates
+                for candidate_id, candidate in candidates.items()
+                if candidate.get("role") == "confirmatory"
+            )
+        )
+        self.assertEqual(
+            pilot["holdout_transfer"]["successful_samples"],
+            0,
+        )
+        self.assertFalse(pilot["holdout_transfer"]["transfer_confirmed"])
+        self.assertFalse(pilot["admission"]["rule_admitted"])
+        computed = research_pilot.recompute_holdout_transfer(pilot)
+        self.assertEqual(
+            {
+                sample: result["status"]
+                for sample, result in computed["sample_results"].items()
+            },
+            {
+                "pubmed-03": "failed_before_live_scan",
+                "pubmed-04": "failed_before_live_scan",
+            },
+        )
+        pareto = research_pilot.validate_declared_pareto(self.PILOT)
+        self.assertEqual(
+            pareto["eligible_candidates"],
+            ["p03-baseline", "p04-baseline"],
+        )
+
+    def test_pubmed_holdout_records_human_false_positives_and_saturation(
+        self,
+    ) -> None:
+        pilot = json.loads(self.PILOT.read_text(encoding="utf-8"))
+
+        def scores(candidate: str, service: str) -> list[float]:
+            matches = [
+                observation["scores_pct"]
+                for observation in pilot["observations"]
+                if observation["candidate"] == candidate
+                and observation["service"] == service
+            ]
+            self.assertEqual(len(matches), 1)
+            return matches[0]
+
+        self.assertEqual(scores("p03-baseline", "zerogpt"), [100, 100, 100])
+        self.assertEqual(scores("p04-baseline", "scribbr"), [100, 100, 100])
+        self.assertEqual(
+            scores("p04-human-control", "zerogpt"),
+            [42.9, 42.9, 42.9],
+        )
+        self.assertEqual(scores("p04-human-control", "scribbr"), [0, 0, 0])
+        self.assertEqual(scores("p03-human-control", "sapling"), [96.4])
+        self.assertEqual(scores("p04-human-control", "sapling"), [100])
+        comparators = [
+            candidate_id
+            for candidate_id, candidate in pilot["candidates"].items()
+            if candidate.get("role") == "exploratory_comparator"
+        ]
+        self.assertTrue(
+            all(
+                scores(candidate_id, service) == [100]
+                for candidate_id in comparators
+                for service in ("zerogpt", "scribbr")
+            )
+        )
+        self.assertEqual(pilot["service_errors"][0]["service"], "copyleaks")
+        self.assertEqual(pilot["service_errors"][0]["status"], "error")
+
+    def _write_tampered_fixture(self, root: Path, pilot: dict) -> Path:
+        (root / self.PREREG.name).write_text(
+            self.PREREG.read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
+        destination = root / self.PILOT.name
+        destination.write_text(json.dumps(pilot), encoding="utf-8")
+        return destination
+
+    def test_holdout_validator_rejects_forged_transfer_success(self) -> None:
+        pilot = json.loads(self.PILOT.read_text(encoding="utf-8"))
+        pilot["holdout_transfer"]["successful_samples"] = 2
+        pilot["holdout_transfer"]["transfer_confirmed"] = True
+        with tempfile.TemporaryDirectory() as temp:
+            path = self._write_tampered_fixture(Path(temp), pilot)
+            with self.assertRaisesRegex(ValueError, "holdout transfer mismatch"):
+                research_pilot.validate_declared_pareto(path)
+
+    def test_holdout_validator_rejects_scanning_quality_rejected_h1(self) -> None:
+        pilot = json.loads(self.PILOT.read_text(encoding="utf-8"))
+        candidate_id = "p03-h1-split-adaptive-mechanism"
+        pilot["observations"].append(
+            {
+                "candidate": candidate_id,
+                "service": "zerogpt",
+                "scores_pct": [0],
+                "post_visible_text_sha256": pilot["candidates"][candidate_id][
+                    "canonical_sha256"
+                ],
+                "terminal_state": "complete",
+            }
+        )
+        with tempfile.TemporaryDirectory() as temp:
+            path = self._write_tampered_fixture(Path(temp), pilot)
+            with self.assertRaisesRegex(
+                ValueError, "quality-rejected confirmatory candidate was scanned"
+            ):
+                research_pilot.validate_declared_pareto(path)
+
+
 class ResearchMatrixTests(unittest.TestCase):
     def fixture(
         self,

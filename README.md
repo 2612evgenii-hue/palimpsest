@@ -52,12 +52,17 @@ human controls, CEFR/fidelity/style screens и Pareto-отбор.
 и прогрессивные пакеты: edit cost до 7,32% не сдвинул насыщенные 100% в
 ZeroGPT/Scribbr, а уже четыре объединённые правки нарушили CEFR-envelope.
 Human control при этом получил 38% в ZeroGPT, 0% в Scribbr и 99,1% в Sapling.
-Ни один вариант не превращён в «рецепт». См.
+Первый preregistered PubMed holdout отверг перенос `split mechanism` ещё до
+live-score: оба кандидата сохранили грубую метку C2, но вышли за допустимый
+reading-grade envelope. Оба AI baseline затем дали 100% ×3 в ZeroGPT/Scribbr,
+а четыре прошедших quality screen компаратора остались на 100%. Ни один вариант
+не превращён в «рецепт». См.
 [протокол](evals/research-v4/PROTOCOL.md),
 [текущие результаты](evals/research-v4/FINDINGS.md) и
 [машиночитаемые pilot-03](evals/research-v4/pilot-03-canonical.json) /
 [pilot-04](evals/research-v4/pilot-04-b1-canonical.json) /
-[pilot-05](evals/research-v4/pilot-05-tech-canonical.json).
+[pilot-05](evals/research-v4/pilot-05-tech-canonical.json) /
+[holdout-01](evals/research-v4/holdout-01-pubmed-canonical.json).
 
 Воспроизвести закреплённый corpus, варианты pilot-05 и проверку Pareto:
 

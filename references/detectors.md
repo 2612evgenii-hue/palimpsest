@@ -85,10 +85,18 @@ registry. Не создавать аккаунт, не платить и не о
 5. Зарегистрировать `detector_round`.
 6. Поставить inline marks в отдельной редакторской working copy.
 7. Внести минимальные правки только по меткам.
-8. Проверить fidelity, minimality, стиль и English level.
+8. До отправки кандидата проверить fidelity, minimality, стиль и
+   source-relative English level. Quality-rejected кандидат не сканировать ради
+   «красивого» score и не включать в Pareto/admission.
 9. Снова прогнать все обязательные service×target.
 
 Если первый bounded pass не достигает порога, не крутить cosmetic synonyms.
+Подсветка и публичное описание признаков сервиса — только гипотезы. Не
+превращать `sentence variation`, perplexity, predictability или «AI phrases» в
+массовый split/merge/синонимизацию без воспроизводимого cross-text эффекта.
+При baseline на отображаемом потолке 100% микроправки нельзя ранжировать как
+равно неэффективные: сервис просто не показывает разницу. Если качество уже
+дрейфует, а score остаётся на потолке, остановить этот механизм.
 После зарегистрированного failed result можно расширить edit envelope:
 
 ```bash

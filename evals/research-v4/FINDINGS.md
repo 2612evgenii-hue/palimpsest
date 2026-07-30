@@ -129,3 +129,42 @@ Progressive bundles были диагностическим ceiling/cliff probe,
 
 Copyleaks принял точный human-control текст в публичную форму, но после submit
 вернул `scan limit reached`; score не записан и не восстановлен догадкой.
+
+## Holdout-01: перенос scientific sentence split
+
+Holdout был опубликован отдельным commit `0adc161` до live-scores. Он проверял
+единственную confirmatory-гипотезу из pilot-03: минимальный split, отделяющий
+механизм/следствие, переносится на два зарезервированных PubMed AI-текста.
+`citation-first` и удаление generic/synthesis frame были заранее объявлены
+только как exploratory comparators.
+
+Confirmatory H1 остановился на quality gate:
+
+| Sample | Edit cost | Грубый CEFR | Reading grade Δ | Style distance | Решение |
+|---|---:|---:|---:|---:|---|
+| PubMed-03 H1 | 0,48% | C2 → C2 | −1,697 | 26,6 | rejected до detector scan |
+| PubMed-04 H1 | 1,48% | C2 → C2 | −1,320 | 23,9 | rejected до detector scan |
+
+Одинаковая метка C2 скрывала source-relative упрощение выше допустимого
+reading-grade threshold. По preregistration отклонённые H1 не отправлялись в
+детекторы и не могли поддержать transfer независимо от потенциального score.
+
+Live baselines и компараторы:
+
+| Sample / кандидат | ZeroGPT | Scribbr v7.1.0 | Sapling |
+|---|---:|---:|---:|
+| PubMed-03 human | 0% ×3 | 0% ×3 | 96,4% ×1 |
+| PubMed-03 AI baseline | 100% ×3 | 100% ×3 | 100% ×1 |
+| PubMed-03 H2/H3 | 100% ×1 | 100% ×1 | — |
+| PubMed-04 human | 42,9% ×3 | 0% ×3 | 100% ×1 |
+| PubMed-04 AI baseline | 100% ×3 | 100% ×3 | 100% ×1 |
+| PubMed-04 H2/H3 | 100% ×1 | 100% ×1 | — |
+
+Copyleaks принял полный PubMed-03 human control с точным SHA, но более 50 секунд
+оставался в disabled loading-state и не выдал score. Результат — `error`, не
+число.
+
+Итог: успешных holdout samples `0/2`; перенос `sentence_length_variation` не
+подтверждён. В skill добавлен только отрицательно подтверждённый guardrail:
+не использовать blanket split/merge как detector-рецепт и не сканировать
+quality-rejected кандидат ради благоприятного процента.

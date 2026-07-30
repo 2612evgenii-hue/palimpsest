@@ -66,7 +66,9 @@ highlight нельзя использовать как локальный нав
 Вывод: Sapling полезен как дополнительная research-family для коротких EN
 текстов, но human control обязателен. В pilot-03 он дал 100% на человеческом
 scientific abstract, а в pilot-05 — 99,1% на человеческом technical control.
-Поэтому единичный Sapling score нельзя трактовать как авторство.
+В holdout-01 ещё два человеческих PubMed-текста получили 96,4% и 100%.
+Поэтому единичный Sapling score нельзя трактовать как авторство, а
+vendor-оценка общего false-positive rate не заменяет жанровый контроль.
 
 ## Turnitin
 

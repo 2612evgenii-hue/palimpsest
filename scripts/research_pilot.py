@@ -3,9 +3,126 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import statistics
 from pathlib import Path
+
+
+def _file_sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _load_bound_preregistration(path: Path, data: dict) -> dict | None:
+    binding = data.get("preregistration")
+    if binding is None:
+        return None
+    if not isinstance(binding, dict):
+        raise ValueError("preregistration binding must be an object")
+    relative = binding.get("path")
+    expected_sha = binding.get("sha256")
+    if not isinstance(relative, str) or not relative or not isinstance(
+        expected_sha, str
+    ):
+        raise ValueError("preregistration binding needs path and sha256")
+    root = path.parent.resolve()
+    prereg_path = (path.parent / relative).resolve()
+    if root != prereg_path.parent and root not in prereg_path.parents:
+        raise ValueError("preregistration path escapes pilot directory")
+    if not prereg_path.is_file() or _file_sha256(prereg_path) != expected_sha:
+        raise ValueError("preregistration hash mismatch")
+    prereg = json.loads(prereg_path.read_text(encoding="utf-8"))
+    if prereg.get("experiment_id") != data.get("experiment_id"):
+        raise ValueError("preregistration experiment mismatch")
+    if binding.get("status_at_commit") != "frozen_before_live_scores":
+        raise ValueError("pilot needs frozen-before-scores preregistration")
+    if prereg.get("status") != "frozen_before_live_scores":
+        raise ValueError("referenced preregistration was not frozen")
+    commit = binding.get("git_commit_before_live_scores")
+    if not isinstance(commit, str) or len(commit) != 40:
+        raise ValueError("preregistration binding needs full git commit")
+    return prereg
+
+
+def recompute_holdout_transfer(data: dict) -> dict | None:
+    declared = data.get("holdout_transfer")
+    if declared is None:
+        return None
+    if not isinstance(declared, dict):
+        raise ValueError("holdout_transfer must be an object")
+    candidates = data["candidates"]
+    confirmatory = {
+        candidate_id: candidate
+        for candidate_id, candidate in candidates.items()
+        if candidate.get("role") == "confirmatory"
+    }
+    if not confirmatory:
+        raise ValueError("holdout_transfer needs confirmatory candidates")
+    factors = {candidate.get("factor") for candidate in confirmatory.values()}
+    if factors != {declared.get("confirmatory_factor")}:
+        raise ValueError("holdout confirmatory factor mismatch")
+    services = data["pareto"]["primary_repeated_services"]
+    minimum_repeats = data["pareto"]["minimum_repeats"]
+    observations = _observation_map(data)
+    results = {}
+    successes = 0
+    for candidate_id, candidate in sorted(
+        confirmatory.items(), key=lambda item: item[1].get("sample", "")
+    ):
+        sample = candidate.get("sample")
+        if not isinstance(sample, str) or not sample:
+            raise ValueError("confirmatory candidate needs sample")
+        if candidate.get("quality", {}).get("status") == "rejected":
+            if any(
+                observation.get("candidate") == candidate_id
+                for observation in data["observations"]
+            ):
+                raise ValueError("quality-rejected confirmatory candidate was scanned")
+            results[sample] = {"status": "failed_before_live_scan"}
+            continue
+        baselines = [
+            baseline_id
+            for baseline_id, baseline in candidates.items()
+            if baseline.get("sample") == sample
+            and baseline.get("authorship") == "ai"
+            and "factor" not in baseline
+        ]
+        if len(baselines) != 1:
+            raise ValueError("holdout sample needs one AI baseline")
+        baseline_id = baselines[0]
+        effects = []
+        insufficient_candidate_repeats = False
+        for service in services:
+            baseline_scores = observations.get((baseline_id, service), [])
+            candidate_scores = observations.get((candidate_id, service), [])
+            if len(baseline_scores) < minimum_repeats or not candidate_scores:
+                effects.append(False)
+                continue
+            baseline_noise = max(baseline_scores) - min(baseline_scores)
+            improves = statistics.median(candidate_scores) < (
+                statistics.median(baseline_scores) - baseline_noise
+            )
+            effects.append(improves)
+            if improves and len(candidate_scores) < minimum_repeats:
+                insufficient_candidate_repeats = True
+        if effects and all(effects) and not insufficient_candidate_repeats:
+            status = "success"
+            successes += 1
+        elif effects and all(effects):
+            status = "insufficient_repeats"
+        else:
+            status = "failed_detector_response"
+        results[sample] = {"status": status}
+    required = declared.get("required_successes")
+    if not isinstance(required, int) or required < 1:
+        raise ValueError("holdout required_successes must be positive")
+    return {
+        "confirmatory_factor": declared.get("confirmatory_factor"),
+        "required_successes": required,
+        "successful_samples": successes,
+        "sample_results": results,
+        "transfer_confirmed": successes >= required,
+    }
 
 
 def load_pilot(path: Path) -> dict:
@@ -59,6 +176,35 @@ def load_pilot(path: Path) -> dict:
             != candidates[candidate_id].get("canonical_sha256")
         ):
             raise ValueError("post-terminal hash does not bind candidate")
+    prereg = _load_bound_preregistration(path, data)
+    computed_transfer = recompute_holdout_transfer(data)
+    if computed_transfer is not None:
+        if prereg is None:
+            raise ValueError("holdout result needs bound preregistration")
+        prereg_required = prereg.get("confirmatory_success", {}).get(
+            "effective_required_successes"
+        )
+        if prereg_required != computed_transfer["required_successes"]:
+            raise ValueError("holdout success threshold differs from preregistration")
+        declared = data["holdout_transfer"]
+        for key in (
+            "confirmatory_factor",
+            "required_successes",
+            "successful_samples",
+            "transfer_confirmed",
+        ):
+            if declared.get(key) != computed_transfer[key]:
+                raise ValueError(f"declared holdout transfer mismatch: {key}")
+        declared_statuses = {
+            sample: result.get("status")
+            for sample, result in declared.get("sample_results", {}).items()
+        }
+        computed_statuses = {
+            sample: result["status"]
+            for sample, result in computed_transfer["sample_results"].items()
+        }
+        if declared_statuses != computed_statuses:
+            raise ValueError("declared holdout transfer mismatch: sample_results")
     return data
 
 

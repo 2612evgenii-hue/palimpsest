@@ -182,9 +182,15 @@ threshold:
    `references/annotation.md`. Preserve the clean candidate separately.
 7. **Edit only marked zones.** Rotate mechanisms: residue deletion, rhythm,
    syntax, information order, paragraph shape, voice balance, or transition
-   repair. Do not repeat one trick across the text.
-8. **Run fidelity and style screens.** Revert unsupported claim, logic,
-   modality, unit, actor, chronology, citation, English-level, or voice drift.
+   repair. Do not repeat one trick across the text. Vendor feature names,
+   highlights, and generic advice such as “increase sentence variation” are
+   hypotheses, not causal edit recipes; never apply blanket split/merge rules.
+8. **Run fidelity, English-level, and style screens before live recheck.**
+   Reject unsupported claim, logic, modality, unit, actor, chronology,
+   citation, English-level, or voice drift before sending the candidate to a
+   detector. A quality-rejected candidate cannot support F1 even if an
+   exploratory score would fall. Preserve the source-relative envelope even
+   when the coarse CEFR label itself remains unchanged.
    A current exact semantic mapping may reconcile only lexical
    `CLAIM_DROPPED`/`CLAIM_ADDED` false positives; it can never override hard
    number, polarity, modality, causality, chronology, citation, or protected

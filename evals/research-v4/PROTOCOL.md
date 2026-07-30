@@ -60,6 +60,13 @@ canonical SHA. Это не edit-вариант и не detector strategy: одн
 Нельзя подбирать операции на holdout и затем называть тот же текст независимой
 проверкой.
 
+До первого live-score holdout обязан иметь отдельный preregistration-файл:
+закреплённые sample/plan SHA, confirmatory factor, quality-first порядок,
+primary services, repeat policy и критерий успеха. Preregistration публикуется
+отдельным git commit; итоговый результат привязывает полный commit SHA и SHA
+самого preregistration-файла. После этого detector score не может породить
+новый вариант внутри того же holdout.
+
 ## Последовательность эксперимента
 
 ### 1. Baseline и шум
@@ -94,6 +101,9 @@ style screens; случайно просканированный rejected-кан
 Опечатки, невидимые символы, homoglyphs, случайная пунктуация, ложные цитаты,
 выдуманные детали и намеренное ухудшение английского запрещены. Они проверяют
 хрупкость классификатора, но не являются допустимой редакционной стратегией.
+Quality screen выполняется до live detector scan. Сохранение той же грубой
+CEFR-метки недостаточно: source-relative reading grade, sentence rhythm и
+другие declared features также должны остаться внутри envelope.
 
 ### 3. Комбинации
 

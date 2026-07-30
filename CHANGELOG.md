@@ -12,7 +12,11 @@
   нарушали C1-envelope, а измеримого detector response не появилось;
 - research builder поддерживает несколько точных hash-bound replacements в
   одном прогрессивном кандидате;
-- полный selftest расширен до 114 тестов.
+- добавлен preregistered PubMed holdout: confirmatory split отклонён на обоих
+  текстах из-за source-relative C2 drift до detector scan;
+- skill запрещает blanket split/merge по vendor-подсказке и требует
+  quality-first screening до live recheck;
+- полный selftest расширен с 114 тестов новым holdout/anti-forgery слоем.
 
 ## 3.5.0 — 2026-07-30
 
