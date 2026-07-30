@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Heterogeneous synthetic long-form and bounded-memory stress for v3.2.
+"""Heterogeneous synthetic long-form and bounded-memory stress for v3.5.
 
 This validates infrastructure behavior at 15k+ words. It is deliberately not
 described as proof of book-scale editorial or semantic quality.

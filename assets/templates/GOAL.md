@@ -1,44 +1,57 @@
-# GOAL — фиксация цели
+# GOAL — Palimpsest v3.5
 
-Статус: `OPEN` → закрывается только через `state.py close`
+Статус: `OPEN` → `CLOSED` только через current green evidence.
 
 ## Материал
-- исходник: `workspace/original.md` (неприкосновенный)
-- рабочая копия: `workspace/working-copy.md`
-- жанр / регистр:
-- язык:
-- объём: N слов
 
-## Референсы почерка
-- пути к сэмплам / «референсов нет»
-- объём сэмплов:
-- жанр сэмплов (совпадает с заданием? да/нет)
+- original и init SHA:
+- working и current SHA:
+- язык / жанр / аудитория:
+- объём:
+
+## Style baseline
+
+- `external_reference` / `source_as_reference`:
+- reference paths или «исходник = референс»:
+- English level A1–C2/native/infer:
+- защищаемые черты почерка:
 
 ## Функции
-| Флаг | Вкл | Что означает в этой задаче |
-|------|-----|----------------------------|
-| F1 гуманизация |  |  |
-| F2 живая структура |  |  |
-| F3 факт-чек |  |  |
-| F4 антиплагиат |  |  |
 
-## Требования пользователя (дословно → brief-rules.md)
+| Флаг | Вкл | Точное назначение |
+|---|---:|---|
+| F1 score_mandatory | | |
+| F2 structure | | |
+| F3 fact-check | | |
+| F4 originality | | |
+
+## Detector contract при F1
+
+- mandatory services:
+- hard pass: каждый service×target `<20%`;
+- soft target: каждый service×target `<15%`;
+- coverage: `full`;
+- blocked/stale/plateau/waiver/`>=20%` оставляют F1 OPEN.
+
+## Требования пользователя
+
 -
 
 ## Бюджеты
-- doc_change_ratio:
-- para_change_ratio:
-- ductus_distance_max:
-- detector_max_pct: 20
-- изменения бюджета (когда, на сколько, почему):
 
-## Что мы НЕ делаем (non-goals)
--
+- document change ratio:
+- paragraph change ratio:
+- protected fragments:
 
 ## Критерии закрытия
-- все включённые гейты G0–G10 зелёные с доказательствами
-- отложенное закрыто, разметки нет, ротация приёмов в норме
-- отчёт собран
 
-## Риски, объявленные заранее
-- (например: референс другого жанра → перенос через матрицу; Copyleaks требует логин)
+- выполнены выбранные функции;
+- final passing detector round зарегистрирован после F2/F3/F4;
+- fidelity/style/English level/requirements сохранены;
+- working очищен от marks;
+- REPORT содержит before/after scores и обоснование правок;
+- все применимые G0–G10 green.
+
+## Текущие blockers
+
+-

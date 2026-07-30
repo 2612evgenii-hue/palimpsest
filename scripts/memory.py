@@ -19,7 +19,7 @@ import _textlib as T  # noqa: E402
 import _v3lib as V  # noqa: E402
 
 SCRIPTS = Path(__file__).resolve().parent
-STATE_SCHEMA = "palimpsest.state.v3.2"
+STATE_SCHEMA = "palimpsest.state.v3.5"
 SEGMENT_SCHEMA = "palimpsest.segments.v3"
 KEEP_SECTIONS = ("инвариант", "manual", "ручн", "договор")
 MAX_GENERATED_LINES = 220

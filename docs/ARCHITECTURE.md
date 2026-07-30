@@ -1,83 +1,80 @@
-# Архитектура Palimpsest
+# Архитектура Palimpsest v3.5
 
-## Компоненты
+## Слои
+
+1. **Skill policy** — `SKILL.md` и routed references задают редакторский цикл.
+2. **State machine** — `scripts/state.py` хранит GOAL, digests, artifacts,
+   detector matrix и вычисляет gates.
+3. **Deterministic screens** — fidelity, minimality, style, CEFR, overlap,
+   annotations и segments.
+4. **External evidence** — live browser/institutional observations.
+5. **Memory** — stable segments, bounded hot index и cold notes.
+
+## F1 state flow
 
 ```mermaid
-flowchart TB
-    S["SKILL.md<br/>операционный контракт"] --> P["scripts/state.py"]
-    R["references/<br/>правила маршрутов"] --> S
-    A["assets/<br/>registry и templates"] --> P
-    P --> ST["STATE.json"]
-    P --> G["G0–G10"]
-    T["scripts/<br/>детерминированные screens"] --> P
-    B["Browser observations"] --> P
-    E["evals/<br/>83 tests"] --> T
-    E --> P
+stateDiagram-v2
+    [*] --> OPEN
+    OPEN --> ROUND_FAIL: any score >=20 / missing / blocked
+    ROUND_FAIL --> OPEN: mark + bounded edit
+    OPEN --> ROUND_PASS: all current scores <20
+    ROUND_PASS --> OPEN: any edit or F2/F3/F4 artifact after round
+    ROUND_PASS --> CLOSED: every gate green and final round is last
 ```
 
-## State
+`score_mandatory` — инвариант F1, а не рекомендация. Comparison
+`strictly_less_than`; hard threshold не может быть поднят выше 20. Sampled
+coverage и detector waiver запрещены.
 
-`STATE.json` хранит:
+## Detector round
 
-- init SHA immutable original;
-- определённый язык source;
-- ответы Q1–Q4;
-- активные функции и detector policy;
-- SHA зарегистрированных artifacts;
-- detector challenges, observations, plateaus и waivers;
-- editor moves;
-- последнюю verification matrix.
+`detector_round` связывает:
 
-Гейты не хранятся как редактируемая истина. Они пересчитываются командой
-`verify`.
+- working SHA;
+- explicit Q3 mandatory services;
+- все current service×target results;
+- observation SHA каждого результата;
+- coverage declaration каждого UI;
+- visible/manual problem zones;
+- editor analysis и next action.
 
-## Evidence binding
+Artifact может быть валидным со статусом `requires_edit`, чтобы документировать
+baseline. G3 становится green только для current round `pass`.
 
-Каждый working-bound artifact содержит SHA текущего текста. После изменения
-working file он становится stale.
+## Независимость и полнота
 
-Detector observation связывает:
+Каждый выбранный бренд должен пройти hard threshold. `independence_group`
+используется дополнительно:
 
-- service и target;
-- current content SHA;
-- одноразовый challenge и nonce;
-- время результата;
-- URL сервиса;
-- visible score excerpt;
-- SHA screenshot, PDF или vendor JSON.
+- Scribbr/QuillBot могут дать два UI результата, но один аналитический голос;
+- aggregator не создаёт независимый голос;
+- минимум независимых passing groups остаётся отдельной защитой.
 
-Это защищает от случайной подмены старого evidence, но не от фабрикации
-локального файла.
+## Staleness
 
-## Semantic reconciliation
+Изменение `working` инвалидирует:
 
-Для каждого source unit хранится:
+- detector observations через content SHA;
+- detector round через working SHA;
+- working-bound attestations;
+- overlap и report;
+- closure digest.
 
-- immutable source ID, SHA и excerpt;
-- verdict;
-- точный working excerpt;
-- `start_char`/`end_char`;
-- rationale.
-
-Mappings не могут пересекаться, повторно использовать один диапазон или
-нарушать порядок. `authorized_change` остаётся yellow, поскольку local CLI не
-удостоверяет согласие пользователя.
+Изменение Q3 очищает capability, results, rounds, plateaus и waivers.
 
 ## Long-form
 
-`segment.py` гарантирует:
-
-- покрытие каждого символа;
-- устойчивые ID неизменённых сегментов;
-- обнаружение нового и изменённого текста;
-- отсутствие невидимого appended tail;
-- привязку evidence к digest, а не только к segment ID.
-
-`memory.py` отделяет компактную hot memory от cold notes и не пытается
-восстановить потерянный контекст из догадок.
+F1 использует только full coverage. Stable segment map связывает каждый target
+с SHA и не допускает дыр. Размер 400–950 слов рассчитан на наименьшие общие
+публичные word limits. Worst target определяет итог сервиса.
 
 ## Trust boundary
 
-Palimpsest — fail-closed workflow, но не security enclave. Процесс с полным
-доступом к workspace способен переписать state и нарисовать screenshot.
-Криптографическая защита требует внешнего signer или append-only host storage.
+State защищает от stale и изменённого evidence, но не аутентифицирует pixels,
+пользовательские цитаты или человека. Поэтому:
+
+- bare score запрещён;
+- registry facts неизменяемы;
+- local waiver не завершает score_mandatory;
+- semantic authorized change остаётся ограничением без внешнего receipt;
+- никаких обещаний авторства или будущей необнаружимости.

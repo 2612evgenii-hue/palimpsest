@@ -21,7 +21,7 @@ def main() -> int:
     )
     count = suite.countTestCases()
     print(
-        f"Palimpsest v3.2 selftest: {count} tests across "
+        f"Palimpsest v3.5 selftest: {count} tests across "
         "adversarial, regression, and synthetic long-form stress layers",
         file=sys.stderr,
     )

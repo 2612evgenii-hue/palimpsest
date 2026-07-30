@@ -1,13 +1,27 @@
 {
-  "schema": "palimpsest.service-registry.v3.2",
+  "schema": "palimpsest.service-registry.v3.5",
   "reviewed_at": "2026-07-30",
   "refresh_after_days": 30,
   "pilot_id": "palimpsest-v3-english-pilot-2026-07-30",
   "policy": {
     "pilot_validated_languages": ["en"],
     "zero_gpt_required": true,
-    "default_english_guest_services": ["zerogpt", "copyleaks"],
-    "default_russian_guest_services": ["zerogpt", "copyleaks"],
+    "default_english_guest_services": [
+      "zerogpt",
+      "gptzero",
+      "scribbr",
+      "quillbot",
+      "gptinf",
+      "copyleaks"
+    ],
+    "default_russian_guest_services": [
+      "zerogpt",
+      "gptzero",
+      "scribbr",
+      "quillbot",
+      "gptinf",
+      "copyleaks"
+    ],
     "language_policy": {
       "en": "pilot_selected_core",
       "ru": "provisional_candidate_pair_until_full_ru_release_corpus"
@@ -17,8 +31,9 @@
     "audit_pool": ["quillbot", "sapling", "gptinf"],
     "notes": [
       "ZeroGPT remains mandatory because the user explicitly requires it.",
-      "The default core is the smallest independent pair that completed the English pilot without login: ZeroGPT plus Copyleaks.",
-      "Russian uses the same pair only as a provisional candidate workflow and remains a yellow limitation until a full Russian release corpus is recorded.",
+      "F1 score_mandatory starts with the six-service set from the original user contract; Q3 must explicitly confirm, enable, or disable services for the current job.",
+      "Every service retained by Q3 is mandatory even when two brands share an engine; duplicate engines count once only for independence analytics.",
+      "Russian remains provisional and can require Q3 exclusions for services whose registry language support does not include Russian.",
       "A service brand is not automatically an independent detector. Scribbr visibly used QuillBot v7.1.0 and duplicated its tested scores.",
       "GPTinf is an aggregator and cannot satisfy the independent-service minimum.",
       "Live access, limits, model versions, languages, and result formats must be reconfirmed for each project.",
@@ -55,7 +70,7 @@
     },
     "copyleaks": {
       "display_name": "Copyleaks AI Detector",
-      "url": "https://copyleaks.com/ai-detector",
+      "url": "https://copyleaks.com/ai-content-detector",
       "kind": "direct",
       "independence_group": "copyleaks",
       "guest_access": true,
@@ -76,8 +91,8 @@
         "guest_form_visible": true,
         "limit_characters": 25000,
         "page_explicitly_states_without_login": true,
-        "custom_result_repeated": false,
-        "limitation": "The embedded editor exposed its form and no-login claim, but browser automation did not complete a new custom submission during this recheck."
+        "custom_result_repeated": true,
+        "english_fixture_score_pct": 100
       }
     },
     "gptzero": {
@@ -85,7 +100,7 @@
       "url": "https://gptzero.me/",
       "kind": "institutional",
       "independence_group": "gptzero",
-      "guest_access": false,
+      "guest_access": true,
       "access_class": "one_guest_scan_then_signup",
       "languages": ["en"],
       "public_limit": {"unit": "characters", "value": 10000},
@@ -110,7 +125,7 @@
       "url": "https://quillbot.com/ai-content-detector",
       "kind": "direct",
       "independence_group": "quillbot-family",
-      "guest_access": false,
+      "guest_access": true,
       "access_class": "limited_guest_then_signup",
       "languages": ["en", "ru", "de", "fr", "es", "it", "pt", "pl", "uk", "tr", "ja", "zh"],
       "public_limit": {"unit": "words", "value": 1200},
@@ -124,6 +139,13 @@
         "observed_scores": [100, 100, 19, 19],
         "notable_failure": "AI technical sample scored 19%, below the 20% review threshold.",
         "blocker": "Sign-up modal interrupted the common six-sample run."
+      },
+      "live_recheck": {
+        "checked_at": "2026-07-30",
+        "guest_form_visible": true,
+        "english_fixture_words": 189,
+        "result_returned": false,
+        "limitation": "The guest editor accepted the full sample, but Detect AI did not return a score in the current browser session."
       }
     },
     "scribbr": {
@@ -142,6 +164,12 @@
         "english_completed": 2,
         "observed_scores": [100, 19],
         "duplicate_evidence": "The page named QuillBot and reproduced QuillBot's two tested scores exactly."
+      },
+      "live_recheck": {
+        "checked_at": "2026-07-30",
+        "guest_result_completed": true,
+        "english_fixture_score_pct": 100,
+        "engine_disclosure": "The embedded result surface identifies QuillBot."
       }
     },
     "sapling": {
@@ -179,6 +207,12 @@
         "observed_scores": [66, 80, 52],
         "human_result_failure": "The Austen control returned to waiting state after two submissions.",
         "independence_warning": "The UI claims cross-checking Turnitin, Copyleaks, OriginalityAI, GPTZero, Crossplag, Sapling, Winston, and ZeroGPT."
+      },
+      "live_recheck": {
+        "checked_at": "2026-07-30",
+        "guest_result_completed": true,
+        "english_fixture_score_pct": 100,
+        "cross_check_claim_visible": true
       }
     },
     "turnitin": {

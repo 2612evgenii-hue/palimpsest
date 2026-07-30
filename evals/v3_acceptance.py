@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-"""Adversarial acceptance suite for Palimpsest v3.2."""
+"""Adversarial acceptance suite for Palimpsest v3.5."""
 from __future__ import annotations
 
 import hashlib
 import json
 import re
+import struct
 import subprocess
 import sys
 import tempfile
 import unittest
+import zlib
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -47,6 +49,26 @@ def write(path: Path, text: str) -> Path:
     return path
 
 
+def captured_png(width: int = 640, height: int = 360) -> bytes:
+    """Build a deterministic, structurally valid browser-sized PNG fixture."""
+    def chunk(kind: bytes, payload: bytes) -> bytes:
+        crc = zlib.crc32(kind + payload) & 0xFFFFFFFF
+        return struct.pack(">I", len(payload)) + kind + payload + struct.pack(">I", crc)
+
+    rows = bytearray()
+    for y in range(height):
+        rows.append(0)
+        for x in range(width):
+            rows.extend(((x * 3 + y) % 256, (x + y * 5) % 256, (x * 7 + y * 2) % 256))
+    header = struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", header)
+        + chunk(b"IDAT", zlib.compress(bytes(rows), 6))
+        + chunk(b"IEND", b"")
+    )
+
+
 def state_cmd(state: Path, command: str, *args: str) -> subprocess.CompletedProcess[str]:
     return run(STATE, "--state", str(state), command, *args)
 
@@ -67,6 +89,11 @@ def init_project(
     )
     working = write(root / "working.md", original.read_text(encoding="utf-8"))
     state = root / "STATE.json"
+    init_args = list(extra_init)
+    if "F1" in flags and "--services" not in init_args:
+        # Focused acceptance cases keep the explicit two-service scope. A
+        # separate contract test verifies that product default is all six.
+        init_args.extend(["--services", "zerogpt,copyleaks"])
     proc = state_cmd(
         state,
         "init",
@@ -76,7 +103,7 @@ def init_project(
         str(working),
         "--flags",
         flags,
-        *extra_init,
+        *init_args,
     )
     if proc.returncode != 0:
         raise AssertionError(proc.stderr)
@@ -132,7 +159,7 @@ def capability(
     root: Path,
     *,
     forge_group: bool = False,
-    forge_guest: bool = False,
+    forge_guest_service: str = "",
 ) -> Path:
     path = root / ("capability-forged.json" if forge_group else "capability.json")
     proc = state_cmd(state, "template", "--kind", "capability_review", "--out", str(path))
@@ -163,9 +190,9 @@ def capability(
             )
     if forge_group:
         data["services"]["copyleaks"]["registry_facts"]["independence_group"] = "zerogpt"
-    if forge_guest:
-        data["services"]["quillbot"]["registry_facts"]["guest_access"] = True
-        data["services"]["quillbot"]["observation"]["access_observed"] = "guest"
+    if forge_guest_service:
+        data["services"][forge_guest_service]["registry_facts"]["guest_access"] = True
+        data["services"][forge_guest_service]["observation"]["access_observed"] = "guest"
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return path
 
@@ -184,6 +211,8 @@ def detector(
     score: float,
     *,
     token: str = "",
+    raw_bytes: bytes | None = None,
+    register: bool = True,
 ) -> tuple[Path, Path]:
     stem = f"{service}-{token}" if token else service
     challenge_path = root / "evidence" / f"{stem}-challenge.json"
@@ -202,7 +231,7 @@ def detector(
     challenge = json.loads(challenge_path.read_text(encoding="utf-8"))
     raw = root / "evidence" / f"{stem}-result.png"
     raw.parent.mkdir(parents=True, exist_ok=True)
-    raw.write_bytes(b"\x89PNG\r\n\x1a\n" + bytes([37]) * 2048)
+    raw.write_bytes(captured_png() if raw_bytes is None else raw_bytes)
     registry = json.loads((ROOT / "assets" / "service-registry.json").read_text(encoding="utf-8"))
     observation = root / "evidence" / f"{stem}-observation.json"
     observation.write_text(
@@ -229,15 +258,84 @@ def detector(
         + "\n",
         encoding="utf-8",
     )
-    proc = state_cmd(
-        state,
-        "detector",
-        "--observation",
-        str(observation),
-    )
-    if proc.returncode != 0:
-        raise AssertionError(proc.stderr)
+    if register:
+        proc = state_cmd(
+            state,
+            "detector",
+            "--observation",
+            str(observation),
+        )
+        if proc.returncode != 0:
+            raise AssertionError(proc.stderr)
     return observation, raw
+
+
+def register_detector_round(
+    state: Path,
+    root: Path,
+    *,
+    filename: str = "detector-round.json",
+) -> Path:
+    round_path = root / filename
+    prepared = state_cmd(
+        state,
+        "template",
+        "--kind",
+        "detector_round",
+        "--out",
+        str(round_path),
+    )
+    if prepared.returncode != 0:
+        raise AssertionError(prepared.stderr)
+    round_data = json.loads(round_path.read_text(encoding="utf-8"))
+    for item in round_data["coverage_declarations"]:
+        item["state"] = "all_visible_highlights_mapped"
+        item["evidence"] = (
+            "The complete visible result surface was inspected and mapped for this target."
+        )
+    for row in round_data["service_results"]:
+        if row["score_pct"] is not None and row["score_pct"] >= round_data[
+            "hard_max_exclusive_pct"
+        ]:
+            round_data["highlight_map"].append(
+                {
+                    "id": f"H-{row['service']}-{row['target']}",
+                    "service": row["service"],
+                    "target": row["target"],
+                    "origin": "manual_diagnosis",
+                    "location": "DOCUMENT paragraph 1",
+                    "excerpt": "A regional library introduced evening study hours",
+                    "reason": (
+                        "The failing service requires a concrete diagnostic zone "
+                        "before the next bounded edit."
+                    ),
+                    "status": "open",
+                }
+            )
+    round_data["editor_analysis"] = (
+        "All mandatory service results and visible highlight surfaces were compared "
+        "before deciding whether another bounded edit is required."
+    )
+    round_data["next_action"] = (
+        "Apply the mapped minimal edits and recheck every mandatory service."
+        if round_data["round_status"] == "requires_edit"
+        else "Proceed to final fidelity gates without changing the current text."
+    )
+    round_path.write_text(
+        json.dumps(round_data, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    registered = state_cmd(
+        state,
+        "artifact",
+        "--kind",
+        "detector_round",
+        "--file",
+        str(round_path),
+    )
+    if registered.returncode != 0:
+        raise AssertionError(registered.stderr)
+    return round_path
 
 
 def make_attestation(
@@ -587,6 +685,44 @@ class SegmentTests(unittest.TestCase):
 
 
 class IntakeStyleTests(unittest.TestCase):
+    def test_f1_default_restores_six_services_and_durable_goal(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            original = write(
+                root / "original.md",
+                "A short technical English sample keeps one qualified claim.\n",
+            )
+            state = root / "STATE.json"
+            initialized = state_cmd(
+                state,
+                "init",
+                "--original",
+                str(original),
+                "--working",
+                str(original),
+                "--flags",
+                "F1",
+            )
+            self.assertEqual(initialized.returncode, 0, initialized.stderr)
+            saved = json.loads(state.read_text(encoding="utf-8"))
+            self.assertEqual(
+                saved["detector_policy"]["selected_services"],
+                [
+                    "zerogpt",
+                    "gptzero",
+                    "scribbr",
+                    "quillbot",
+                    "gptinf",
+                    "copyleaks",
+                ],
+            )
+            self.assertTrue(saved["detector_policy"]["score_mandatory"])
+            self.assertEqual(saved["detector_policy"]["threshold_pct"], 20.0)
+            self.assertEqual(saved["detector_policy"]["soft_target_pct"], 15.0)
+            self.assertEqual(saved["detector_policy"]["coverage"], "full")
+            self.assertIn("strict", saved["goal"]["hard_pass"])
+            self.assertEqual(saved["budgets"]["document_change_ratio"], 0.30)
+
     def test_original_digest_change_is_a_g0_blocker(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
@@ -761,10 +897,10 @@ class DetectorStateTests(unittest.TestCase):
                 "--flags",
                 "F1",
                 "--services",
-                "zerogpt,quillbot",
+                "zerogpt,turnitin",
             )
             self.assertEqual(init.returncode, 0, init.stderr)
-            forged = capability(state, root, forge_guest=True)
+            forged = capability(state, root, forge_guest_service="turnitin")
             registered = state_cmd(
                 state,
                 "artifact",
@@ -775,6 +911,28 @@ class DetectorStateTests(unittest.TestCase):
             )
             self.assertNotEqual(registered.returncode, 0)
             self.assertIn("registry_facts were changed", registered.stderr)
+
+    def test_browser_capture_must_be_a_real_image(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            state, _, _ = init_project(root)
+            register_capability(state, root)
+            observation, _ = detector(
+                state,
+                root,
+                "zerogpt",
+                19.0,
+                raw_bytes=b"\x89PNG\r\n\x1a\n" + bytes([37]) * 2048,
+                register=False,
+            )
+            registered = state_cmd(
+                state,
+                "detector",
+                "--observation",
+                str(observation),
+            )
+            self.assertNotEqual(registered.returncode, 0)
+            self.assertIn("raw PNG", registered.stderr)
 
     def test_each_service_needs_current_untampered_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -793,6 +951,7 @@ class DetectorStateTests(unittest.TestCase):
             )
 
             detector(state, root, "copyleaks", 0)
+            register_detector_round(state, root)
             complete = state_cmd(state, "verify", "--json")
             complete_data = payload(complete)
             self.assertEqual(complete_data["gates"]["G3"]["color"], "green")
@@ -806,7 +965,7 @@ class DetectorStateTests(unittest.TestCase):
             )
 
             detector(state, root, "zerogpt", 3)
-            state_cmd(
+            rejected_waiver = state_cmd(
                 state,
                 "waive",
                 "--service",
@@ -818,6 +977,8 @@ class DetectorStateTests(unittest.TestCase):
                 "--user-quote",
                 "I accept the Copyleaks limitation for this exact current document.",
             )
+            self.assertNotEqual(rejected_waiver.returncode, 0)
+            self.assertIn("cannot satisfy score_mandatory", rejected_waiver.stderr)
             working.write_text(
                 working.read_text(encoding="utf-8") + "A new final sentence changes the digest.\n",
                 encoding="utf-8",
@@ -827,6 +988,183 @@ class DetectorStateTests(unittest.TestCase):
             self.assertEqual(stale["gates"]["G3"]["color"], "red")
             self.assertIn("only stale results", details)
             self.assertNotIn("waived", details)
+
+    def test_hard_threshold_is_strict_and_soft_target_is_advisory(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            state, _, _ = init_project(root)
+            complete_intake(state)
+            register_capability(state, root)
+            detector(state, root, "zerogpt", 19.9)
+            detector(state, root, "copyleaks", 20.0)
+            register_detector_round(state, root, filename="round-failing.json")
+
+            failing = payload(state_cmd(state, "verify", "--json"))
+            details = "\n".join(failing["gates"]["G3"]["details"])
+            self.assertEqual(failing["gates"]["G3"]["color"], "red")
+            self.assertIn("20% is not strictly below 20%", details)
+            self.assertNotEqual(state_cmd(state, "close").returncode, 0)
+
+            detector(state, root, "copyleaks", 19.9, token="below-hard")
+            register_detector_round(state, root, filename="round-passing.json")
+            passing = payload(state_cmd(state, "verify", "--json"))
+            details = "\n".join(passing["gates"]["G3"]["details"])
+            self.assertEqual(passing["gates"]["G3"]["color"], "green")
+            self.assertIn("soft target <15% not reached", details)
+
+    def test_detector_round_rejects_unbound_highlight_excerpt(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            state, _, _ = init_project(root)
+            complete_intake(state)
+            register_capability(state, root)
+            detector(state, root, "zerogpt", 40)
+            detector(state, root, "copyleaks", 35)
+            round_path = root / "round-forged-highlight.json"
+            prepared = state_cmd(
+                state,
+                "template",
+                "--kind",
+                "detector_round",
+                "--out",
+                str(round_path),
+            )
+            self.assertEqual(prepared.returncode, 0, prepared.stderr)
+            round_data = json.loads(round_path.read_text(encoding="utf-8"))
+            for item in round_data["coverage_declarations"]:
+                item["state"] = "all_visible_highlights_mapped"
+                item["evidence"] = (
+                    "Every visible result area was inspected for this service target."
+                )
+            for index, row in enumerate(round_data["service_results"], start=1):
+                round_data["highlight_map"].append(
+                    {
+                        "id": f"H{index}",
+                        "service": row["service"],
+                        "target": row["target"],
+                        "origin": "manual_diagnosis",
+                        "location": "DOCUMENT paragraph 1",
+                        "excerpt": (
+                            "This sentence does not occur anywhere in the current target."
+                            if index == 2
+                            else "A regional library introduced evening study hours"
+                        ),
+                        "reason": (
+                            "This concrete zone is claimed as the basis for the next edit."
+                        ),
+                        "status": "open",
+                    }
+                )
+            round_data["editor_analysis"] = (
+                "The round attempts to bind every failing service to a concrete text zone."
+            )
+            round_data["next_action"] = (
+                "Repair mapped zones minimally and then rerun every mandatory service."
+            )
+            round_path.write_text(
+                json.dumps(round_data, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            rejected = state_cmd(
+                state,
+                "artifact",
+                "--kind",
+                "detector_round",
+                "--file",
+                str(round_path),
+            )
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn("excerpt is not verbatim text", rejected.stderr)
+
+    def test_edit_requires_every_service_recheck_and_a_new_round(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            state, _, working = init_project(root)
+            complete_intake(state)
+            register_capability(state, root)
+            detector(state, root, "zerogpt", 4)
+            detector(state, root, "copyleaks", 3)
+            register_detector_round(state, root, filename="round-before-edit.json")
+            self.assertEqual(
+                payload(state_cmd(state, "verify", "--json"))["gates"]["G3"]["color"],
+                "green",
+            )
+
+            working.write_text(
+                working.read_text(encoding="utf-8").replace(
+                    "six weeks", "a six-week period"
+                ),
+                encoding="utf-8",
+            )
+            stale = payload(state_cmd(state, "verify", "--json"))
+            stale_details = "\n".join(stale["gates"]["G3"]["details"])
+            self.assertEqual(stale["gates"]["G3"]["color"], "red")
+            self.assertIn("zerogpt/DOCUMENT: only stale results", stale_details)
+            self.assertIn("copyleaks/DOCUMENT: only stale results", stale_details)
+            self.assertIn("detector round is stale", stale_details)
+
+            detector(state, root, "zerogpt", 5, token="after-edit")
+            partial = payload(state_cmd(state, "verify", "--json"))
+            self.assertIn(
+                "copyleaks/DOCUMENT: only stale results",
+                "\n".join(partial["gates"]["G3"]["details"]),
+            )
+            detector(state, root, "copyleaks", 6, token="after-edit")
+            register_detector_round(state, root, filename="round-after-edit.json")
+            self.assertEqual(
+                payload(state_cmd(state, "verify", "--json"))["gates"]["G3"]["color"],
+                "green",
+            )
+
+    def test_score_mandatory_rejects_sampled_coverage_and_blocked_service(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            state, _, _ = init_project(root)
+            rejected = state_cmd(
+                state,
+                "detector-policy",
+                "--coverage",
+                "risk_sampled",
+                "--user-quote",
+                "The user allegedly accepts a sampled detector pass for this project.",
+            )
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn("forbids risk_sampled", rejected.stderr)
+
+            complete_intake(state)
+            cap_path = capability(state, root)
+            cap_data = json.loads(cap_path.read_text(encoding="utf-8"))
+            cap_data["services"]["copyleaks"]["observation"] = {
+                "status": "blocked",
+                "checked_at": datetime.now(timezone.utc).isoformat(),
+                "access_observed": "blocked",
+                "language_tested": False,
+                "result_returned": False,
+                "evidence": (
+                    "The live page required unavailable access and returned no usable result."
+                ),
+                "access_authorization_quote": "",
+            }
+            cap_path.write_text(
+                json.dumps(cap_data, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            accepted = state_cmd(
+                state,
+                "artifact",
+                "--kind",
+                "capability_review",
+                "--file",
+                str(cap_path),
+            )
+            self.assertEqual(accepted.returncode, 0, accepted.stderr)
+            detector(state, root, "zerogpt", 2)
+            verification = payload(state_cmd(state, "verify", "--json"))
+            self.assertEqual(verification["gates"]["G3"]["color"], "red")
+            self.assertIn(
+                "capability not confirmed",
+                "\n".join(verification["gates"]["G3"]["details"]),
+            )
 
     def test_reducing_independent_minimum_requires_user_words(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -1012,6 +1350,11 @@ class DetectorStateTests(unittest.TestCase):
             saved = json.loads(state.read_text(encoding="utf-8"))
             self.assertEqual(len(saved["plateaus"]), 1)
             self.assertEqual(saved["plateaus"][0]["service"], "copyleaks")
+            verification = payload(state_cmd(state, "verify", "--json"))
+            details = "\n".join(verification["gates"]["G3"]["details"])
+            self.assertEqual(verification["gates"]["G3"]["color"], "red")
+            self.assertIn("plateau is still a blocker", details)
+            self.assertNotEqual(state_cmd(state, "close").returncode, 0)
 
     def test_plateau_rejects_cosmetic_synonym_variants_even_with_move_labels(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -1223,7 +1566,7 @@ class MemoryTests(unittest.TestCase):
 
 
 class ClosureTests(unittest.TestCase):
-    def test_local_quote_cannot_close_yellow_limitations(self) -> None:
+    def test_local_quote_cannot_bypass_score_mandatory(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             state, _, _ = init_project(root, flags="F1")
@@ -1239,6 +1582,16 @@ class ClosureTests(unittest.TestCase):
                 "I allegedly accept one detector; this local sentence proves nothing.",
             )
             self.assertEqual(reduced.returncode, 0, reduced.stderr)
+            removed = state_cmd(
+                state,
+                "detector-policy",
+                "--services",
+                "zerogpt",
+                "--user-quote",
+                "I allegedly remove Copyleaks, but this local quote is not user provenance.",
+            )
+            self.assertNotEqual(removed.returncode, 0)
+            self.assertIn("new explicit Q3 intake answer", removed.stderr)
             waived = state_cmd(
                 state,
                 "waive",
@@ -1251,7 +1604,8 @@ class ClosureTests(unittest.TestCase):
                 "--user-quote",
                 "I allegedly accept the Copyleaks limitation for this current document.",
             )
-            self.assertEqual(waived.returncode, 0, waived.stderr)
+            self.assertNotEqual(waived.returncode, 0)
+            self.assertIn("cannot satisfy score_mandatory", waived.stderr)
             for kind in (
                 "master_brief",
                 "diagnosis",
@@ -1280,12 +1634,7 @@ class ClosureTests(unittest.TestCase):
             )
             self.assertEqual(registered.returncode, 0, registered.stderr)
             verification = payload(state_cmd(state, "verify", "--json"))
-            yellow = [
-                gate_id
-                for gate_id, info in verification["gates"].items()
-                if info["color"] == "yellow"
-            ]
-            self.assertEqual(yellow, ["G3"])
+            self.assertEqual(verification["gates"]["G3"]["color"], "red")
 
             forged = state_cmd(
                 state,
@@ -1300,10 +1649,10 @@ class ClosureTests(unittest.TestCase):
             self.assertIn("unrecognized arguments", forged.stderr)
 
             pending = state_cmd(state, "close")
-            self.assertEqual(pending.returncode, 1)
+            self.assertNotEqual(pending.returncode, 0)
             saved = json.loads(state.read_text(encoding="utf-8"))
-            self.assertEqual(saved["status"], "READY_WITH_LIMITS")
-            self.assertEqual(saved["pending_limitations"]["gates"], ["G3"])
+            self.assertEqual(saved["status"], "OPEN")
+            self.assertNotIn("pending_limitations", saved)
             self.assertEqual(saved["close_digest"], "")
 
     def test_clean_non_f1_project_can_close_and_reopens_after_edit(self) -> None:
@@ -1431,10 +1780,13 @@ class ClosureTests(unittest.TestCase):
 class ContractTests(unittest.TestCase):
     def test_registry_and_skill_contract(self) -> None:
         registry = json.loads((ROOT / "assets" / "service-registry.json").read_text(encoding="utf-8"))
-        self.assertEqual(registry["schema"], "palimpsest.service-registry.v3.2")
+        self.assertEqual(registry["schema"], "palimpsest.service-registry.v3.5")
         policy = registry["policy"]
-        self.assertEqual(policy["default_english_guest_services"], ["zerogpt", "copyleaks"])
-        self.assertEqual(policy["default_russian_guest_services"], ["zerogpt", "copyleaks"])
+        required = [
+            "zerogpt", "gptzero", "scribbr", "quillbot", "gptinf", "copyleaks"
+        ]
+        self.assertEqual(policy["default_english_guest_services"], required)
+        self.assertEqual(policy["default_russian_guest_services"], required)
         self.assertTrue(policy["zero_gpt_required"])
         self.assertEqual(policy["pilot_validated_languages"], ["en"])
         self.assertIn("provisional", policy["language_policy"]["ru"])
@@ -1442,8 +1794,7 @@ class ContractTests(unittest.TestCase):
             registry["services"][service]["independence_group"]
             for service in policy["default_english_guest_services"]
         ]
-        self.assertEqual(len(groups), len(set(groups)))
-        self.assertTrue(all(registry["services"][service]["guest_access"] for service in policy["default_english_guest_services"]))
+        self.assertLess(len(set(groups)), len(groups))
         self.assertEqual(
             registry["services"]["scribbr"]["independence_group"],
             registry["services"]["quillbot"]["independence_group"],
@@ -1461,7 +1812,7 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(keys, ["name", "description"])
         for link in re.findall(r"\]\((references/[^)]+)\)", skill):
             self.assertTrue((ROOT / link).is_file(), link)
-        self.assertNotIn("all six", skill.casefold())
+        self.assertRegex(skill.casefold(), r"strictly below\s+20")
 
         yaml_text = (ROOT / "agents" / "openai.yaml").read_text(encoding="utf-8")
         prompt = re.search(r'default_prompt:\s*"([^"]+)"', yaml_text).group(1)

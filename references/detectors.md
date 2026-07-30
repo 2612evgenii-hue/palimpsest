@@ -1,249 +1,174 @@
-# Детекторы v3.2: выбранный независимый протокол
+# F1 и детекторы: контракт v3.5
 
-## Задача протокола
+## Содержание
 
-Получить воспроизводимые текущие сигналы с минимальным числом сервисов, не
-подменяя редактуру гонкой за случайным процентом. Сервисы отбираются по четырём
-условиям:
+1. Контракт успеха
+2. Выбор сервисов
+3. Capability review
+4. Полный цикл
+5. Detector round
+6. Long-form
+7. Plateau и недоступность
+8. Evidence и границы доверия
 
-1. доступ без оплаты и обязательной регистрации для повторного цикла;
-2. поддержка языка и объёма текущего текста;
-3. независимость от уже выбранного движка;
-4. приемлемая чувствительность и ложные срабатывания на общем корпусе.
+## 1. Контракт успеха
 
-## Выбор до начала работы
+При F1 автоматически действует `score_mandatory`.
 
-Q3 задаётся всегда. При выключенном F1 выбранный набор — `none`. При включённом
-F1 пользователь явно включает/выключает сервисы:
+- hard pass: каждый обязательный сервис на каждом target даёт `score < 20%`;
+- soft target: стремиться к `score < 15%` везде;
+- `20.0%` не проходит;
+- ни среднее, ни лучший сервис, ни голосование не заменяют проверку каждого;
+- plateau, waiver, blocked, stale evidence и partial coverage не являются
+  успешным завершением F1;
+- `READY_WITH_LIMITS` никогда не маскирует score `>=20%`.
 
-```bash
-python3 scripts/state.py --state workspace/STATE.json intake \
-  --question Q3 --services zerogpt,copyleaks \
-  --answer "Enable ZeroGPT and Copyleaks; disable optional detectors."
-```
+Score — текущий сигнал конкретного сервиса, а не доказательство авторства.
+Нельзя обещать прохождение будущей версии модели.
 
-ZeroGPT остаётся обязательным постоянным требованием пользователя. Copyleaks —
-рекомендованный второй независимый сигнал, но его можно выключить. Тогда
-minimum-independent=2 по умолчанию не будет выполнен: либо выбрать другой
-реально независимый доступный сервис, либо оставить явное жёлтое ограничение.
-Локальная цитата не удостоверяет согласие и не превращает снижение минимума в
-зелёный результат. Опциональные сервисы никогда не включаются молча.
+## 2. Выбор сервисов
 
-## Исходный рабочий минимум
+После выбора F1 всегда задать пользователю отдельный вопрос. Начальный набор
+восстановлен из исходного ТЗ:
 
-По полевому английскому пилоту 2026-07-30:
+1. [ZeroGPT](https://www.zerogpt.com/)
+2. [GPTZero](https://gptzero.me/)
+3. [Scribbr AI Detector](https://www.scribbr.com/ai-detector/)
+4. [QuillBot AI Detector](https://quillbot.com/ai-content-detector)
+5. [GPTinf](https://gptinf.com/detector)
+6. [Copyleaks AI Detector](https://copyleaks.com/ai-content-detector)
 
-| Сервис | Доступ | AI-контроли ≥20% | human-контроли ≥20% | Роль |
-|---|---:|---:|---:|---|
-| ZeroGPT | guest | 3/3 | 1/3 | обязательный core |
-| Copyleaks | guest, 25k знаков | 3/3 | 0/3 | независимый core |
-| Sapling | guest, 2k знаков | 3/3 | 2/3 | только audit |
-| QuillBot v7.1.0 | ограниченный guest | 2/3 | 0/1 | audit, не core |
-| Scribbr / QuillBot v7.1.0 | guest | те же 2 проверенных результата | — | дубль семейства |
-| GPTinf | guest | 3/3 | один сбой результата | агрегатор |
-| GPTZero | один guest scan | 1/1 | не проверен | institutional optional |
+Q3 разрешает явно включить или выключить сервисы перед работой. ZeroGPT
+сохраняется как обязательный по постоянному предпочтению пользователя. Каждый
+оставленный сервис становится обязательным для этого заказа.
 
-Корпус мал: три сгенерированных жанра и три public-domain human controls. Это
-приёмочный пилот доступности и явных провалов, а не оценка популяционной
-точности. Для следующей смены core нужен общий корпус минимум 12 AI + 12 human
-в целевых жанрах, заранее фиксированный порог и опубликованные сырые результаты.
+Дубли движков всё равно проверять, если они оставлены: Scribbr и QuillBot могут
+представлять одно семейство и считаются одним голосом только в аналитике.
+GPTinf — агрегатор и не заменяет прямой сервис.
 
-Поэтому default:
+## 3. Capability review
 
-- ZeroGPT — всегда;
-- Copyleaks — второй независимый сигнал;
-- GPTZero/Turnitin — только если пользователь уже имеет доступ или приносит
-  институциональный отчёт;
-- Scribbr вместо QuillBot допустим как интерфейс, но не как дополнительный голос;
-- GPTinf никогда не считается независимым;
-- Sapling не обязателен из-за наблюдавшихся ложных срабатываний.
-
-Источник конфигурации: `assets/service-registry.json`.
-
-Полный пилот проведён только на английском. Для русского та же пара является
-provisional candidate и всегда создаёт yellow limitation, пока не появится
-отдельный полный release-корпус. Не называй RU core валидированным по EN данным.
-
-## Capability review перед каждым проектом
-
-Создай шаблон:
+Перед первым score создать live capability review:
 
 ```bash
 python3 scripts/state.py --state workspace/STATE.json template \
   --kind capability_review --out workspace/capability.json
 ```
 
-`registry_facts` в шаблоне immutable. В живом UI заполняй только `observation`
-для каждого выбранного сервиса и проверь:
+Для каждого выбранного сервиса проверить в видимом UI:
 
-- прямой URL и видимый бренд;
-- guest/login/paywall;
-- язык;
-- минимальный и максимальный объём;
-- модель/версию, если показана;
-- формат результата и наличие подсветки;
-- является ли сервис direct, institutional или aggregator;
-- evidence с датой и видимыми ограничениями.
+- URL и бренд;
+- guest, lawful existing authenticated/institutional access или blocked;
+- поддержку языка;
+- минимальный/максимальный объём;
+- модель/версию, если видна;
+- численный результат и доступность подсветок;
+- дату и конкретное evidence.
 
-Нельзя менять `kind`, `independence_group`, `guest_access`, language support,
-access class или другие registry facts: весь блок сверяется с registry. Guest
-нельзя заявить для non-guest сервиса. Existing authenticated/institutional
-access требует правильного access status; обычный authenticated сервис также
-требует записанную пользовательскую authorization claim. Это audit metadata,
-а не доказательство личности пользователя. Capability review старше 30 дней
-не принимается.
+`registry_facts` неизменяемы: validator сверяет `kind`,
+`independence_group`, `guest_access`, language support, limit и result format с
+registry. Не создавать аккаунт, не платить и не обходить ToS ради гейта.
 
-## Общий корпус и границы
+## 4. Полный цикл
 
-Для сравнения сервисов используй один и тот же текст, без изменений между
-сервисами. Сохраняй:
+На каждом SHA:
 
-- `sample_id`, truth provenance и жанр;
-- полный текст и SHA;
-- сервис, URL, дату, модель;
-- численный результат или точное описание сбоя;
-- скриншот/текстовый evidence.
+1. Прогнать все обязательные service×target.
+2. Сохранить challenge-bound observations.
+3. Выписать все видимые подсветки.
+4. Если подсветок нет, но score не проходит, вручную локализовать конкретные
+   AI-like зоны и объяснить механизм.
+5. Зарегистрировать `detector_round`.
+6. Поставить inline marks в отдельной редакторской working copy.
+7. Внести минимальные правки только по меткам.
+8. Проверить fidelity, minimality, стиль и English level.
+9. Снова прогнать все обязательные service×target.
 
-Не делай вывод о сервисе по одному удобному примеру. Human controls должны быть
-реальными текстами с проверяемым происхождением, а не текстом модели,
-попросившей «писать как человек».
+Нельзя перепроверить только провалившийся сервис: любая содержательная правка
+инвалидирует всю предыдущую матрицу и detector round.
 
-## Проектный цикл F1
+## 5. Detector round
 
-1. Сначала сохранить baseline по обоим core-сервисам.
-2. Свести подсветки по адресам, но не считать их истиной.
-3. Сопоставить с диагнозом: править только место с объяснимым языковым
-   механизмом или явным пользовательским требованием.
-4. Прогнать fidelity/minimality.
-5. Повторить оба сервиса на новом полном SHA.
-6. Зафиксировать challenge-bound наблюдение через `state.py detector`.
-
-Храни таблицу кандидатов:
-
-| candidate SHA | fidelity | edit ratio | ZeroGPT | Copyleaks | решение |
-|---|---|---:|---:|---:|---|
-
-Кандидат доминируется, если другой вариант не хуже по каждому активному
-detector signal и требует меньший diff. После достижения порога дальнейшие
-проценты этого сервиса не компенсируют большой рост вмешательства без отдельной
-редакторской пользы.
-
-Если один сервис не улучшается три материально разных смыслобезопасных раунда:
-
-1. проверить SHA, границы, язык и лимит;
-2. убедиться, что сервис действительно возвращает новый результат;
-3. собрать и зарегистрировать формальный plateau bundle;
-4. выбрать наименее инвазивный недоминируемый вариант;
-5. остановить правки по этому сигналу и показать ограничение пользователю.
-
-Плато не является зелёным pass. При наличии другого passing independent group
-оно превращает G3 в yellow limitation и защищает текст от бесконечного
-ухудшения ради грубого или бинарного сенсора. Без passing independent group
-гейт остаётся красным.
-
-Если текст помещается в лимит — проверять документ целиком. Для longform по
-умолчанию проверять все текущие сегменты. Границы сегментов между раундами
-стабильны, пока `sync` не изменит содержимое; доказательство привязывается к SHA,
-а не только к ID.
-
-## Challenge-bound evidence
-
-Bare `--score` не принимается. Для каждого service/target/current SHA:
+После регистрации всех observations:
 
 ```bash
-python3 scripts/state.py --state workspace/STATE.json detector-prepare \
-  --service zerogpt --target DOCUMENT \
-  --out workspace/evidence/zerogpt-challenge.json
+python3 scripts/state.py --state workspace/STATE.json template \
+  --kind detector_round --out workspace/evidence/round-R001.json
 ```
 
-После живого результата сохрани screenshot/PDF (или raw vendor JSON) и создай
-observation по `assets/templates/detector-observation.json`. Оно обязано
-содержать challenge ID/nonce, service, target, content SHA, точный service URL,
-timestamp внутри двухчасового окна, численный score, видимый excerpt со score и
-SHA сырого capture.
+Не менять автоматически заполненные:
+
+- `working_sha256`;
+- `required_services`;
+- thresholds;
+- `service_results`;
+- service/target digests и observation hashes.
+
+Заполнить:
+
+- одну `coverage_declaration` на каждый service×target;
+- `highlight_map` с уникальными ID, адресом, excerpt, причиной и origin;
+- `editor_analysis`;
+- `next_action`.
+
+Для каждого failing service×target нужна хотя бы одна
+`visible_highlight` или `manual_diagnosis`. Если UI не показывает spans,
+зафиксировать `no_highlight_surface`, но всё равно дать ручную диагностическую
+зону. `round_status` вычисляется по scores: `requires_edit` при любом
+`score >=20`, иначе `pass`.
 
 ```bash
-python3 scripts/state.py --state workspace/STATE.json detector \
-  --observation workspace/evidence/zerogpt-observation.json
+python3 scripts/state.py --state workspace/STATE.json artifact \
+  --kind detector_round --file workspace/evidence/round-R001.json
 ```
 
-Challenge одноразовый. Изменение working SHA, observation или raw capture
-инвалидирует evidence.
+После правки старый round становится stale. Для финала нужен новый `pass`
+после F2/F3/F4 artifacts, даже если эти проверки не изменили текст.
 
-Это устраняет случайный старый файл и голое число, но не является
-криптографическим доказательством. Мотивированный локальный агент способен
-нарисовать PNG или JSON. Browser capture — аудиторский след видимого
-наблюдения; он не доказывает авторство и всё равно требует честного мастера.
+## 6. Long-form
 
-## Формальное plateau
+В F1 auto-route переходит к стабильным сегментам с 1,000 слов. Рекомендуемые
+границы `400–950` слов укладываются в наименьший общий публичный word limit.
 
-После трёх materially different кандидатов создай каркас:
+- покрыть все сегменты;
+- не использовать `risk_sampled`;
+- не менять границы между сервисами одного раунда;
+- привязывать score к exact segment SHA;
+- service-level итог считать по worst case, а не по среднему;
+- после `segment.py sync` перепроверить все изменившиеся SHA и собрать полную
+  текущую матрицу.
 
-```bash
-python3 scripts/state.py --state workspace/STATE.json plateau-template \
-  --service copyleaks --target DOCUMENT \
-  --out workspace/evidence/copyleaks-plateau.json
-```
+## 7. Plateau и недоступность
 
-Каждый кандидат обязан иметь:
+Plateau нужен как диагноз после трёх materially different, fidelity-safe
+кандидатов. Он доказывает только воспроизводимый тупик:
 
-- отдельный файл и SHA;
-- passing `fidelity.v3.1` против immutable original;
-- полный semantic review с точными working offsets, валидный для candidate SHA;
-- один или несколько `move_ids`, чьи SHA совпадают с candidate, плюс
-  содержательный `change_summary`;
-- зарегистрированный challenge-bound observation и неизменённый raw capture.
+- не делает высокий score зелёным или жёлтым;
+- не разрешает закрытие;
+- отсекает косметические synonym-only варианты;
+- помогает выбрать следующую действительно другую гипотезу.
 
-При регистрации каждый candidate заново проходит `minimality.py`, строгий
-source-relative English-level screen (для EN) и применимую reliable-style
-policy. Во всём bundle должны присутствовать минимум два реально заявленных
-edit mechanisms.
+При blocked сервисе:
 
-Все три score должны быть выше порога, а последние три — различаться не более
-чем на один процентный пункт. Текущий working SHA должен быть одним из
-кандидатов. Для segment target каждый row дополнительно содержит точную
-candidate `SEGMENTS.json` и её SHA; карта обязана покрывать весь candidate
-document и связывать target ID с observation digest. Каждая пара должна
-различаться минимум на 5% target words. Малые same-position replacement-блоки
-без изменения структуры отклоняются как косметические даже тогда, когда JSON
-называет их разными механизмами.
+1. записать blocked в capability review;
+2. не пропускать его молча;
+3. спросить пользователя, хочет ли он изменить Q3 scope;
+4. менять scope только по реальному новому сообщению пользователя;
+5. после изменения Q3 заново собрать capability, results и rounds.
 
-```bash
-python3 scripts/state.py --state workspace/STATE.json plateau \
-  --file workspace/evidence/copyleaks-plateau.json
-```
+Локальный `waive --user-quote` запрещён в `score_mandatory`: локальный процесс
+может выдумать цитату.
 
-## Порог и расхождения
+## 8. Evidence и границы доверия
 
-Порог — рабочая договорённость пользователя, по умолчанию 20%, а не научная
-граница. Если один core-сервис выше порога:
+Bare `--score` не принимается. Observation связывает challenge nonce, current
+target SHA, URL, timestamp, видимый score excerpt и SHA screenshot/PDF/raw API
+response. Для browser capture дополнительно проверяются настоящий контейнер,
+checksums/markers и минимальный размер изображения. Это защищает от случайного
+stale evidence, последующего изменения файла и тривиальной подмены
+«PNG header + случайные байты».
 
-- проверить тот ли SHA и тот ли объём;
-- посмотреть конкретный фрагмент;
-- не менять защищённый смысл;
-- отметить расхождение сервисов;
-- при невозможности безопасной правки оставить ограничение, а не разрушать текст.
-
-## Недоступность
-
-Не регистрироваться и не платить ради default-проверки. Заменить сервис можно
-только независимым гостевым кандидатом, проверенным на общем корпусе. Если один
-выбранный сервис недоступен:
-
-- записать `blocked` в capability review;
-- при явном согласии пользователя создать waiver только для этого
-  `service/target/current_sha`;
-- waiver не создаёт независимый passing group;
-- снижение `minimum_independent` ниже двух может хранить отдельную цитату как
-  audit claim, но всегда остаётся жёлтым ограничением;
-- `close` не принимает локальное `--accept-limits`: статус остаётся
-  `READY_WITH_LIMITS` до внешнего пользовательского решения.
-
-Никаких blanket-waiver.
-
-## Институциональные сервисы
-
-GPTZero, Turnitin и аналогичные продукты важны, потому что используются в
-образовательных процессах. Но это не делает доступ гостевым. Если пользователь
-предоставляет законный текущий отчёт, зарегистрируй его как institutional
-evidence и укажи версию/дату. Не имитируй их результат другим брендом.
+Локальный агент всё ещё способен нарисовать правдоподобный поддельный
+screenshot: структурная проверка не заменяет OCR или подписанный receipt.
+Поэтому capture — аудиторский след, а не криптографическое доказательство.
+Никогда не выдумывать проценты или выделенные зоны.

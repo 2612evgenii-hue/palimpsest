@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Broad functional regression layer for Palimpsest v3.2."""
+"""Broad functional regression layer for Palimpsest v3.5."""
 from __future__ import annotations
 
 import json
@@ -629,14 +629,18 @@ class DocumentationContractTests(unittest.TestCase):
         self.assertNotIn("forced close", report)
         self.assertNotIn("`--force`", report)
 
-    def test_docs_do_not_claim_six_service_core(self) -> None:
+    def test_docs_restore_six_service_scope_and_strict_loop(self) -> None:
         texts = "\n".join(
             path.read_text(encoding="utf-8")
             for path in [ROOT / "SKILL.md", *(ROOT / "references").glob("*.md")]
         ).casefold()
-        self.assertNotIn("all six", texts)
-        self.assertIn("zerogpt", texts)
-        self.assertIn("copyleaks", texts)
+        for service in (
+            "zerogpt", "gptzero", "scribbr", "quillbot", "gptinf", "copyleaks"
+        ):
+            self.assertIn(service, texts)
+        self.assertIn("score < 20", texts)
+        self.assertIn("plateau", texts)
+        self.assertIn("не заверш", texts)
 
     def test_selftest_loads_acceptance_regression_and_stress_layers(self) -> None:
         text = (ROOT / "evals" / "selftest.py").read_text(encoding="utf-8")

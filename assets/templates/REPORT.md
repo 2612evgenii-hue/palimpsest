@@ -1,81 +1,81 @@
-# Отчёт Palimpsest v3.2
+# Отчёт Palimpsest v3.5
 
-Дата: · Рабочий SHA-256: · Итоговый статус: OPEN / READY_WITH_LIMITS / CLOSED
+Дата: · Working SHA-256: · Итоговый статус: OPEN / READY_WITH_LIMITS / CLOSED
 
 ## Изменения
 
-- исходный жанр, язык и объём:
-- активные функции: F1 / F2 / F3 / F4 / none
-- режим стиля: `external_reference` / `source_as_reference`
-- целевой уровень английского и оценка исходника (если применимо):
-- какие проблемы были подтверждены:
-- какие минимальные вмешательства выполнены:
-- document change ratio: X при бюджете Y
-- что сознательно не менялось:
+- жанр, язык и объём:
+- функции F1/F2/F3/F4:
+- style baseline:
+- English level source → target → final:
+- подтверждённые проблемы:
+- минимальные вмешательства и причины:
+- document/paragraph change ratio:
+- что сознательно сохранено:
 
 ## Проверки
 
+### Detector contract
+
+- score_mandatory: да / нет
+- mandatory services из Q3:
+- hard pass: каждый current service×target `<20%`
+- soft target: каждый `<15%`
+- coverage: full
+- capability review SHA/date:
+- final detector round ID/SHA/date:
+- final round зарегистрирован после F2/F3/F4: да / нет / n/a
+
+| Сервис | Target | Baseline % | Final % | Hard `<20` | Target `<15` | Observation SHA |
+|---|---|---:|---:|---:|---:|---|
+| | | | | pass/fail | reached/missed | |
+
+### Check → mark → edit → recheck
+
+| Round | Working SHA | Failing services | Mapped zones | Edit mechanisms | Результат |
+|---|---|---|---:|---|---|
+| | | | | | requires_edit / pass |
+
+- все visible highlights перенесены:
+- manual diagnosis для сервисов без span UI:
+- после каждой substantive edit перепроверены все mandatory services:
+- plateau bundles (это blockers, не success):
+- blocked services (если есть):
+
 ### Верность и минимальность
 
-- `fidelity_check.py`: pass / fail; SHA отчёта:
-- semantic source-unit reconciliation: N из N; SHA:
-- `minimality.py`: pass / fail; document/paragraph ratios:
-- числа, единицы, модальность, причинность, хронология и роли:
-- externally authorized change claims, source-unit/offset binding и жёлтый G7:
+- fidelity result/SHA:
+- semantic source units: N/N:
+- numbers, units, polarity, causality, modality, actors, chronology:
+- minimality ratio/budget:
 
-### Стиль и уровень языка
+### Почерк и English level
 
-- baseline: внешний корпус / исходный текст как собственный референс
-- Ductus (только для внешнего корпуса): IMPORT / ADAPT / QUARANTINE
-- `style_distance.py`: reliability; baseline → final; применённый policy или advisory:
-- English-level screen: source estimate → final estimate; target; drift signals:
-- ручная проверка уровня: лексика, синтаксис, идиоматика, learner voice
-- случайные ошибки исправлены без искусственного добавления новых ошибок:
+- Ductus IMPORT/ADAPT/QUARANTINE или source-as-reference:
+- style distance/reliability:
+- side-by-side voice review:
+- CEFR source/target/final и drift:
 
-### Детекторы (только если F1 включён)
-
-Выбранный пользователем набор: · Порог: · Minimum independent: · Coverage:
-
-| Сервис | Target | Content SHA | Score | Checked at | Challenge | Raw capture SHA | Итог |
-|---|---|---|---:|---|---|---|---|
-| | | | | | | | pass / fail / waived / plateau |
-
-- ZeroGPT присутствует: да / нет / F1 выключен
-- capability review SHA и возраст:
-- независимые passing groups:
-- формальный plateau bundle (если есть):
-- waivers, каждый для точного service/target/SHA:
-
-Сырые снимки подтверждают сохранённое наблюдение, но не доказывают авторство и
-не дают гарантии результата на другой версии сервиса.
-
-### Дополнительные маршруты
+### F2/F3/F4
 
 - F2 structure review:
-- F3 claim ledger, первичные источники и даты:
-- F4 overlap report, атрибуция и разрешённые цитаты:
-- pattern scan (advisory):
-- constraints review:
-- proofread и отсутствие рабочих аннотаций:
+- F3 claim ledger и primary sources:
+- F4 overlap/quotation/attribution:
+- constraints/proofread/clean annotations:
 
-### Long-form и память
+### Long-form
 
-- `segment.py status`: сегментов N; coverage X%; changed/new/risk:
-- browser coverage: все targets / принятая risk sample:
-- orphaned prior IDs:
-- `MEMORY.md` refresh:
-- `TERMS.md` lost:
-- edit-amplified echoes:
+- segment count и full coverage:
+- service×target matrix:
+- changed/new/orphaned segments:
+- memory refresh/handoff:
 
 ## Ограничения
 
-- детекторный корпус EN 3+3 — пилот, не оценка популяционной точности:
-- RU core остаётся provisional до полного отдельного корпуса:
-- CEFR определяется приближённо и подтверждается редакторской сверкой:
-- synthetic 15k+ stress проверяет pipeline, а не book-scale редакторское качество:
-- browser evidence можно подделать локально; challenge/digest/capture binding
-  создаёт аудиторский след, а не криптографическое доказательство:
-- yellow gates: локальный CLI не аутентифицирует согласие и оставляет
-  `READY_WITH_LIMITS`; требуемое внешнее решение пользователя:
-- заблокированные сервисы, лимиты, неполное покрытие или недоступные источники:
-- что пользователю следует проверить самостоятельно:
+- detector scores не доказывают авторство и могут измениться:
+- raw capture — audit trail, не криптографическое доказательство:
+- RU corpus provisional:
+- CEFR/style metrics approximate:
+- target `<15%` не достигнут, но hard `<20%` пройден (перечислить):
+- OPEN blocker, если любой mandatory score `>=20%`/blocked/stale:
+- что пользователю следует проверить:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Palimpsest v3.2 project state and fail-closed evidence gates.
+"""Palimpsest v3.5 project state and fail-closed evidence gates.
 
 There is no command that manually paints a gate green.  Gates are recomputed
 from current file digests, structured reconciliations, challenge-bound detector
@@ -12,8 +12,10 @@ import difflib
 import json
 import re
 import secrets
+import struct
 import subprocess
 import sys
+import zlib
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import urlparse
@@ -22,14 +24,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _textlib as T  # noqa: E402
 import _v3lib as V  # noqa: E402
 
-VERSION = "3.2.0"
-STATE_SCHEMA = "palimpsest.state.v3.2"
-ATTEST_SCHEMA = "palimpsest.attestation.v3.2"
-CAPABILITY_SCHEMA = "palimpsest.capability-review.v3.2"
+VERSION = "3.5.0"
+STATE_SCHEMA = "palimpsest.state.v3.5"
+ATTEST_SCHEMA = "palimpsest.attestation.v3.5"
+CAPABILITY_SCHEMA = "palimpsest.capability-review.v3.5"
 OVERLAP_SCHEMA = "palimpsest.overlap.v3"
 DETECTOR_CHALLENGE_SCHEMA = "palimpsest.detector-challenge.v1"
 DETECTOR_OBSERVATION_SCHEMA = "palimpsest.detector-observation.v1"
+DETECTOR_ROUND_SCHEMA = "palimpsest.detector-round.v1"
 PLATEAU_SCHEMA = "palimpsest.detector-plateau.v2"
+HARD_DETECTOR_MAX_EXCLUSIVE = 20.0
+SOFT_DETECTOR_TARGET_EXCLUSIVE = 15.0
 PLATEAU_MECHANISMS = {
     "lexical_cleanup",
     "rhythm_restructure",
@@ -242,6 +247,41 @@ def add_event(st: dict, event: str, **data) -> None:
     st["updated_at"] = V.now()
 
 
+def refresh_goal(st: dict) -> None:
+    """Keep the user-facing success contract explicit in durable state."""
+    selected = st.get("detector_policy", {}).get("selected_services", [])
+    score_mandatory = bool(
+        st.get("flags", {}).get("F1")
+        and st.get("detector_policy", {}).get("score_mandatory", True)
+    )
+    st["goal"] = {
+        "functions": [name for name, enabled in st.get("flags", {}).items() if enabled],
+        "style_mode": st.get("style_mode", "unselected"),
+        "english_level": st.get("english_level", {}).get("target", "not_applicable"),
+        "requirements": st.get("intake", {}).get("Q4_requirements", {}).get("answer", ""),
+        "score_mandatory": score_mandatory,
+        "mandatory_detectors": list(selected) if score_mandatory else [],
+        "hard_pass": (
+            f"every mandatory detector score strictly < "
+            f"{HARD_DETECTOR_MAX_EXCLUSIVE:g}% "
+            "on every current full-coverage target"
+            if score_mandatory
+            else "not applicable"
+        ),
+        "soft_target": (
+            f"every mandatory detector score < {SOFT_DETECTOR_TARGET_EXCLUSIVE:g}%"
+            if score_mandatory
+            else "not applicable"
+        ),
+        "closure_rule": (
+            "OPEN while any mandatory detector is missing, blocked, stale, "
+            f"or >= {HARD_DETECTOR_MAX_EXCLUSIVE:g}%"
+            if score_mandatory
+            else "close only when all selected function gates are green"
+        ),
+    }
+
+
 def gate(color: str, evidence: str, details: list[str] | None = None) -> dict:
     return {
         "color": color,
@@ -273,12 +313,24 @@ def cmd_init(args: argparse.Namespace) -> int:
     source_words = word_count(original)
     route = args.route
     if route == "auto":
-        route = "longform" if source_words >= 4000 else ("surgical" if source_words <= 600 else "standard")
-    budget = args.budget if args.budget is not None else (0.12 if route == "surgical" else 0.18)
+        # In score-mandatory mode, switch to stable chunks before the smallest
+        # default public word limit (1,200 words) can be exceeded.
+        longform_cutoff = 1000 if flags["F1"] else 4000
+        route = (
+            "longform"
+            if source_words >= longform_cutoff
+            else ("surgical" if source_words <= 600 else "standard")
+        )
+    default_budget = (
+        0.30
+        if flags["F1"]
+        else (0.12 if route == "surgical" else 0.18)
+    )
+    budget = args.budget if args.budget is not None else default_budget
     para_budget = (
         args.para_budget
         if args.para_budget is not None
-        else (0.35 if route == "surgical" else 0.45)
+        else (0.60 if flags["F1"] else (0.35 if route == "surgical" else 0.45))
     )
     original_text = V.read_text(original)
     source_language = language_profile(original_text)
@@ -302,8 +354,13 @@ def cmd_init(args: argparse.Namespace) -> int:
     unknown = [x for x in services if x not in reg["services"]]
     if unknown:
         return fail(f"unknown services: {', '.join(unknown)}")
-    if args.coverage == "risk_sampled" and len((args.user_quote or "").strip()) < 25:
-        return fail("risk_sampled coverage requires a specific user quote (25+ characters)")
+    if flags["F1"] and args.coverage != "full":
+        return fail("score_mandatory F1 requires full detector coverage; risk_sampled is forbidden")
+    if not 0 <= args.detector_max <= HARD_DETECTOR_MAX_EXCLUSIVE:
+        return fail(
+            f"score_mandatory hard threshold must be between 0 and "
+            f"{HARD_DETECTOR_MAX_EXCLUSIVE:g}%"
+        )
     registry_minimum = int(reg["policy"]["minimum_independent_services"])
     if (
         flags["F1"]
@@ -360,7 +417,13 @@ def cmd_init(args: argparse.Namespace) -> int:
         },
         "detector_policy": {
             "selected_services": services,
-            "threshold_pct": args.detector_max,
+            "score_mandatory": bool(flags["F1"]),
+            "threshold_pct": min(args.detector_max, HARD_DETECTOR_MAX_EXCLUSIVE),
+            "threshold_comparison": "strictly_less_than",
+            "soft_target_pct": min(
+                SOFT_DETECTOR_TARGET_EXCLUSIVE,
+                args.detector_max,
+            ),
             "minimum_independent": args.min_independent,
             "coverage": args.coverage,
             "sample_ids": V.parse_csv(args.sample_ids),
@@ -375,6 +438,7 @@ def cmd_init(args: argparse.Namespace) -> int:
         "artifacts": {},
         "detector_challenges": [],
         "detector_results": [],
+        "detector_rounds": [],
         "plateaus": [],
         "waivers": [],
         "moves": [],
@@ -387,6 +451,7 @@ def cmd_init(args: argparse.Namespace) -> int:
         },
         "events": [{"at": V.now(), "event": "init"}],
     }
+    refresh_goal(st)
     V.atomic_write_json(target, st)
     print(f"Palimpsest v{VERSION} state: {target}")
     print(f"route={route} language={language} words={source_words}")
@@ -502,8 +567,18 @@ def cmd_intake(args: argparse.Namespace) -> int:
                     st["detector_results"] = []
                     st["plateaus"] = []
                     st["waivers"] = []
+                    st["detector_rounds"] = []
+                    st["artifacts"].pop("detector_round", None)
                 if not st["flags"]["F1"]:
                     st["detector_policy"]["selected_services"] = []
+                    st["detector_policy"]["score_mandatory"] = False
+                else:
+                    st["detector_policy"]["score_mandatory"] = True
+                    st["detector_policy"]["coverage"] = "full"
+                    st["detector_policy"]["threshold_pct"] = min(
+                        float(st["detector_policy"].get("threshold_pct", 20.0)),
+                        HARD_DETECTOR_MAX_EXCLUSIVE,
+                    )
 
             if args.question == "Q3":
                 if args.services is None:
@@ -535,6 +610,8 @@ def cmd_intake(args: argparse.Namespace) -> int:
                     st["detector_results"] = []
                     st["plateaus"] = []
                     st["waivers"] = []
+                    st["detector_rounds"] = []
+                    st["artifacts"].pop("detector_round", None)
                 st["detector_policy"]["selected_services"] = selected
 
             st["intake"][key_map[args.question]] = {
@@ -542,11 +619,57 @@ def cmd_intake(args: argparse.Namespace) -> int:
                 "source": args.source,
                 "recorded_at": V.now(),
             }
+            refresh_goal(st)
             add_event(st, "intake", question=args.question, source=args.source)
     except (FileNotFoundError, StateError) as exc:
         return fail(str(exc))
     print(f"{args.question} recorded ({args.source})")
     return 0
+
+
+def detector_round_snapshot(st: dict) -> tuple[list[dict], list[str]]:
+    """Return the exact current service/target observation matrix."""
+    targets, problems = detector_targets(st)
+    rows: list[dict] = []
+    for target, digest in targets:
+        for service in st["detector_policy"]["selected_services"]:
+            result = latest_current_result(st, service, target, digest)
+            if not result:
+                rows.append(
+                    {
+                        "service": service,
+                        "target": target,
+                        "content_sha256": digest,
+                        "score_pct": None,
+                        "observation_sha256": "",
+                    }
+                )
+                continue
+            rows.append(
+                {
+                    "service": service,
+                    "target": target,
+                    "content_sha256": digest,
+                    "score_pct": float(result["score_pct"]),
+                    "observation_sha256": result["observation_sha256"],
+                }
+            )
+    return rows, problems
+
+
+def current_target_text(st: dict, target: str) -> str:
+    text = V.read_text(st["files"]["working"])
+    if target == "DOCUMENT":
+        return text
+    segment_path = Path(st["files"]["segments"])
+    data = V.load_json(segment_path)
+    row = next(
+        (item for item in data.get("segments", []) if item.get("id") == target),
+        None,
+    )
+    if not row:
+        raise StateError(f"unknown segment target {target}")
+    return text[int(row["start"]):int(row["end"])]
 
 
 def template_payload(st: dict, kind: str) -> dict | str:
@@ -588,12 +711,59 @@ def template_payload(st: dict, kind: str) -> dict | str:
                 "Confirm access, a real language test, and an actual returned result in the live UI.",
             ],
         }
+    if kind == "detector_round":
+        rows, target_problems = detector_round_snapshot(st)
+        threshold = float(st["detector_policy"]["threshold_pct"])
+        failing = [
+            row for row in rows
+            if row["score_pct"] is None or float(row["score_pct"]) >= threshold
+        ]
+        return {
+            "schema": DETECTOR_ROUND_SCHEMA,
+            "round_id": f"R{len(st.get('detector_rounds', [])) + 1:03d}",
+            "working_sha256": working_sha(st),
+            "required_services": list(st["detector_policy"]["selected_services"]),
+            "coverage": st["detector_policy"]["coverage"],
+            "hard_max_exclusive_pct": threshold,
+            "soft_target_exclusive_pct": float(
+                st["detector_policy"]["soft_target_pct"]
+            ),
+            "round_status": "requires_edit" if failing else "pass",
+            "service_results": rows,
+            "coverage_declarations": [
+                {
+                    "service": row["service"],
+                    "target": row["target"],
+                    "state": "pending",
+                    "evidence": "",
+                }
+                for row in rows
+            ],
+            "highlight_map": [],
+            "editor_analysis": "",
+            "next_action": "",
+            "target_problems": target_problems,
+            "instructions": [
+                "Do not change service_results, digests, thresholds, or required_services.",
+                "For every service/target, map all visible highlights or state that the UI exposed none.",
+                "Every failing service/target needs at least one visible-highlight or manual-diagnostic zone.",
+                "Use round_status=requires_edit when any score is at or above the hard threshold; use pass only when every score is below it.",
+            ],
+        }
     if kind == "report":
+        selected = ", ".join(st["detector_policy"]["selected_services"]) or "none"
         return (
             f"# {st['task']}: итоговый отчёт\n\n"
-            "## Изменения\n\n[Заполнить: что изменено и почему.]\n\n"
-            "## Проверки\n\n[Заполнить: прямые результаты, хэши и машинные проверки.]\n\n"
-            "## Ограничения\n\n[Заполнить: шум детекторов, waivers, sampled coverage или «нет».]\n"
+            "## Изменения\n\n"
+            "[Заполнить: диагноз → минимальные moves → сохранённые invariants.]\n\n"
+            "## Проверки\n\n"
+            f"Mandatory detectors: {selected}. Hard pass: каждый score <20%; "
+            "target: каждый score <15%.\n\n"
+            "[Добавить before/after service×target table, detector rounds, "
+            "fidelity, style, English level и F2/F3/F4 evidence.]\n\n"
+            "## Ограничения\n\n"
+            "[Указать target misses 15–<20, blocked/open blockers, provisional "
+            "corpus и trust boundary; высокий score не называть успехом.]\n"
         )
     spec = ATTESTATIONS[kind]
     payload = {
@@ -635,6 +805,150 @@ def template_payload(st: dict, kind: str) -> dict | str:
             "source_estimate", ""
         )
     return payload
+
+
+def validate_detector_round(st: dict, path: Path) -> tuple[bool, list[str]]:
+    problems: list[str] = []
+    try:
+        data = V.load_json(path)
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        return False, [f"invalid JSON: {exc}"]
+    if data.get("schema") != DETECTOR_ROUND_SCHEMA:
+        problems.append(f"schema must be {DETECTOR_ROUND_SCHEMA}")
+    if data.get("working_sha256") != working_sha(st):
+        problems.append("detector round is stale for the current working text")
+    selected = st["detector_policy"]["selected_services"]
+    if data.get("required_services") != selected:
+        problems.append("required_services differ from the explicit Q3 detector scope")
+    if data.get("coverage") != "full":
+        problems.append("score_mandatory detector rounds require full coverage")
+    hard = float(st["detector_policy"]["threshold_pct"])
+    soft = float(st["detector_policy"]["soft_target_pct"])
+    if data.get("hard_max_exclusive_pct") != hard:
+        problems.append("hard threshold differs from state policy")
+    if data.get("soft_target_exclusive_pct") != soft:
+        problems.append("soft target differs from state policy")
+    expected_rows, target_problems = detector_round_snapshot(st)
+    problems.extend(target_problems)
+    observed_rows = data.get("service_results")
+    if observed_rows != expected_rows:
+        problems.append(
+            "service_results must exactly match every current challenge-bound result"
+        )
+    complete_rows = [
+        row for row in expected_rows
+        if row.get("score_pct") is not None and row.get("observation_sha256")
+    ]
+    if len(complete_rows) != len(expected_rows):
+        problems.append("detector round is incomplete; every service/target needs a result")
+    for row in complete_rows:
+        result = latest_current_result(
+            st,
+            row["service"],
+            row["target"],
+            row["content_sha256"],
+        )
+        if not result:
+            problems.append(f"{row['service']}/{row['target']}: current result disappeared")
+            continue
+        integrity_ok, integrity_message = detector_result_integrity(result)
+        if not integrity_ok:
+            problems.append(
+                f"{row['service']}/{row['target']}: {integrity_message}"
+            )
+
+    expected_pairs = {
+        (row["service"], row["target"]) for row in expected_rows
+    }
+    declarations = data.get("coverage_declarations", [])
+    declaration_pairs: set[tuple[str, str]] = set()
+    allowed_states = {
+        "all_visible_highlights_mapped",
+        "no_highlights_visible",
+        "no_highlight_surface",
+    }
+    for item in declarations if isinstance(declarations, list) else []:
+        if not isinstance(item, dict):
+            problems.append("coverage_declaration rows must be objects")
+            continue
+        pair = (str(item.get("service", "")), str(item.get("target", "")))
+        if pair in declaration_pairs:
+            problems.append(f"duplicate coverage declaration for {pair[0]}/{pair[1]}")
+        declaration_pairs.add(pair)
+        if item.get("state") not in allowed_states:
+            problems.append(
+                f"{pair[0]}/{pair[1]}: coverage state must describe visible highlight coverage"
+            )
+        if len(str(item.get("evidence", "")).strip()) < 20:
+            problems.append(
+                f"{pair[0]}/{pair[1]}: coverage evidence must contain 20+ characters"
+            )
+    if declaration_pairs != expected_pairs:
+        problems.append("coverage declarations must cover every required service/target once")
+
+    highlights = data.get("highlight_map", [])
+    highlight_ids: set[str] = set()
+    highlight_pairs: set[tuple[str, str]] = set()
+    if not isinstance(highlights, list):
+        problems.append("highlight_map must be a list")
+        highlights = []
+    for item in highlights:
+        if not isinstance(item, dict):
+            problems.append("highlight rows must be objects")
+            continue
+        mark_id = str(item.get("id", "")).strip()
+        if not mark_id or mark_id in highlight_ids:
+            problems.append("every highlight needs a unique non-empty id")
+        highlight_ids.add(mark_id)
+        pair = (str(item.get("service", "")), str(item.get("target", "")))
+        if pair not in expected_pairs:
+            problems.append(f"{mark_id}: highlight service/target is outside this round")
+        highlight_pairs.add(pair)
+        if item.get("origin") not in {"visible_highlight", "manual_diagnosis"}:
+            problems.append(f"{mark_id}: origin must be visible_highlight or manual_diagnosis")
+        if len(str(item.get("location", "")).strip()) < 2:
+            problems.append(f"{mark_id}: precise location is required")
+        if len(str(item.get("excerpt", "")).strip()) < 8:
+            problems.append(f"{mark_id}: excerpt must contain 8+ characters")
+        else:
+            try:
+                target_text = current_target_text(st, pair[1])
+            except (OSError, KeyError, ValueError, StateError) as exc:
+                problems.append(f"{mark_id}: cannot resolve target text: {exc}")
+            else:
+                if str(item.get("excerpt", "")).strip() not in target_text:
+                    problems.append(
+                        f"{mark_id}: excerpt is not verbatim text from the current target"
+                    )
+        if len(str(item.get("reason", "")).strip()) < 20:
+            problems.append(f"{mark_id}: reason must contain 20+ characters")
+        if item.get("status") not in {"open", "resolved", "false_positive"}:
+            problems.append(f"{mark_id}: invalid highlight status")
+
+    failing_pairs = {
+        (row["service"], row["target"])
+        for row in complete_rows
+        if float(row["score_pct"]) >= hard
+    }
+    missing_diagnosis = failing_pairs - highlight_pairs
+    for service, target in sorted(missing_diagnosis):
+        problems.append(
+            f"{service}/{target}: failing result needs at least one mapped or manual diagnostic zone"
+        )
+    expected_status = "requires_edit" if failing_pairs else "pass"
+    if data.get("round_status") != expected_status:
+        problems.append(
+            f"round_status must be {expected_status} for the current strict threshold"
+        )
+    if expected_status == "pass" and any(
+        item.get("status") == "open" for item in highlights if isinstance(item, dict)
+    ):
+        problems.append("passing final round cannot contain open highlight zones")
+    if len(str(data.get("editor_analysis", "")).strip()) < 40:
+        problems.append("editor_analysis must contain 40+ characters")
+    if len(str(data.get("next_action", "")).strip()) < 20:
+        problems.append("next_action must contain 20+ characters")
+    return not problems, problems
 
 
 def cmd_template(args: argparse.Namespace) -> int:
@@ -953,6 +1267,9 @@ def cmd_artifact(args: argparse.Namespace) -> int:
             elif args.kind == "capability_review":
                 ok, problems = validate_capability(st, artifact_path)
                 subject = ""
+            elif args.kind == "detector_round":
+                ok, problems = validate_detector_round(st, artifact_path)
+                subject = working_sha(st)
             elif args.kind == "overlap_report":
                 ok, problems = validate_overlap(st, artifact_path)
                 subject = working_sha(st)
@@ -969,6 +1286,18 @@ def cmd_artifact(args: argparse.Namespace) -> int:
                 "subject_sha256": subject,
                 "registered_at": V.now(),
             }
+            if args.kind == "detector_round":
+                round_data = V.load_json(artifact_path)
+                st.setdefault("detector_rounds", []).append(
+                    {
+                        "round_id": round_data["round_id"],
+                        "round_status": round_data["round_status"],
+                        "working_sha256": subject,
+                        "path": str(artifact_path),
+                        "file_sha256": V.sha256_file(artifact_path),
+                        "registered_at": V.now(),
+                    }
+                )
             add_event(st, "artifact_registered", kind=args.kind)
     except (FileNotFoundError, StateError) as exc:
         return fail(str(exc))
@@ -1071,6 +1400,98 @@ def observation_raw_path(observation_path: Path, value: str) -> Path:
     return (observation_path.parent / raw).resolve() if not raw.is_absolute() else raw.resolve()
 
 
+def capture_artifact_health(path: Path) -> tuple[bool, str]:
+    """Reject files that only pretend to be a browser image or PDF.
+
+    This is structural validation, not OCR or cryptographic proof of what was
+    visible in the browser.  It closes the trivial ``PNG header + random
+    bytes`` bypass while keeping the trust boundary explicit.
+    """
+    try:
+        data = path.read_bytes()
+    except OSError as exc:
+        return False, f"cannot read raw detector artifact: {exc}"
+    suffix = path.suffix.lower()
+    if suffix == ".png":
+        if not data.startswith(b"\x89PNG\r\n\x1a\n"):
+            return False, "raw PNG has an invalid signature"
+        cursor = 8
+        chunks: list[bytes] = []
+        width = height = 0
+        while cursor + 12 <= len(data):
+            length = struct.unpack(">I", data[cursor:cursor + 4])[0]
+            chunk_type = data[cursor + 4:cursor + 8]
+            end = cursor + 12 + length
+            if end > len(data):
+                return False, "raw PNG contains a truncated chunk"
+            payload = data[cursor + 8:cursor + 8 + length]
+            expected_crc = struct.unpack(">I", data[cursor + 8 + length:end])[0]
+            actual_crc = zlib.crc32(chunk_type + payload) & 0xFFFFFFFF
+            if actual_crc != expected_crc:
+                return False, "raw PNG contains an invalid chunk checksum"
+            chunks.append(chunk_type)
+            if chunk_type == b"IHDR":
+                if length != 13:
+                    return False, "raw PNG has an invalid IHDR"
+                width, height = struct.unpack(">II", payload[:8])
+            cursor = end
+            if chunk_type == b"IEND":
+                break
+        if not chunks or chunks[0] != b"IHDR" or b"IDAT" not in chunks or b"IEND" not in chunks:
+            return False, "raw PNG is missing required image chunks"
+        if width < 320 or height < 180:
+            return False, "browser screenshot must be at least 320x180 pixels"
+        return True, f"valid PNG capture {width}x{height}"
+    if suffix in {".jpg", ".jpeg"}:
+        if not (data.startswith(b"\xff\xd8") and data.rstrip().endswith(b"\xff\xd9")):
+            return False, "raw JPEG has invalid start/end markers"
+        cursor = 2
+        width = height = 0
+        sof_markers = {
+            0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7,
+            0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF,
+        }
+        while cursor + 4 <= len(data):
+            if data[cursor] != 0xFF:
+                cursor += 1
+                continue
+            marker = data[cursor + 1]
+            cursor += 2
+            if marker in {0xD8, 0xD9} or 0xD0 <= marker <= 0xD7:
+                continue
+            if cursor + 2 > len(data):
+                break
+            length = struct.unpack(">H", data[cursor:cursor + 2])[0]
+            if length < 2 or cursor + length > len(data):
+                return False, "raw JPEG contains a truncated segment"
+            if marker in sof_markers and length >= 7:
+                height, width = struct.unpack(">HH", data[cursor + 3:cursor + 7])
+                break
+            cursor += length
+        if width < 320 or height < 180:
+            return False, "browser screenshot must be at least 320x180 pixels"
+        return True, f"valid JPEG capture {width}x{height}"
+    if suffix == ".webp":
+        if not (
+            len(data) >= 20
+            and data.startswith(b"RIFF")
+            and data[8:12] == b"WEBP"
+            and data[12:16] in {b"VP8 ", b"VP8L", b"VP8X"}
+        ):
+            return False, "raw WebP has an invalid container"
+        declared = struct.unpack("<I", data[4:8])[0] + 8
+        if abs(declared - len(data)) > 1:
+            return False, "raw WebP length does not match its container"
+        return True, "valid WebP capture"
+    if suffix == ".pdf":
+        if not data.startswith(b"%PDF-") or b"%%EOF" not in data[-2048:]:
+            return False, "raw PDF has an invalid header or trailer"
+        if b"/Type /Page" not in data and b"/Type/Page" not in data:
+            return False, "raw PDF does not expose a page object"
+        return True, "valid PDF capture"
+    return False, "unsupported raw detector artifact format"
+
+
 def validate_detector_observation(
     st: dict,
     observation_path: Path,
@@ -1155,6 +1576,10 @@ def validate_detector_observation(
         raise StateError("browser/institutional observations require an image or PDF artifact")
     if mode == "vendor_api" and suffix != ".json":
         raise StateError("vendor_api observations require a raw JSON response")
+    if mode in {"browser_observed", "institutional_report"}:
+        healthy, message = capture_artifact_health(raw_path)
+        if not healthy:
+            raise StateError(message)
     return data, raw_path, challenge
 
 
@@ -1630,7 +2055,7 @@ def cmd_plateau(args: argparse.Namespace) -> int:
                     "plateau bundle must exercise at least two distinct edit mechanisms"
                 )
             threshold = float(st["detector_policy"]["threshold_pct"])
-            if any(score <= threshold for score in scores):
+            if any(score < threshold for score in scores):
                 raise StateError("plateau is only for unresolved above-threshold observations")
             if max(scores[-3:]) - min(scores[-3:]) > 1.0:
                 raise StateError("last three plateau scores differ by more than 1 point")
@@ -1674,6 +2099,11 @@ def cmd_waive(args: argparse.Namespace) -> int:
         with V.locked_json(path) as st:
             if st.get("schema") != STATE_SCHEMA:
                 raise StateError("not a Palimpsest v3 state")
+            if st["detector_policy"].get("score_mandatory"):
+                raise StateError(
+                    "waivers cannot satisfy score_mandatory F1; change the explicit "
+                    "Q3 detector scope in conversation and restart current detector evidence"
+                )
             if service not in st["detector_policy"]["selected_services"]:
                 raise StateError(f"{service} is not selected")
             # Resolve now: a DOCUMENT waiver is tied to the current document
@@ -1706,6 +2136,12 @@ def cmd_detector_policy(args: argparse.Namespace) -> int:
                 raise StateError("not a Palimpsest v3 state")
             policy = st["detector_policy"]
             if services is not None:
+                if policy.get("score_mandatory"):
+                    raise StateError(
+                        "score_mandatory detector scope cannot be changed with "
+                        "detector-policy; record a new explicit Q3 intake answer "
+                        "after an actual user message"
+                    )
                 known = registry()["services"]
                 unknown = [x for x in services if x not in known]
                 if unknown:
@@ -1718,7 +2154,19 @@ def cmd_detector_policy(args: argparse.Namespace) -> int:
             if args.threshold is not None:
                 if not 0 <= args.threshold <= 100:
                     raise StateError("threshold must be 0..100")
+                if (
+                    policy.get("score_mandatory")
+                    and args.threshold > HARD_DETECTOR_MAX_EXCLUSIVE
+                ):
+                    raise StateError(
+                        f"score_mandatory threshold cannot exceed "
+                        f"{HARD_DETECTOR_MAX_EXCLUSIVE:g}%"
+                    )
                 policy["threshold_pct"] = args.threshold
+                policy["soft_target_pct"] = min(
+                    SOFT_DETECTOR_TARGET_EXCLUSIVE,
+                    args.threshold,
+                )
             if args.min_independent is not None:
                 if args.min_independent < 1:
                     raise StateError("minimum independent services must be >=1")
@@ -1735,12 +2183,20 @@ def cmd_detector_policy(args: argparse.Namespace) -> int:
                 if args.min_independent < registry_minimum:
                     policy["minimum_acceptance_quote"] = args.user_quote.strip()
             if args.coverage:
+                if policy.get("score_mandatory") and args.coverage != "full":
+                    raise StateError(
+                        "score_mandatory F1 forbids risk_sampled detector coverage"
+                    )
                 if args.coverage == "risk_sampled" and len((args.user_quote or "").strip()) < 25:
                     raise StateError("risk_sampled requires a specific 25+ character user quote")
                 policy["coverage"] = args.coverage
                 policy["coverage_acceptance_quote"] = args.user_quote or ""
             if args.sample_ids is not None:
                 policy["sample_ids"] = V.parse_csv(args.sample_ids)
+            st["detector_results"] = []
+            st["detector_rounds"] = []
+            st["artifacts"].pop("detector_round", None)
+            refresh_goal(st)
             add_event(st, "detector_policy_changed")
     except (FileNotFoundError, StateError) as exc:
         return fail(str(exc))
@@ -1804,6 +2260,8 @@ def artifact_health(st: dict, kind: str) -> tuple[bool, str]:
         ok, problems, _ = validate_attestation(st, kind, path)
     elif kind == "capability_review":
         ok, problems = validate_capability(st, path)
+    elif kind == "detector_round":
+        ok, problems = validate_detector_round(st, path)
     elif kind == "overlap_report":
         ok, problems = validate_overlap(st, path)
     elif kind == "report":
@@ -1964,6 +2422,7 @@ def detector_gate(st: dict) -> dict:
     refresh_days = registry().get("refresh_after_days", 30)
     problems: list[str] = []
     limits: list[str] = []
+    target_notes: list[str] = []
     now_dt = datetime.now(timezone.utc)
     for service in selected:
         observation = cap["services"][service]["observation"]
@@ -1987,7 +2446,12 @@ def detector_gate(st: dict) -> dict:
             observation = cap["services"][service]["observation"]
             waiver = current_waiver(st, service, target, digest)
             if waiver:
-                limits.append(f"{service}/{target}: waived ({waiver['code']})")
+                if st["detector_policy"].get("score_mandatory"):
+                    problems.append(
+                        f"{service}/{target}: local waiver cannot satisfy score_mandatory"
+                    )
+                else:
+                    limits.append(f"{service}/{target}: waived ({waiver['code']})")
                 continue
             if observation.get("status") != "confirmed":
                 problems.append(f"{service}/{target}: capability not confirmed and no scoped waiver")
@@ -2006,19 +2470,30 @@ def detector_gate(st: dict) -> dict:
             if not integrity_ok:
                 problems.append(f"{service}/{target}: {integrity_message}")
                 continue
-            if result["score_pct"] > threshold:
+            if result["score_pct"] >= threshold:
                 plateau = current_plateau(st, service, target, digest)
                 if plateau:
                     plateau_services.add(service)
-                    limits.append(
-                        f"{service}/{target}: validated plateau above threshold "
-                        f"({result['score_pct']:g}% > {threshold:g}%)"
+                    problems.append(
+                        f"{service}/{target}: validated plateau is still a blocker "
+                        f"({result['score_pct']:g}% >= strict {threshold:g}% limit)"
                     )
                 else:
                     problems.append(
-                        f"{service}/{target}: {result['score_pct']:g}% exceeds {threshold:g}%"
+                        f"{service}/{target}: {result['score_pct']:g}% is not strictly "
+                        f"below {threshold:g}%"
                     )
                 continue
+            soft_target = float(
+                st["detector_policy"].get(
+                    "soft_target_pct", SOFT_DETECTOR_TARGET_EXCLUSIVE
+                )
+            )
+            if result["score_pct"] >= soft_target:
+                target_notes.append(
+                    f"{service}/{target}: hard pass {result['score_pct']:g}%, "
+                    f"soft target <{soft_target:g}% not reached"
+                )
             group = result.get("independence_group", "")
             if (
                 result.get("kind") in {"direct", "institutional"}
@@ -2026,17 +2501,17 @@ def detector_gate(st: dict) -> dict:
             ):
                 independent_groups.add(group)
         if len(independent_groups) < minimum:
-            if plateau_services and independent_groups:
-                limits.append(
-                    f"{target}: only {len(independent_groups)} passing independent group(s); "
-                    f"{len(plateau_services)} service(s) stopped at validated plateau"
-                )
-            else:
-                problems.append(
-                    f"{target}: only {len(independent_groups)} independent passing groups; need {minimum}"
-                )
+            problems.append(
+                f"{target}: only {len(independent_groups)} independent passing groups; "
+                f"need {minimum}"
+            )
     if st["detector_policy"]["coverage"] == "risk_sampled":
-        limits.append("long-form detector evidence covers an accepted risk sample, not the full text")
+        if st["detector_policy"].get("score_mandatory"):
+            problems.append(
+                "score_mandatory requires full text coverage; risk_sampled cannot pass"
+            )
+        else:
+            limits.append("long-form detector evidence covers an accepted risk sample, not the full text")
     registry_minimum = int(registry()["policy"]["minimum_independent_services"])
     if st["detector_policy"]["minimum_independent"] < registry_minimum:
         limits.append(
@@ -2048,11 +2523,58 @@ def detector_gate(st: dict) -> dict:
         limits.append(
             f"{st['language']} detector core is provisional; no full release corpus is recorded"
         )
+    round_ok, round_msg = artifact_health(st, "detector_round")
+    if not round_ok:
+        problems.append(round_msg)
+    else:
+        round_record = st["artifacts"]["detector_round"]
+        round_data = V.load_json(round_record["path"])
+        if round_data.get("round_status") != "pass":
+            problems.append(
+                "current detector round still requires edits; plateau/diagnosis is not success"
+            )
+        final_stage_kinds = [
+            kind
+            for kind, enabled in (
+                ("structure_review", st["flags"]["F2"]),
+                ("claim_ledger", st["flags"]["F3"]),
+                ("overlap_report", st["flags"]["F4"]),
+                ("plagiarism_review", st["flags"]["F4"]),
+            )
+            if enabled and kind in st.get("artifacts", {})
+        ]
+        try:
+            round_time = V.parse_iso(round_record["registered_at"])
+            later = [
+                kind
+                for kind in final_stage_kinds
+                if V.parse_iso(st["artifacts"][kind]["registered_at"]) > round_time
+            ]
+        except (ValueError, TypeError, KeyError):
+            later = ["invalid artifact timestamp"]
+        if later:
+            problems.append(
+                "final full detector round must be registered after F2/F3/F4 "
+                f"artifacts: {', '.join(later)}"
+            )
     if problems:
-        return gate("red", "detector evidence incomplete or failing", problems + limits)
+        return gate(
+            "red",
+            "score_mandatory detector contract is incomplete or failing",
+            problems + limits + target_notes,
+        )
     if limits:
-        return gate("yellow", "detector policy passed with explicit limitations", limits)
-    return gate("green", f"{len(targets)} target(s), {len(selected)} selected service(s), all current")
+        return gate(
+            "yellow",
+            "hard detector threshold passed with explicit non-score limitations",
+            limits + target_notes,
+        )
+    return gate(
+        "green",
+        f"{len(targets)} target(s), {len(selected)} mandatory service(s), "
+        f"every score strictly below {threshold:g}%",
+        target_notes,
+    )
 
 
 def run_json(command: list[str]) -> tuple[dict | None, int, str]:
@@ -2466,7 +2988,7 @@ def cmd_close(args: argparse.Namespace) -> int:
     try:
         with V.locked_json(path) as st:
             if st.get("schema") != STATE_SCHEMA:
-                raise StateError("not a Palimpsest v3.2 state")
+                raise StateError("not a Palimpsest v3.5 state")
             st["verification"] = verify_state(st, path)
             red, yellow = status_counts(st["verification"])
             if red:
@@ -2515,7 +3037,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--state", type=Path, default=DEFAULT_STATE)
     sub = parser.add_subparsers(dest="command", required=True)
 
-    p = sub.add_parser("init", help="create v3.2 state")
+    p = sub.add_parser("init", help="create v3.5 state")
     p.add_argument("--original", required=True)
     p.add_argument("--working", required=True)
     p.add_argument("--flags", default="F1,F2")
@@ -2562,9 +3084,15 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.set_defaults(func=cmd_intake)
 
-    artifact_choices = list(ATTESTATIONS) + ["capability_review", "overlap_report", "report"]
+    artifact_choices = list(ATTESTATIONS) + [
+        "capability_review", "detector_round", "overlap_report", "report"
+    ]
     p = sub.add_parser("template", help="create a digest-bound evidence template")
-    p.add_argument("--kind", choices=list(ATTESTATIONS) + ["capability_review", "report"], required=True)
+    p.add_argument(
+        "--kind",
+        choices=list(ATTESTATIONS) + ["capability_review", "detector_round", "report"],
+        required=True,
+    )
     p.add_argument("--out", required=True)
     p.set_defaults(func=cmd_template)
 

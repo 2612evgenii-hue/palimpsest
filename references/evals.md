@@ -1,4 +1,4 @@
-# Проверка Palimpsest v3.2
+# Проверка Palimpsest v3.5
 
 ## Что считается приёмкой
 
@@ -25,6 +25,13 @@
 19. локально выдуманное согласие для yellow close;
 20. synonym-only plateau с ложными mechanism labels;
 21. мягкий one-band English-level drift.
+22. ровно 20% ошибочно принято как pass;
+23. один mandatory detector остался `>=20%`;
+24. substantive edit не потребовал recheck всех сервисов;
+25. отсутствует current detector round или карта подсветок;
+26. plateau ошибочно завершил F1;
+27. blocked mandatory service или risk-sampling ошибочно прошли;
+28. final detector round зарегистрирован до F2/F3/F4.
 
 ## Автоматический набор
 
@@ -62,14 +69,13 @@ book-scale редакторской апробацией, не доказыва�
 - английский текст с фиксированным learner level;
 - baseline и финальный diff;
 - полный semantic review;
-- прямой ZeroGPT + Copyleaks на одном SHA;
+- полный явно выбранный mandatory detector scope на одном SHA;
 - longform-сценарий с добавленным абзацем и `sync`;
 - F4-сценарий с намеренно близким источнику фрагментом;
 - закрытие state без ручных подмен.
 
-Для yellow gates автоматическая приёмка намеренно невозможна: локальный процесс
-не аутентифицирует согласие пользователя. Проверяется переход только в
-`READY_WITH_LIMITS` с non-zero return code.
+High-score yellow path отсутствует: любой score `>=20%` обязан оставить G3 red
+и проект OPEN. Yellow проверяется только для non-score ограничений.
 
 Проверить не только happy path:
 
@@ -103,7 +109,7 @@ book-scale редакторской апробацией, не доказыва�
 - любой Python-файл не компилируется;
 - любой adversarial сценарий проходит «зелёным»;
 - документация требует отсутствующую команду;
-- default detector core требует регистрацию/оплату;
+- default detector scope не объясняет live blocked/access flow;
 - registry и detector reference расходятся;
 - сквозной проект нельзя повторить по сохранённым файлам;
 - отчёт преувеличивает evidence.

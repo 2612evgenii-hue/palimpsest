@@ -1,31 +1,34 @@
-# Раунд N — YYYY-MM-DD HH:MM
+# Detector round R___
 
-## Замеры (по сегментам из SEGMENTS.json)
-| Сервис | Чанк | % / вердикт | Подсветов | Доступ |
-|--------|------|-------------|-----------|--------|
+Working SHA: · Hard `<20%`: · Target `<15%`: · Status: requires_edit / pass
 
-## Подсветы дословно
-### <сервис> / <сегмент S###>
-- «цитата» → механизм → марка ⟦F..⟧
+## Полная матрица
 
-## Агрегат
-| Спан | Сервисы | Механизм | Приоритет | Уровень |
-|------|---------|----------|-----------|---------|
+| Service | Target | Score | Observation SHA | Visible span UI | Coverage |
+|---|---|---:|---|---|---|
+| | | | | yes/no | all mapped / none visible / no surface |
 
-## Сделано
-| Марка | Приём | Изменено слов | Гипотеза подтвердилась? |
-|-------|-------|----------------|--------------------------|
+## Highlight map
+
+| ID | Service/target | Origin | Location/excerpt | Почему AI-like | Status |
+|---|---|---|---|---|---|
+| | | visible/manual | | | open/resolved/false_positive |
+
+## Минимальные moves
+
+| Highlight IDs | Mechanism | Гипотеза | Protected invariants |
+|---|---|---|---|
+| | | | |
 
 ## Контроль
-- minimality: X% (бюджет Y%) — абзацы сверх бюджета:
-- fidelity: ok / нарушения:
-- ductus-distance: было → стало
-- ротация приёмов: ok / нарушена
 
-## КПД раунда
-- снижение процентов по сервисам:
-- цена: X% изменённых слов
-- вывод: продолжаем на этом уровне / поднимаем уровень / откладываем зону
+- fidelity:
+- minimality:
+- style/English level:
+- полный recheck всех mandatory services:
 
-## Блокеры
+## Следующий шаг
+
 -
+
+Plateau при score `>=20%` документируется отдельно и оставляет проект OPEN.

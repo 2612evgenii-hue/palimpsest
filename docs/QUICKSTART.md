@@ -1,9 +1,6 @@
-# Быстрый сквозной сценарий
+# Быстрый старт Palimpsest v3.5
 
-Этот пример показывает базовый `source_as_reference` workflow без внешнего
-стилевого образца.
-
-## 1. Подготовьте файлы
+## 1. Создать immutable original и working copy
 
 ```bash
 mkdir -p workspace/evidence
@@ -11,9 +8,7 @@ cp essay.md workspace/original.md
 cp essay.md workspace/working.md
 ```
 
-Оригинал после `init` не редактируется.
-
-## 2. Создайте state
+## 2. Инициализировать проект
 
 ```bash
 python3 scripts/state.py --state workspace/STATE.json init \
@@ -22,31 +17,41 @@ python3 scripts/state.py --state workspace/STATE.json init \
   --flags F1,F2
 ```
 
-Язык определяется из source. Несовпадающий ручной `--language` будет отклонён.
+F1 включает `score_mandatory`, strict `<20%`, target `<15%`, полное detector
+coverage и расширенный default edit budget 0.30/0.60.
 
-## 3. Запишите intake
+## 3. Записать intake
+
+В диалоге это три вопроса; F1 detector scope — follow-up второго.
 
 ```bash
 python3 scripts/state.py --state workspace/STATE.json intake \
-  --question Q1 --style-mode source_as_reference \
-  --english-level infer_from_source \
-  --answer "Use the source as its own style reference." --source explicit
+  --question Q1 --style-mode source_as_reference --english-level B2 \
+  --answer "No external reference; preserve source handwriting and B2." \
+  --source explicit
 
 python3 scripts/state.py --state workspace/STATE.json intake \
   --question Q2 --functions F1,F2 \
   --answer "Enable F1 and F2." --source explicit
 
 python3 scripts/state.py --state workspace/STATE.json intake \
-  --question Q3 --services zerogpt,copyleaks \
-  --answer "Use ZeroGPT and Copyleaks only." --source explicit
+  --question Q3 \
+  --services zerogpt,gptzero,scribbr,quillbot,gptinf,copyleaks \
+  --answer "Keep the original six-service set mandatory." --source explicit
 
 python3 scripts/state.py --state workspace/STATE.json intake \
   --question Q4 \
-  --answer "Preserve claims, headings, citations, and learner English." \
+  --answer "Technical report; preserve headings, citations, claims, and B2." \
   --source explicit
 ```
 
-## 4. Создайте evidence templates
+Проверь `goal`:
+
+```bash
+python3 scripts/state.py --state workspace/STATE.json show --json
+```
+
+## 4. Создать базовые artifacts
 
 ```bash
 python3 scripts/state.py --state workspace/STATE.json template \
@@ -54,44 +59,24 @@ python3 scripts/state.py --state workspace/STATE.json template \
 python3 scripts/state.py --state workspace/STATE.json template \
   --kind diagnosis --out workspace/diagnosis.json
 python3 scripts/state.py --state workspace/STATE.json template \
-  --kind semantic_review --out workspace/semantic-review.json
-python3 scripts/state.py --state workspace/STATE.json template \
-  --kind style_review --out workspace/style-review.json
+  --kind capability_review --out workspace/capability.json
 ```
 
-Шаблоны нельзя принимать механическим переключением `pending` → `pass`.
-Каждый пункт требует конкретного evidence.
-
-## 5. Проведите baseline
+Заполни их фактическими результатами полного чтения и live UI. Затем
+зарегистрируй:
 
 ```bash
-python3 scripts/pattern_scan.py workspace/working.md
-python3 scripts/fidelity_check.py \
-  --original workspace/original.md \
-  --edited workspace/working.md --json
-python3 scripts/minimality.py \
-  --original workspace/original.md \
-  --current workspace/working.md --json
-python3 scripts/english_level.py \
-  --original workspace/original.md \
-  --edited workspace/working.md \
-  --target B2 --json
+python3 scripts/state.py --state workspace/STATE.json artifact \
+  --kind master_brief --file workspace/master-brief.json
+python3 scripts/state.py --state workspace/STATE.json artifact \
+  --kind diagnosis --file workspace/diagnosis.json
+python3 scripts/state.py --state workspace/STATE.json artifact \
+  --kind capability_review --file workspace/capability.json
 ```
 
-## 6. Редактируйте bounded moves
+## 5. Прогнать каждый обязательный detector
 
-```bash
-python3 scripts/state.py --state workspace/STATE.json move \
-  --id M01 --span P4-P5 \
-  --mechanism rhythm_restructure \
-  --hypothesis "Break the repeated cadence while retaining both claims."
-```
-
-После каждого смыслового batch повторяйте fidelity и minimality.
-
-## 7. Запишите detector observation
-
-Сначала получите новый живой результат для точного current SHA, затем:
+Повтори для каждого service×target:
 
 ```bash
 python3 scripts/state.py --state workspace/STATE.json detector-prepare \
@@ -102,17 +87,80 @@ python3 scripts/state.py --state workspace/STATE.json detector \
   --observation workspace/evidence/zerogpt-observation.json
 ```
 
-Повторите для каждого сервиса из Q3.
+Observation создаётся по
+`assets/templates/detector-observation.json` после реального browser result.
 
-## 8. Финальная проверка
+## 6. Зафиксировать подсветки и round
+
+```bash
+python3 scripts/state.py --state workspace/STATE.json template \
+  --kind detector_round --out workspace/evidence/round-R001.json
+```
+
+Заполни coverage, все visible highlights, manual diagnostic zones,
+`editor_analysis` и `next_action`. Не изменяй auto-filled score matrix.
+
+```bash
+python3 scripts/state.py --state workspace/STATE.json artifact \
+  --kind detector_round --file workspace/evidence/round-R001.json
+```
+
+Если любой score `>=20%`, round обязан быть `requires_edit`.
+
+## 7. Пометить и минимально исправить
+
+Работай через отдельную annotated copy:
+
+```bash
+python3 scripts/annotations.py workspace/working-annotated.md --validate
+python3 scripts/state.py --state workspace/STATE.json move \
+  --id M01 --span "P4-P5" --mechanism rhythm_restructure \
+  --hypothesis "Break repeated cadence while preserving both qualified claims."
+```
+
+После правки:
+
+```bash
+python3 scripts/fidelity_check.py \
+  --original workspace/original.md --edited workspace/working.md --json
+python3 scripts/minimality.py \
+  --original workspace/original.md --current workspace/working.md --json
+python3 scripts/english_level.py \
+  --text workspace/original.md --edited workspace/working.md --json
+```
+
+Старая detector evidence теперь stale. Снова прогони **все** обязательные
+сервисы и зарегистрируй новый round. Повторяй до hard pass.
+
+## 8. Финальные функции и перепроверка
+
+Выполни F2/F3/F4, если они выбраны. После регистрации их artifacts обязательно
+снова прогони весь mandatory detector scope и зарегистрируй final passing
+round.
+
+Затем заполни:
+
+- `semantic_review`;
+- `style_review`;
+- `constraints_review`;
+- `proofread`;
+- `report`;
+- route-specific artifacts.
+
+## 9. Проверить и закрыть
 
 ```bash
 python3 scripts/state.py --state workspace/STATE.json verify
 python3 scripts/state.py --state workspace/STATE.json close
 ```
 
-- red — исправить или остановиться;
-- yellow — `READY_WITH_LIMITS`, локального auto-close нет;
-- все активные gates green — `CLOSED`.
+`close` невозможен, если:
 
-Подробные правила находятся в [SKILL.md](../SKILL.md).
+- хотя бы один mandatory score `>=20%`;
+- нет результата или он stale/tampered;
+- сервис blocked;
+- detector round неполон или требует edit;
+- final round зарегистрирован раньше F2/F3/F4;
+- остался любой другой red gate.
+
+Plateau документирует blocker, но не завершает F1.

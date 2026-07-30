@@ -2,105 +2,164 @@
 
 # Palimpsest
 
-### Профессиональный RU/EN skill для аккуратной редактуры с сохранением смысла, голоса и уровня английского
+### Профессиональный RU/EN skill: анализ → разметка → минимальная правка → полная перепроверка
 
 [![CI](https://github.com/2612evgenii-hue/palimpsest/actions/workflows/ci.yml/badge.svg)](https://github.com/2612evgenii-hue/palimpsest/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/2612evgenii-hue/palimpsest?display_name=tag)](https://github.com/2612evgenii-hue/palimpsest/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)](https://www.python.org/)
 
-**Актуальная версия: 3.2.0**
+**Актуальная версия: 3.5.0**
 
 [Установка](#установка) · [Быстрый старт](#быстрый-старт) ·
-[Возможности](#возможности) · [Как устроена проверка](#как-устроена-проверка) ·
+[Функции](#функции) · [F1 и детекторы](#f1-и-детекторы) ·
 [Ограничения](#честные-ограничения)
 
 </div>
 
 ---
 
-Palimpsest — это не «синонимайзер» и не набор трюков для обмана проверок.
-Это воспроизводимый редакторский процесс: сначала понять весь текст, затем
-диагностировать конкретные проблемы, внести минимальные обоснованные изменения
-и проверить результат по текущим файлам и SHA-256.
+Palimpsest — skill профессионального редактора, рерайтера и копирайтера для
+русских и английских текстов. Он не переписывает материал «вслепую»: сначала
+понимает весь текст, затем изучает почерк референса или самого исходника,
+помечает конкретные проблемные зоны, вносит минимальные обоснованные изменения
+и повторяет полный цикл проверки.
 
-Skill предназначен для эссе, статей, диссертаций, отчётов, рукописей,
-технической и академической прозы на русском и английском языках.
+Версия 3.5 возвращает исходный пользовательский контракт F1:
 
-## Главный принцип
+> Пока хотя бы один выбранный обязательный AI-детектор показывает 20% или
+> больше, F1 не завершён. Hard pass — строго меньше 20% на каждом сервисе;
+> рабочая цель — строго меньше 15%.
 
-> Качество текста важнее процента детектора, а сохранение смысла важнее
-> косметической «человечности».
+Plateau, waiver, средний score, один прошедший сервис или
+`READY_WITH_LIMITS` не считаются успехом при высоком AI-score.
 
-Palimpsest запрещает:
+## Для чего нужен Palimpsest
 
-- выдумывать факты, источники, цитаты и результаты сервисов;
-- менять причинность, модальность, числа, единицы или позиции автора ради score;
-- использовать невидимый Unicode, homoglyphs, намеренные ошибки и metadata tricks;
-- скрывать плагиат или удалять обязательную атрибуцию;
-- обещать «необнаружимость» или точное определение авторства.
+| Маршрут | Результат |
+|---|---|
+| Базовая редактура | Полное понимание, diagnosis, минимальные moves, fidelity, style и proofread |
+| `F1` | Итеративное снижение текущих detector scores по обязательному набору |
+| `F2` | Менее механическая структура без разрушения жанра |
+| `F3` | Глубокий факт-чек по первичным и официальным источникам |
+| `F4` | Проверка close paraphrase, цитат, ссылок и атрибуции |
+| Long-form | Полное сегментное покрытие и память между context resets |
 
-## Возможности
+Подходит для эссе, статей, диссертаций, отчётов, рукописей, технической и
+академической прозы.
 
-| Маршрут | Что делает | Когда включать |
-|---|---|---|
-| Базовая редактура | Полное чтение, diagnosis, semantic review, minimality, стиль и proofread | Всегда |
-| `F1` | Уменьшает подтверждённые AI-like шаблоны минимальными смыслобезопасными правками | Если нужны текущие detector signals |
-| `F2` | Исправляет механическую структуру, однообразный ритм и повторяющиеся переходы | Если структура действительно мешает жанру |
-| `F3` | Проверяет факты по первичным и официальным источникам | Для фактических и исследовательских текстов |
-| `F4` | Ищет close paraphrase, проблемы цитирования и атрибуции | Для академических и публикационных задач |
-| Long-form | Карта всех сегментов, lossless sync и bounded memory между context resets | Для текстов от 4000 слов |
+## Что изменилось в v3.5
 
-### Два режима стиля
+- `score_mandatory` автоматически включается с F1;
+- hard pass теперь строго `score <20%`, а не `<=20%`;
+- target `<15%` учитывается отдельно и честно отражается в отчёте;
+- стартовый detector scope восстановлен до шести сервисов исходного ТЗ;
+- пользователь перед работой явно включает или выключает сервисы;
+- добавлен digest-bound `detector_round` со всей матрицей scores и подсветок;
+- каждая правка требует повторного прогона всех mandatory detectors;
+- после F2/F3/F4 обязателен ещё один финальный полный detector round;
+- plateau остаётся диагностикой, но всегда блокирует закрытие при score `>=20%`;
+- waiver и sampled coverage запрещены в `score_mandatory`;
+- F1 long-form всегда имеет полное покрытие;
+- сохранены SHA binding, semantic reconciliation, fidelity, CEFR, style,
+  capability integrity, anti-forgery и bounded memory.
 
-1. `external_reference` — пользователь предоставляет отдельный образец своего
-   письма. Из него переносятся решения и привычки, но не факты и не характерные
-   фразы.
-2. `source_as_reference` — внешнего образца нет. Редактируемый текст становится
-   собственным стилевым эталоном и изменяется как можно меньше.
+Подробности: [CHANGELOG.md](CHANGELOG.md).
 
-Вопрос о референсе задаётся всегда. Отсутствие референса не отключает style
-control.
-
-### Сохранение уровня английского
-
-Для английского фиксируется `A1`–`C2`, `native` или
-`infer_from_source`. Skill сохраняет:
-
-- сложность лексики и синтаксиса;
-- длину предложений и информационную плотность;
-- естественную идиоматику;
-- learner voice;
-- исходную степень неидеальности без искусственного добавления ошибок.
-
-Автоматический экран контролирует source-relative drift по нескольким
-readability и complexity-признакам. Это не сертифицированная CEFR-оценка,
-поэтому финальная side-by-side проверка обязательна.
-
-## Рабочий процесс
+## Как работает редактор
 
 ```mermaid
-flowchart LR
-    A["Исходный текст"] --> B["4 вопроса intake"]
-    B --> C["Полное понимание<br/>и master brief"]
-    C --> D["Diagnosis"]
-    D --> E["Минимальные<br/>редакторские moves"]
-    E --> F["Fidelity + minimality<br/>style + English level"]
-    F --> G{"Активные<br/>F1–F4?"}
-    G -->|Да| H["Проверки активных<br/>маршрутов"]
-    G -->|Нет| I["Финальная сверка"]
-    H --> I
-    I --> J{"Все gates?"}
-    J -->|Green| K["CLOSED"]
-    J -->|Yellow| L["READY_WITH_LIMITS"]
-    J -->|Red| M["OPEN: исправить<br/>или остановиться"]
+flowchart TD
+    A["Полное чтение original"] --> B["Style baseline<br/>и English level"]
+    B --> C["Diagnosis и GOAL"]
+    C --> D["Все mandatory detectors"]
+    D --> E["Все highlights и AI-like зоны<br/>в detector_round"]
+    E --> F["Минимальные правки<br/>только по меткам"]
+    F --> G["Fidelity, style, CEFR"]
+    G --> H["Повтор всех mandatory detectors"]
+    H --> I{"Каждый score <20%?"}
+    I -->|Нет| E
+    I -->|Да| J["Semantic reconciliation"]
+    J --> K["Опциональные F2/F3/F4"]
+    K --> L["Финальный полный detector round"]
+    L --> M{"Все gates green?"}
+    M -->|Да| N["CLOSED"]
+    M -->|Нет| O["OPEN: продолжить или показать blocker"]
 ```
+
+## Стиль и уровень английского
+
+Вопрос о референсе задаётся всегда.
+
+1. `external_reference`: отдельные файлы задают почерк — развитие мысли,
+   ритм, квалификации, локальные привычки. Фразы и факты не копируются.
+2. `source_as_reference`: если внешнего образца нет, исходник сам становится
+   стилевым эталоном и изменяется как можно меньше.
+
+Для английского фиксируется `A1`–`C2`, `native` или `infer_from_source`.
+Palimpsest не повышает B2 до «идеального академического» C1/C2 и не упрощает
+его вниз. При этом он не добавляет искусственные ошибки.
+
+## Intake
+
+Пользователь видит три основных вопроса:
+
+1. Есть ли style-reference и какой English level сохранить?
+2. Какие функции F1–F4 включить? Если выбран F1 — какие детекторы оставить
+   обязательными?
+3. Какие требования к структуре, письму и запретам соблюдать?
+
+В state detector follow-up хранится отдельно, поэтому CLI использует Q1–Q4.
+После ответов создаётся durable `goal` с точным условием завершения.
+
+## F1 и детекторы
+
+Стартовый набор исходного ТЗ:
+
+| Сервис | Роль в процессе |
+|---|---|
+| [ZeroGPT](https://www.zerogpt.com/) | Обязателен по постоянному пользовательскому предпочтению |
+| [GPTZero](https://gptzero.me/) | Отдельный сервис; доступ перепроверяется live |
+| [Scribbr](https://www.scribbr.com/ai-detector/) | Проверяется отдельно, но может дублировать QuillBot engine |
+| [QuillBot](https://quillbot.com/ai-content-detector) | Проверяется отдельно при доступности |
+| [GPTinf](https://gptinf.com/detector) | Агрегатор; не заменяет прямой сервис |
+| [Copyleaks](https://copyleaks.com/ai-content-detector) | Независимый прямой сигнал |
+
+Перед началом F1 пользователь может явно включить или выключить сервисы.
+Каждый оставленный сервис обязателен. Два бренда одного engine всё равно
+прогоняются, но считаются одним голосом только при анализе независимости.
+
+Доступ и лимиты меняются, поэтому перед проектом заполняется
+`capability_review`. Palimpsest не покупает аккаунты, не регистрируется и не
+обходит ограничения. Blocked сервис не пропускается: пользователь должен
+реальным новым сообщением изменить detector scope либо проект остаётся open.
+Команда `detector-policy --services` в `score_mandatory` отклоняется; scope
+перезаписывается только новым explicit Q3 intake, после чего вся detector
+evidence инвалидируется.
+
+### Detector evidence
+
+Для каждого service×target создаётся одноразовый challenge. Observation
+привязывает:
+
+- service и URL;
+- current content SHA;
+- timestamp;
+- score и видимый excerpt;
+- SHA screenshot/PDF/raw API response;
+- структурную валидность и browser-sized dimensions изображения.
+
+Затем `detector_round` фиксирует всю текущую матрицу, полноту просмотра
+подсветок, адреса проблемных зон, анализ редактора и следующий шаг.
+
+Это отклоняет stale-файлы, подмену registry facts и тривиальный fake-capture
+вида «PNG header + случайные байты», но не является криптографическим
+доказательством: локальный мотивированный агент всё ещё способен нарисовать
+правдоподобный screenshot. Поэтому проценты никогда нельзя выдумывать.
 
 ## Установка
 
-### Вариант 1 — клонирование прямо в проект
-
-Из корня вашего проекта:
+### Клонирование в проект
 
 ```bash
 mkdir -p .agents/skills
@@ -108,15 +167,13 @@ git clone https://github.com/2612evgenii-hue/palimpsest.git \
   .agents/skills/palimpsest
 ```
 
-После этого skill доступен по пути:
+Skill будет доступен как:
 
 ```text
 .agents/skills/palimpsest/SKILL.md
 ```
 
-### Вариант 2 — подключение как git submodule
-
-Подходит, если вы хотите обновлять skill отдельно:
+### Git submodule
 
 ```bash
 mkdir -p .agents/skills
@@ -125,148 +182,84 @@ git submodule add https://github.com/2612evgenii-hue/palimpsest.git \
 git submodule update --init --recursive
 ```
 
-Обновление:
-
-```bash
-git submodule update --remote .agents/skills/palimpsest
-```
-
 ### Требования
 
-- Python 3.10 или новее;
-- стандартная библиотека Python — внешние пакеты для ядра не нужны;
-- браузер только для реальных F1 detector observations;
+- Python 3.10+;
+- стандартная библиотека Python для ядра;
+- браузер для реальных F1 observations;
 - lawful existing access для institutional services.
 
 ## Быстрый старт
-
-Создайте рабочую копию текста:
 
 ```bash
 mkdir -p workspace
 cp essay.md workspace/original.md
 cp essay.md workspace/working.md
-```
 
-Инициализируйте state:
-
-```bash
 python3 scripts/state.py --state workspace/STATE.json init \
   --original workspace/original.md \
   --working workspace/working.md \
   --flags F1,F2
 ```
 
-Затем последовательно зафиксируйте четыре ответа.
-
-### Q1 — стиль и уровень английского
+Ответы intake:
 
 ```bash
 python3 scripts/state.py --state workspace/STATE.json intake \
-  --question Q1 \
-  --style-mode source_as_reference \
-  --english-level B2 \
-  --answer "Use the source as its own style baseline; preserve B2 English." \
+  --question Q1 --style-mode source_as_reference --english-level B2 \
+  --answer "No external reference; preserve source handwriting and B2." \
   --source explicit
-```
 
-### Q2 — функции
-
-```bash
 python3 scripts/state.py --state workspace/STATE.json intake \
-  --question Q2 \
-  --functions F1,F2 \
-  --answer "Enable F1 and F2." \
-  --source explicit
-```
+  --question Q2 --functions F1,F2 \
+  --answer "Enable F1 and F2." --source explicit
 
-### Q3 — детекторы
-
-```bash
 python3 scripts/state.py --state workspace/STATE.json intake \
   --question Q3 \
-  --services zerogpt,copyleaks \
-  --answer "Enable ZeroGPT and Copyleaks; disable optional services." \
-  --source explicit
-```
+  --services zerogpt,gptzero,scribbr,quillbot,gptinf,copyleaks \
+  --answer "Keep all six services mandatory." --source explicit
 
-### Q4 — остальные требования
-
-```bash
 python3 scripts/state.py --state workspace/STATE.json intake \
   --question Q4 \
-  --answer "English essay; preserve headings, citations, claims, and length." \
+  --answer "Technical report; preserve headings, citations, and B2 English." \
   --source explicit
 ```
 
-Подробный сквозной пример: [docs/QUICKSTART.md](docs/QUICKSTART.md).
+Полный сценарий: [docs/QUICKSTART.md](docs/QUICKSTART.md).
 
-## Детекторы
+## Гейты
 
-При включённом `F1`:
-
-- ZeroGPT обязателен по пользовательскому требованию проекта;
-- ZeroGPT + Copyleaks — рекомендуемый минимальный независимый EN-набор;
-- Copyleaks и остальные сервисы можно явно включать или выключать в Q3;
-- GPTZero и Turnitin используются только при существующем законном доступе;
-- агрегаторы не считаются независимыми detector groups;
-- платные или registration-only сервисы не входят в default workflow.
-
-Результат сохраняется только для точного service, target и content SHA.
-Challenge и raw-capture binding защищают от случайно устаревшего файла, но не
-являются криптографическим доказательством: локальный screenshot можно
-сфабриковать.
-
-Английский detector core основан на небольшом pilot corpus 3+3 и не является
-population benchmark. Русский маршрут остаётся provisional.
-
-Подробнее: [references/detectors.md](references/detectors.md).
-
-## Как устроена проверка
-
-State вычисляет гейты заново — команда ручного «покрасить зелёным» отсутствует.
-
-| Gate | Проверка |
+| Gate | Что блокирует или подтверждает |
 |---|---|
-| `G0` | Intake, master brief, immutable original SHA и язык source |
-| `G1` | Diagnosis и запуск pattern scan |
-| `G2` | Активный стилевой baseline |
-| `G3` | Текущие detector observations |
-| `G4` | Структура при `F2` |
-| `G5` | Claim ledger при `F3` |
-| `G6` | Attribution и source overlap при `F4` |
-| `G7` | Fidelity, semantic source-unit reconciliation и edit budget |
-| `G8` | Style review и сохранение English level |
-| `G9` | Constraints, proofread и чистый delivery text |
+| `G0` | Intake, GOAL, master brief, immutable original, source language |
+| `G1` | Diagnosis и pattern scan |
+| `G2` | Активный style baseline |
+| `G3` | Все mandatory scores `<20%`, full coverage, current final round |
+| `G4` | F2 structure review |
+| `G5` | F3 claim ledger |
+| `G6` | F4 overlap и attribution |
+| `G7` | Fidelity, semantic reconciliation, edit budget |
+| `G8` | Почерк и сохранение English level |
+| `G9` | Требования, proofread, чистый delivery |
 | `G10` | Итоговый отчёт |
 
-Цвета:
-
-- `green` — текущие требования подтверждены;
-- `yellow` — есть честно зафиксированное ограничение;
-- `red` — блокирующая проблема;
-- `na` — маршрут не был выбран.
-
-Жёлтый state нельзя закрыть локальной цитатой. Он получает
-`READY_WITH_LIMITS` и требует отдельного внешнего решения пользователя.
+Красный гейт блокирует `close`. Жёлтый допустим только для не-score
+ограничений вроде provisional RU corpus; он не означает выполненный F1.
 
 ## Long-form
 
-Для длинного текста:
+С F1 auto-route начинает стабильное сегментирование от 1,000 слов. Каждый
+сегмент имеет SHA, а финальная матрица покрывает все targets. `risk_sampled` в
+`score_mandatory` запрещён.
 
 ```bash
 python3 scripts/segment.py map workspace/working.md \
-  --out workspace/SEGMENTS.json
+  --out workspace/SEGMENTS.json --target 700 --min 400 --max 950
 python3 scripts/segment.py --map workspace/SEGMENTS.json next
 python3 scripts/segment.py --map workspace/SEGMENTS.json pack S001 --json
 python3 scripts/segment.py --map workspace/SEGMENTS.json sync \
   --file workspace/working.md
-python3 scripts/segment.py --map workspace/SEGMENTS.json status --json
 ```
-
-`sync` сохраняет стабильные ID неизменённых сегментов, замечает новый хвост и
-не допускает дыр в coverage. Hot memory остаётся ограниченной, а подробности
-хранятся в cold notes.
 
 ## Тестирование
 
@@ -275,51 +268,43 @@ python3 -m compileall -q scripts evals
 python3 evals/selftest.py
 ```
 
-Релиз v3.2.0:
+Suite объединяет broad regression, adversarial acceptance и heterogeneous
+15k+ word stress. Он проверяет механику и устойчивость, но не доказывает
+универсальную точность внешних детекторов.
 
-- adversarial acceptance: 22;
-- broad regression: 58;
-- synthetic long-form stress: 3;
-- всего: **83 теста**.
-
-Stress проверяет инфраструктуру на гетерогенном synthetic document 15k+ слов,
-но не выдаётся за book-scale редакторскую апробацию.
-
-## Структура репозитория
-
-```text
-.
-├── SKILL.md                 # обязательный операционный контракт skill
-├── agents/openai.yaml       # UI metadata
-├── scripts/                 # state, fidelity, style, memory и segment tools
-├── references/              # правила активных маршрутов
-├── assets/                  # registry и шаблоны evidence
-├── evals/                   # adversarial, regression и stress tests
-├── docs/                    # русская документация
-└── .github/                 # CI и templates для issues/PR
-```
-
-Архитектура: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+Отдельно опубликован воспроизводимый отчёт о
+[живой EN-апробации](docs/LIVE_ACCEPTANCE_3.5.md): пять сервисов вернули
+63,1–100%, QuillBot не вернул результат, поэтому G3 остался красным и
+`close` был технически запрещён.
 
 ## Честные ограничения
 
-- Ни один detector не доказывает авторство.
-- CEFR и style metrics являются приближёнными измерительными экранами.
-- Локально редактируемые state, JSON и screenshots не являются защищённым
-  журналом.
-- Полная защита от мотивированного агента требует внешней подписи или
-  append-only host storage.
-- Skill не обещает идеальный score, необнаружимость или отсутствие плагиата.
-- Фактическое и смысловое решение остаётся ответственностью редактора и
-  пользователя.
+- Детектор не доказывает авторство.
+- Score и доступность могут измениться после обновления сервиса.
+- Структурно валидный challenge-bound screenshot всё ещё можно подделать локально.
+- CEFR и style metrics — экраны drift, а не сертификация.
+- RU detector corpus остаётся provisional.
+- При несовместимости `<20%` со смыслом skill оставляет воспроизводимый
+  blocker и не объявляет успех.
+- Palimpsest нельзя использовать для скрытия плагиата, удаления обязательной
+  атрибуции или фабрикации evidence.
 
-Полный список: [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
+Подробнее: [docs/LIMITATIONS.md](docs/LIMITATIONS.md) и
+[references/detectors.md](references/detectors.md).
 
-## Участие в разработке
+## Состав
 
-См. [CONTRIBUTING.md](CONTRIBUTING.md). Исправления принимаются вместе с
-воспроизводимым failing case и regression test.
+```text
+palimpsest/
+├── SKILL.md
+├── agents/openai.yaml
+├── scripts/
+├── references/
+├── assets/
+├── evals/
+└── docs/
+```
 
 ## Лицензия
 
-[MIT](LICENSE) © 2026.
+[MIT](LICENSE)
