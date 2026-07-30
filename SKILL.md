@@ -24,7 +24,8 @@ while pursuing the exact functions and detector scope selected by the user.
    units, equations, terms, citations, protected fragments, audience, genre,
    and purpose.
 6. Preserve the selected English level (A1–C2/native or source-inferred). Do
-   not polish B2 into C1/C2, simplify it downward, or manufacture errors.
+   not polish B2 into C1/C2, simplify it downward, or manufacture errors. An
+   explicit user level outranks a noisy readability estimate.
 7. Prefer the smallest edit that solves a diagnosed problem. F1
    `score_mandatory` may use a larger explicit budget than pure copy-editing,
    but semantic and style gates never disappear.
@@ -72,10 +73,13 @@ always obtain the reference decision.
    - `F3`: deeply verify claims against primary/official sources;
    - `F4`: resolve close paraphrase, quotation, citation, and attribution risk.
 3. **F1 detector scope.** If F1 is selected, ask which detectors to enable or
-   disable. Start from the original six-service set:
-   `zerogpt,gptzero,scribbr,quillbot,gptinf,copyleaks`. ZeroGPT remains
-   mandatory by user preference. Every service retained by this answer becomes
-   mandatory for the current job. Without F1, record `none`.
+   disable. Start from the repeatable no-sign-up English profile:
+   `zerogpt,scribbr,gptinf,copyleaks` (Russian:
+   `zerogpt,gptinf,copyleaks`). Also offer GPTZero and QuillBot as optional
+   account/limit-sensitive services and show the original six-service profile
+   when requested. ZeroGPT remains mandatory by user preference. Every service
+   retained by this answer becomes mandatory for the current job. Without F1,
+   record `none`.
 4. **Writing requirements.** Ask for audience, genre, structure, length,
    citation style, forbidden wording, protected fragments, and other rules.
 
@@ -99,8 +103,8 @@ python3 scripts/state.py --state workspace/STATE.json intake \
   --answer "Enable F1 and F2." --source explicit
 python3 scripts/state.py --state workspace/STATE.json intake \
   --question Q3 \
-  --services zerogpt,gptzero,scribbr,quillbot,gptinf,copyleaks \
-  --answer "Use all six services as mandatory." --source explicit
+  --services zerogpt,scribbr,gptinf,copyleaks \
+  --answer "Use the repeatable no-sign-up English profile." --source explicit
 python3 scripts/state.py --state workspace/STATE.json intake \
   --question Q4 --answer "Technical report; preserve headings and citations." \
   --source explicit
@@ -181,9 +185,27 @@ threshold:
    repair. Do not repeat one trick across the text.
 8. **Run fidelity and style screens.** Revert unsupported claim, logic,
    modality, unit, actor, chronology, citation, English-level, or voice drift.
+   A current exact semantic mapping may reconcile only lexical
+   `CLAIM_DROPPED`/`CLAIM_ADDED` false positives; it can never override hard
+   number, polarity, modality, causality, chronology, citation, or protected
+   literal findings.
 9. **Recheck every mandatory service.** A substantive edit invalidates all
    old detector results and the prior round, even if only one service had
    failed.
+
+Start with the default edit envelope. If a recorded detector result remains at
+or above 20% after a bounded, meaning-safe pass, widen the envelope
+progressively and record why:
+
+```bash
+python3 scripts/state.py --state workspace/STATE.json edit-budget \
+  --document 0.70 --paragraph 1.0 \
+  --reason "A recorded mandatory result remained above 20% after the first bounded pass."
+```
+
+An expanded envelope is not a quota and must not be marketed as a small
+copy-edit. Compare multiple fidelity-safe candidates and retain the least
+changed candidate that actually passes the selected detector scope.
 
 Prepare and register each live observation:
 
@@ -201,14 +223,15 @@ python3 scripts/state.py --state workspace/STATE.json artifact \
 
 The hard comparison is strict: `score < 20`. Results from 15% through 19.999%
 pass the hard gate but the report must say the `<15%` target was not reached.
-Scribbr and QuillBot may share an engine and count as one analytical voice, yet
-both retained brands must still be run. GPTinf is an aggregator and never
+Scribbr and QuillBot may share an engine and count as one analytical voice; if
+both are explicitly retained, both must still be run. GPTinf is an aggregator and never
 substitutes for a direct service.
 
 If a retained service is blocked, report it as blocked and ask the user whether
-to change the Q3 scope. A locally typed quote or `waive` cannot do this. Only an
-actual user turn can redefine the mandatory set; changing Q3 clears current
-capability, results, rounds, and plateaus.
+to change the Q3 scope. A locally typed quote or `waive` cannot do this. Intake
+is immutable after Q4, so an actual user-approved scope change requires a new
+state initialized with the revised Q3; old capability, results, rounds, and
+plateaus are never carried across as current evidence.
 
 A validated plateau documents a blocker and prevents repeated cosmetic edits.
 It never turns a score of 20% or more green or yellow. Continue with a

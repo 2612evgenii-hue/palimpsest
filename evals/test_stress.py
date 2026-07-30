@@ -6,6 +6,7 @@ described as proof of book-scale editorial or semantic quality.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import subprocess
 import sys
@@ -107,6 +108,76 @@ def longform_block(index: int) -> str:
 
 
 class SyntheticLongformStressTests(unittest.TestCase):
+    def test_longform_sync_handles_deletion_reorder_and_unicode_tail(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            blocks = [longform_block(index) for index in range(1, 321)]
+            working = write(root / "working.md", "\n\n".join(blocks) + "\n")
+            mapping = root / "SEGMENTS.json"
+            mapped = run(
+                SEGMENT,
+                "map",
+                working,
+                "--out",
+                mapping,
+                "--target",
+                "700",
+                "--min",
+                "400",
+                "--max",
+                "950",
+            )
+            self.assertEqual(mapped.returncode, 0, mapped.stderr)
+            before = json.loads(mapping.read_text(encoding="utf-8"))
+            old_ids = {item["id"] for item in before["segments"]}
+
+            mutated = blocks[:75] + blocks[80:]
+            mutated[140], mutated[141] = mutated[141], mutated[140]
+            mutated[10] = mutated[10].replace(
+                "practical constraints",
+                "documented practical constraints",
+            )
+            mutated.append(
+                "Unicode tail preserves café, naïve, Москва, and the protected "
+                "URL https://example.com/финал without truncation."
+            )
+            working.write_text("\n\n".join(mutated) + "\n", encoding="utf-8")
+            synced = run(
+                SEGMENT,
+                "--map",
+                mapping,
+                "sync",
+                "--file",
+                working,
+            )
+            self.assertEqual(synced.returncode, 0, synced.stderr)
+            status = run(SEGMENT, "--map", mapping, "status", "--json")
+            self.assertEqual(status.returncode, 0, status.stderr)
+            self.assertEqual(
+                json.loads(status.stdout)["metrics"]["coverage_pct"], 100.0
+            )
+
+            text = working.read_text(encoding="utf-8")
+            after = json.loads(mapping.read_text(encoding="utf-8"))
+            segments = after["segments"]
+            self.assertEqual(len({item["id"] for item in segments}), len(segments))
+            self.assertGreaterEqual(
+                len(old_ids & {item["id"] for item in segments}),
+                8,
+            )
+            self.assertTrue(any(item["changed"] or item["new"] for item in segments))
+            cursor = 0
+            for item in segments:
+                self.assertEqual(item["start"], cursor)
+                body = text[item["start"]:item["end"]]
+                self.assertEqual(
+                    hashlib.sha256(body.encode("utf-8")).hexdigest(),
+                    item["current_sha256"],
+                )
+                cursor = item["end"]
+            self.assertEqual(cursor, len(text))
+            self.assertIn("Москва", text[segments[-1]["start"]:])
+
     def test_longform_edit_sync_sampling_pack_and_memory_are_lossless(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)

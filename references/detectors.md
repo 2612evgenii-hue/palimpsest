@@ -28,21 +28,25 @@ Score — текущий сигнал конкретного сервиса, а 
 
 ## 2. Выбор сервисов
 
-После выбора F1 всегда задать пользователю отдельный вопрос. Начальный набор
-восстановлен из исходного ТЗ:
+После выбора F1 всегда задать пользователю отдельный вопрос. Repeatable
+no-sign-up профиль для EN:
 
 1. [ZeroGPT](https://www.zerogpt.com/)
-2. [GPTZero](https://gptzero.me/)
-3. [Scribbr AI Detector](https://www.scribbr.com/ai-detector/)
-4. [QuillBot AI Detector](https://quillbot.com/ai-content-detector)
-5. [GPTinf](https://gptinf.com/detector)
-6. [Copyleaks AI Detector](https://copyleaks.com/ai-content-detector)
+2. [Scribbr AI Detector](https://www.scribbr.com/ai-detector/)
+3. [GPTinf](https://gptinf.com/detector)
+4. [Copyleaks AI Detector](https://copyleaks.com/ai-content-detector)
+
+Для RU default: ZeroGPT, GPTinf и Copyleaks. GPTZero и QuillBot остаются в
+registry и предлагаются отдельно: live-проверка 2026-07-30 показала
+sign-up/guest-limit вместо повторяемого результата. Исходный профиль из шести
+сервисов сохранён как явная опция:
+`zerogpt,gptzero,scribbr,quillbot,gptinf,copyleaks`.
 
 Q3 разрешает явно включить или выключить сервисы перед работой. ZeroGPT
 сохраняется как обязательный по постоянному предпочтению пользователя. Каждый
 оставленный сервис становится обязательным для этого заказа.
 
-Дубли движков всё равно проверять, если они оставлены: Scribbr и QuillBot могут
+Дубли движков всё равно проверять, если они явно оставлены: Scribbr и QuillBot могут
 представлять одно семейство и считаются одним голосом только в аналитике.
 GPTinf — агрегатор и не заменяет прямой сервис.
 
@@ -83,6 +87,18 @@ registry. Не создавать аккаунт, не платить и не о
 7. Внести минимальные правки только по меткам.
 8. Проверить fidelity, minimality, стиль и English level.
 9. Снова прогнать все обязательные service×target.
+
+Если первый bounded pass не достигает порога, не крутить cosmetic synonyms.
+После зарегистрированного failed result можно расширить edit envelope:
+
+```bash
+python3 scripts/state.py --state workspace/STATE.json edit-budget \
+  --document 0.70 --paragraph 1.0 \
+  --reason "Mandatory detector score stayed above 20% after a bounded pass."
+```
+
+История бюджета должна попасть в итоговый отчёт. Из нескольких прошедших
+кандидатов выбирать минимальный diff.
 
 Нельзя перепроверить только провалившийся сервис: любая содержательная правка
 инвалидирует всю предыдущую матрицу и detector round.
@@ -154,7 +170,8 @@ Plateau нужен как диагноз после трёх materially differen
 2. не пропускать его молча;
 3. спросить пользователя, хочет ли он изменить Q3 scope;
 4. менять scope только по реальному новому сообщению пользователя;
-5. после изменения Q3 заново собрать capability, results и rounds.
+5. создать новый state с обновлённым Q3 и заново собрать capability, results
+   и rounds: завершённый intake локально не редактируется.
 
 Локальный `waive --user-quote` запрещён в `score_mandatory`: локальный процесс
 может выдумать цитату.

@@ -105,15 +105,25 @@ def level_index(level: str) -> int:
     return LEVELS.index(level)
 
 
-def compare(original: dict, edited: dict, target: str) -> dict:
+def compare(
+    original: dict,
+    edited: dict,
+    target: str,
+    target_mode: str = "inferred",
+) -> dict:
     target_normalized = target if target == "native" else target.upper()
     if target_normalized not in LEVELS:
         raise ValueError(f"unknown target level: {target}")
+    if target_mode not in {"inferred", "explicit"}:
+        raise ValueError(f"unknown target mode: {target_mode}")
     source_shift = edited["complexity_index"] - original["complexity_index"]
     band_shift = level_index(edited["estimated_cefr"]) - level_index(
         original["estimated_cefr"]
     )
     target_gap = level_index(edited["estimated_cefr"]) - level_index(target_normalized)
+    source_target_gap = (
+        level_index(original["estimated_cefr"]) - level_index(target_normalized)
+    )
     findings = []
     feature_deltas = {
         "complexity_index": round(source_shift, 3),
@@ -153,32 +163,84 @@ def compare(original: dict, edited: dict, target: str) -> dict:
     ]
     if band_shift != 0:
         drift_signals.append("estimated_band_shift")
-    if drift_signals:
-        direction = "raised" if source_shift > 0 else "lowered"
-        findings.append(
-            {
-                "code": "ENGLISH_LEVEL_DRIFT",
-                "message": (
-                    f"estimated English complexity was {direction}: "
-                    f"{original['estimated_cefr']} -> {edited['estimated_cefr']} "
-                    f"(out-of-envelope signals: {', '.join(drift_signals)})"
-                ),
-            }
+
+    # ``infer_from_source`` means the source itself is authoritative, so even a
+    # one-band movement remains a blocker.  With an explicit user level, the
+    # selected level is authoritative and the source estimate is only a noisy
+    # diagnostic.  This prevents a jargon-heavy B2/C1 draft from trapping the
+    # editor at an accidental C2 readability estimate.
+    if target_mode == "inferred":
+        if drift_signals:
+            direction = "raised" if source_shift > 0 else "lowered"
+            findings.append(
+                {
+                    "code": "ENGLISH_LEVEL_DRIFT",
+                    "message": (
+                        f"estimated English complexity was {direction}: "
+                        f"{original['estimated_cefr']} -> {edited['estimated_cefr']} "
+                        f"(out-of-envelope signals: {', '.join(drift_signals)})"
+                    ),
+                }
+            )
+        if abs(target_gap) > 1:
+            findings.append(
+                {
+                    "code": "ENGLISH_TARGET_MISMATCH",
+                    "message": (
+                        f"edited estimate {edited['estimated_cefr']} is not close to "
+                        f"the source-inferred target {target_normalized}"
+                    ),
+                }
+            )
+    else:
+        accepted_bands = (
+            {"C2", "native"} if target_normalized == "native" else {target_normalized}
         )
-    if abs(target_gap) > 1:
-        findings.append(
-            {
-                "code": "ENGLISH_TARGET_MISMATCH",
-                "message": (
-                    f"edited estimate {edited['estimated_cefr']} is not close to "
-                    f"the recorded target {target_normalized}"
-                ),
-            }
-        )
+        edited_on_target = edited["estimated_cefr"] in accepted_bands
+        source_on_target = original["estimated_cefr"] in accepted_bands
+        if not edited_on_target:
+            findings.append(
+                {
+                    "code": "ENGLISH_TARGET_MISMATCH",
+                    "message": (
+                        f"edited estimate {edited['estimated_cefr']} does not match "
+                        f"the explicit user target {target_normalized}"
+                    ),
+                }
+            )
+        if source_on_target and drift_signals:
+            direction = "raised" if source_shift > 0 else "lowered"
+            findings.append(
+                {
+                    "code": "ENGLISH_LEVEL_DRIFT",
+                    "message": (
+                        f"estimated English complexity was {direction} away from "
+                        f"an already on-target source: "
+                        f"{original['estimated_cefr']} -> {edited['estimated_cefr']} "
+                        f"(out-of-envelope signals: {', '.join(drift_signals)})"
+                    ),
+                }
+            )
+        elif (
+            not source_on_target
+            and not edited_on_target
+            and abs(target_gap) >= abs(source_target_gap)
+        ):
+            findings.append(
+                {
+                    "code": "ENGLISH_LEVEL_DRIFT",
+                    "message": (
+                        f"the edit did not move the approximate profile toward the "
+                        f"explicit target {target_normalized}: "
+                        f"{original['estimated_cefr']} -> {edited['estimated_cefr']}"
+                    ),
+                }
+            )
     return {
         "schema": SCHEMA,
         "ok": not findings,
         "target_cefr": target_normalized,
+        "target_mode": target_mode,
         "source": original,
         "edited": edited,
         "complexity_delta": round(source_shift, 3),
@@ -189,7 +251,12 @@ def compare(original: dict, edited: dict, target: str) -> dict:
         "findings": findings,
         "limits": [
             "CEFR is only approximated from readability and lexical/syntactic signals.",
-            "A passing screen means no measured source-relative drift exceeded the configured envelope; it does not prove exact CEFR equivalence.",
+            (
+                "In inferred mode, a pass means no measured source-relative drift "
+                "exceeded the configured envelope. In explicit mode, the selected "
+                "user level is authoritative and the source estimate is diagnostic."
+            ),
+            "A passing readability screen does not prove exact CEFR equivalence.",
             "Do not introduce learner errors; preserve complexity and voice while correcting accidental mistakes.",
         ],
     }
@@ -201,6 +268,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--original")
     parser.add_argument("--edited")
     parser.add_argument("--target", choices=LEVELS + [x.lower() for x in LEVELS])
+    parser.add_argument(
+        "--target-mode",
+        choices=["inferred", "explicit"],
+        default="inferred",
+        help="whether the target came from the source estimate or an explicit user choice",
+    )
     parser.add_argument("--json", action="store_true")
     return parser
 
@@ -222,6 +295,7 @@ def main() -> int:
                 profile_text(V.read_text(args.original)),
                 profile_text(V.read_text(args.edited)),
                 args.target,
+                args.target_mode,
             )
             rc = 0 if result["ok"] else 1
     except (OSError, ValueError) as exc:

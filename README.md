@@ -2,7 +2,7 @@
 
 # Palimpsest
 
-### Профессиональный RU/EN skill: анализ → разметка → минимальная правка → полная перепроверка
+### Профессиональный RU/EN skill: анализ → разметка → достаточная правка → полная перепроверка
 
 [![CI](https://github.com/2612evgenii-hue/palimpsest/actions/workflows/ci.yml/badge.svg)](https://github.com/2612evgenii-hue/palimpsest/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/2612evgenii-hue/palimpsest?display_name=tag)](https://github.com/2612evgenii-hue/palimpsest/releases)
@@ -22,8 +22,10 @@
 Palimpsest — skill профессионального редактора, рерайтера и копирайтера для
 русских и английских текстов. Он не переписывает материал «вслепую»: сначала
 понимает весь текст, затем изучает почерк референса или самого исходника,
-помечает конкретные проблемные зоны, вносит минимальные обоснованные изменения
-и повторяет полный цикл проверки.
+помечает конкретные проблемные зоны, начинает с минимальных обоснованных
+изменений и повторяет полный цикл проверки. Если F1 требует более глубокого
+rewrite, расширение edit envelope фиксируется отдельно и не выдаётся за
+обычную корректуру.
 
 Версия 3.5 возвращает исходный пользовательский контракт F1:
 
@@ -53,8 +55,14 @@ Plateau, waiver, средний score, один прошедший сервис 
 - `score_mandatory` автоматически включается с F1;
 - hard pass теперь строго `score <20%`, а не `<=20%`;
 - target `<15%` учитывается отдельно и честно отражается в отчёте;
-- стартовый detector scope восстановлен до шести сервисов исходного ТЗ;
+- repeatable EN-ядро без регистрации: ZeroGPT, Scribbr, GPTinf и Copyleaks;
+- исходный набор из шести сервисов сохранён как явный optional profile;
 - пользователь перед работой явно включает или выключает сервисы;
+- GPTZero/QuillBot не включаются молча, когда live guest path требует sign-up;
+- появился контролируемый `edit-budget` после фактического detector resistance;
+- lexical fidelity false positives снимаются только exact semantic mapping;
+- выдуманный `authorized_change` теперь оставляет G7 красным;
+- explicit English level имеет приоритет над шумной readability-оценкой;
 - добавлен digest-bound `detector_round` со всей матрицей scores и подсветок;
 - каждая правка требует повторного прогона всех mandatory detectors;
 - после F2/F3/F4 обязателен ещё один финальный полный detector round;
@@ -74,11 +82,14 @@ flowchart TD
     B --> C["Diagnosis и GOAL"]
     C --> D["Все mandatory detectors"]
     D --> E["Все highlights и AI-like зоны<br/>в detector_round"]
-    E --> F["Минимальные правки<br/>только по меткам"]
+    E --> F["Минимальный bounded pass<br/>только по меткам"]
     F --> G["Fidelity, style, CEFR"]
     G --> H["Повтор всех mandatory detectors"]
     H --> I{"Каждый score <20%?"}
-    I -->|Нет| E
+    I -->|Нет| P{"Бюджет достаточен?"}
+    P -->|Да| E
+    P -->|Нет, есть failed evidence| Q["Зафиксировать расширение<br/>edit-budget"]
+    Q --> E
     I -->|Да| J["Semantic reconciliation"]
     J --> K["Опциональные F2/F3/F4"]
     K --> L["Финальный полный detector round"]
@@ -98,7 +109,8 @@ flowchart TD
 
 Для английского фиксируется `A1`–`C2`, `native` или `infer_from_source`.
 Palimpsest не повышает B2 до «идеального академического» C1/C2 и не упрощает
-его вниз. При этом он не добавляет искусственные ошибки.
+его вниз. При этом он не добавляет искусственные ошибки. Если пользователь
+явно выбрал B2, это решение важнее приблизительной машинной оценки исходника.
 
 ## Intake
 
@@ -114,28 +126,31 @@ Palimpsest не повышает B2 до «идеального академич
 
 ## F1 и детекторы
 
-Стартовый набор исходного ТЗ:
+Repeatable EN-профиль без обязательной регистрации:
 
 | Сервис | Роль в процессе |
 |---|---|
 | [ZeroGPT](https://www.zerogpt.com/) | Обязателен по постоянному пользовательскому предпочтению |
-| [GPTZero](https://gptzero.me/) | Отдельный сервис; доступ перепроверяется live |
 | [Scribbr](https://www.scribbr.com/ai-detector/) | Проверяется отдельно, но может дублировать QuillBot engine |
-| [QuillBot](https://quillbot.com/ai-content-detector) | Проверяется отдельно при доступности |
 | [GPTinf](https://gptinf.com/detector) | Агрегатор; не заменяет прямой сервис |
 | [Copyleaks](https://copyleaks.com/ai-content-detector) | Независимый прямой сигнал |
 
-Перед началом F1 пользователь может явно включить или выключить сервисы.
-Каждый оставленный сервис обязателен. Два бренда одного engine всё равно
-прогоняются, но считаются одним голосом только при анализе независимости.
+Для RU default — ZeroGPT, GPTinf и Copyleaks. GPTZero и QuillBot остаются
+опциональными: текущий guest flow упирается в sign-up/лимит. Исходный
+six-service profile никуда не удалён и может быть выбран явно.
+
+Перед началом F1 пользователь явно включает или выключает сервисы. Каждый
+оставленный сервис обязателен. Два бренда одного engine всё равно прогоняются,
+если оба выбраны, но считаются одним голосом при анализе независимости.
 
 Доступ и лимиты меняются, поэтому перед проектом заполняется
 `capability_review`. Palimpsest не покупает аккаунты, не регистрируется и не
 обходит ограничения. Blocked сервис не пропускается: пользователь должен
 реальным новым сообщением изменить detector scope либо проект остаётся open.
 Команда `detector-policy --services` в `score_mandatory` отклоняется; scope
-перезаписывается только новым explicit Q3 intake, после чего вся detector
-evidence инвалидируется.
+после Q4 не перезаписывается локально вообще. После реального нового решения
+пользователя создаётся новый state с новым Q3; старую detector evidence нельзя
+переносить как current.
 
 ### Detector evidence
 
@@ -216,8 +231,8 @@ python3 scripts/state.py --state workspace/STATE.json intake \
 
 python3 scripts/state.py --state workspace/STATE.json intake \
   --question Q3 \
-  --services zerogpt,gptzero,scribbr,quillbot,gptinf,copyleaks \
-  --answer "Keep all six services mandatory." --source explicit
+  --services zerogpt,scribbr,gptinf,copyleaks \
+  --answer "Use the repeatable no-sign-up English profile." --source explicit
 
 python3 scripts/state.py --state workspace/STATE.json intake \
   --question Q4 \
@@ -273,9 +288,10 @@ Suite объединяет broad regression, adversarial acceptance и heterogen
 универсальную точность внешних детекторов.
 
 Отдельно опубликован воспроизводимый отчёт о
-[живой EN-апробации](docs/LIVE_ACCEPTANCE_3.5.md): пять сервисов вернули
-63,1–100%, QuillBot не вернул результат, поэтому G3 остался красным и
-`close` был технически запрещён.
+[живой EN-апробации](docs/LIVE_ACCEPTANCE_3.5.md): baseline fail
+63,1/100/100/100% после реального edit-cycle стал 5,3/0/0/0% на repeatable
+no-sign-up core. Отчёт отдельно показывает большой diff, optional sign-up
+blockers и границу DOM/screenshot evidence.
 
 ## Честные ограничения
 

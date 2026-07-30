@@ -1,0 +1,61 @@
+{
+  "schema": "palimpsest.live-acceptance.v1",
+  "version": "3.5.0",
+  "observed_at": "2026-07-30",
+  "language": "en",
+  "scope": "repeatable_no_signup_core",
+  "original": {
+    "path": "evals/fixtures/ai-en.md",
+    "sha256": "4019dc16cfef048eaacf8b3c2419fd0ea26814ddbc662941c221cf0093542fe1"
+  },
+  "candidate": {
+    "path": "evals/fixtures/edited-success-en.md",
+    "sha256": "13d4816b3fb226b202b1b24c12c3bae360dd8311285ee3e5083b9acab40069fa",
+    "explicit_english_level": "B2",
+    "document_change_ratio": 0.7925
+  },
+  "results": [
+    {
+      "service": "zerogpt",
+      "baseline_score_pct": 63.1,
+      "candidate_score_pct": 5.3,
+      "status": "pass"
+    },
+    {
+      "service": "scribbr",
+      "baseline_score_pct": 100,
+      "candidate_score_pct": 0,
+      "status": "pass"
+    },
+    {
+      "service": "gptinf",
+      "baseline_score_pct": 100,
+      "candidate_score_pct": 0,
+      "status": "pass"
+    },
+    {
+      "service": "copyleaks",
+      "baseline_score_pct": 100,
+      "candidate_score_pct": 0,
+      "status": "pass"
+    }
+  ],
+  "optional_access_checks": [
+    {
+      "service": "gptzero",
+      "status": "blocked_after_guest_limit",
+      "default_action": "exclude_from_no_signup_default_offer_as_optional"
+    },
+    {
+      "service": "quillbot",
+      "status": "signup_required_in_current_session",
+      "default_action": "exclude_from_no_signup_default_offer_as_optional"
+    }
+  ],
+  "evidence_trust": {
+    "result_source": "visible_live_browser_dom",
+    "screenshot_saved": false,
+    "screenshot_failure": "browser Page.captureScreenshot timed out",
+    "claim": "forward-test observation, not a signed vendor receipt or population benchmark"
+  }
+}

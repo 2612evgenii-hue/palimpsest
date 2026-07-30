@@ -36,8 +36,8 @@ python3 scripts/state.py --state workspace/STATE.json intake \
 
 python3 scripts/state.py --state workspace/STATE.json intake \
   --question Q3 \
-  --services zerogpt,gptzero,scribbr,quillbot,gptinf,copyleaks \
-  --answer "Keep the original six-service set mandatory." --source explicit
+  --services zerogpt,scribbr,gptinf,copyleaks \
+  --answer "Use the repeatable no-sign-up English profile." --source explicit
 
 python3 scripts/state.py --state workspace/STATE.json intake \
   --question Q4 \
@@ -126,11 +126,24 @@ python3 scripts/fidelity_check.py \
 python3 scripts/minimality.py \
   --original workspace/original.md --current workspace/working.md --json
 python3 scripts/english_level.py \
-  --text workspace/original.md --edited workspace/working.md --json
+  --original workspace/original.md --edited workspace/working.md \
+  --target B2 --target-mode explicit --json
 ```
 
 Старая detector evidence теперь stale. Снова прогони **все** обязательные
 сервисы и зарегистрируй новый round. Повторяй до hard pass.
+
+Если после первого bounded pass есть зарегистрированный score `>=20%`,
+расширяй edit envelope явно, а не скрыто:
+
+```bash
+python3 scripts/state.py --state workspace/STATE.json edit-budget \
+  --document 0.70 --paragraph 1.0 \
+  --reason "A mandatory score remained above 20% after the first bounded pass."
+```
+
+Команда без failed evidence отклоняется. Из нескольких прошедших кандидатов
+оставь тот, у которого минимальный diff.
 
 ## 8. Финальные функции и перепроверка
 

@@ -8,13 +8,16 @@
     "zero_gpt_required": true,
     "default_english_guest_services": [
       "zerogpt",
-      "gptzero",
       "scribbr",
-      "quillbot",
       "gptinf",
       "copyleaks"
     ],
     "default_russian_guest_services": [
+      "zerogpt",
+      "gptinf",
+      "copyleaks"
+    ],
+    "original_six_service_profile": [
       "zerogpt",
       "gptzero",
       "scribbr",
@@ -31,7 +34,8 @@
     "audit_pool": ["quillbot", "sapling", "gptinf"],
     "notes": [
       "ZeroGPT remains mandatory because the user explicitly requires it.",
-      "F1 score_mandatory starts with the six-service set from the original user contract; Q3 must explicitly confirm, enable, or disable services for the current job.",
+      "F1 starts from the repeatable no-sign-up profile: ZeroGPT, Scribbr, GPTinf, and Copyleaks for English; Russian uses only registry-supported repeatable services.",
+      "The original six-service profile remains available for explicit Q3 selection, but GPTZero and QuillBot are not default because their current guest paths stop at sign-up limits.",
       "Every service retained by Q3 is mandatory even when two brands share an engine; duplicate engines count once only for independence analytics.",
       "Russian remains provisional and can require Q3 exclusions for services whose registry language support does not include Russian.",
       "A service brand is not automatically an independent detector. Scribbr visibly used QuillBot v7.1.0 and duplicated its tested scores.",
@@ -64,6 +68,8 @@
         "guest_form_visible": true,
         "limit_characters": 15000,
         "english_fixture_score_pct": 63.1,
+        "edited_english_fixture_score_pct": 5.3,
+        "successful_edit_cycle": true,
         "russian_fixture_score_pct": 100,
         "consecutive_guest_results_completed": 2
       }
@@ -92,7 +98,9 @@
         "limit_characters": 25000,
         "page_explicitly_states_without_login": true,
         "custom_result_repeated": true,
-        "english_fixture_score_pct": 100
+        "english_fixture_score_pct": 100,
+        "edited_english_fixture_score_pct": 0,
+        "successful_edit_cycle": true
       }
     },
     "gptzero": {
@@ -117,7 +125,8 @@
         "english_fixture_score_pct": 100,
         "guest_result_completed": true,
         "post_result_signup_modal": true,
-        "repeatable_without_registration": false
+        "repeatable_without_registration": false,
+        "default_exclusion_reason": "Current repeat scans require sign-up."
       }
     },
     "quillbot": {
@@ -145,7 +154,8 @@
         "guest_form_visible": true,
         "english_fixture_words": 189,
         "result_returned": false,
-        "limitation": "The guest editor accepted the full sample, but Detect AI did not return a score in the current browser session."
+        "limitation": "The guest editor accepted the full sample, but the result path opened a sign-up requirement instead of returning a score.",
+        "default_exclusion_reason": "Current repeatable no-sign-up result path was not available."
       }
     },
     "scribbr": {
@@ -169,6 +179,8 @@
         "checked_at": "2026-07-30",
         "guest_result_completed": true,
         "english_fixture_score_pct": 100,
+        "edited_english_fixture_score_pct": 0,
+        "successful_edit_cycle": true,
         "engine_disclosure": "The embedded result surface identifies QuillBot."
       }
     },
@@ -212,6 +224,8 @@
         "checked_at": "2026-07-30",
         "guest_result_completed": true,
         "english_fixture_score_pct": 100,
+        "edited_english_fixture_score_pct": 0,
+        "successful_edit_cycle": true,
         "cross_check_claim_visible": true
       }
     },

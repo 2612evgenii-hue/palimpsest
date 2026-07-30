@@ -92,7 +92,7 @@ def init_project(
     init_args = list(extra_init)
     if "F1" in flags and "--services" not in init_args:
         # Focused acceptance cases keep the explicit two-service scope. A
-        # separate contract test verifies that product default is all six.
+        # separate contract test verifies the repeatable no-sign-up default.
         init_args.extend(["--services", "zerogpt,copyleaks"])
     proc = state_cmd(
         state,
@@ -555,7 +555,7 @@ class SemanticAuthorizationTests(unittest.TestCase):
             self.assertNotEqual(registered.returncode, 0)
             self.assertIn("overlaps or reuses", registered.stderr)
 
-    def test_declared_authorized_change_is_yellow_not_green(self) -> None:
+    def test_declared_authorized_change_is_red_until_source_is_rebaselined(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             original = write(
@@ -617,11 +617,108 @@ class SemanticAuthorizationTests(unittest.TestCase):
             )
             self.assertEqual(registered.returncode, 0, registered.stderr)
             verification = payload(state_cmd(state, "verify", "--json"))
-            self.assertEqual(verification["gates"]["G7"]["color"], "yellow")
+            self.assertEqual(verification["gates"]["G7"]["color"], "red")
             self.assertIn(
                 "cannot be authenticated",
                 "\n".join(verification["gates"]["G7"]["details"]),
             )
+
+    def test_exact_semantic_mapping_can_reconcile_lexical_coverage_only(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            original = write(
+                root / "original.md",
+                (
+                    "The committee reviewed the regional transport schedule before "
+                    "approving the pilot. The report retained the original qualification.\n"
+                ),
+            )
+            working = write(
+                root / "working.md",
+                (
+                    "Before approving the trial, the committee examined the local "
+                    "logistics timetable. The report retained the original qualification.\n"
+                ),
+            )
+            state = root / "STATE.json"
+            initialized = state_cmd(
+                state,
+                "init",
+                "--original",
+                str(original),
+                "--working",
+                str(working),
+                "--flags",
+                "none",
+                "--budget",
+                "0.8",
+                "--para-budget",
+                "1",
+            )
+            self.assertEqual(initialized.returncode, 0, initialized.stderr)
+            complete_intake(state)
+            semantic = make_attestation(state, root, "semantic_review")
+            registered = state_cmd(
+                state,
+                "artifact",
+                "--kind",
+                "semantic_review",
+                "--file",
+                str(semantic),
+            )
+            self.assertEqual(registered.returncode, 0, registered.stderr)
+            verification = payload(state_cmd(state, "verify", "--json"))
+            fidelity = verification["machine_checks"]["fidelity"]
+            self.assertFalse(fidelity["raw_ok"])
+            self.assertTrue(fidelity["coverage_reconciled"])
+            self.assertEqual(verification["gates"]["G7"]["color"], "green")
+
+    def test_semantic_mapping_never_overrides_number_or_negation_change(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            original = write(
+                root / "original.md",
+                "The committee did not approve 12 applications.\n",
+            )
+            working = write(
+                root / "working.md",
+                "The committee approved 13 applications.\n",
+            )
+            state = root / "STATE.json"
+            initialized = state_cmd(
+                state,
+                "init",
+                "--original",
+                str(original),
+                "--working",
+                str(working),
+                "--flags",
+                "none",
+                "--budget",
+                "0.8",
+                "--para-budget",
+                "1",
+            )
+            self.assertEqual(initialized.returncode, 0, initialized.stderr)
+            complete_intake(state)
+            semantic = make_attestation(state, root, "semantic_review")
+            registered = state_cmd(
+                state,
+                "artifact",
+                "--kind",
+                "semantic_review",
+                "--file",
+                str(semantic),
+            )
+            self.assertEqual(registered.returncode, 0, registered.stderr)
+            verification = payload(state_cmd(state, "verify", "--json"))
+            fidelity = verification["machine_checks"]["fidelity"]
+            self.assertFalse(fidelity["coverage_reconciled"])
+            self.assertIn(
+                "hard fidelity findings",
+                " ".join(fidelity["coverage_reconciliation_details"]),
+            )
+            self.assertEqual(verification["gates"]["G7"]["color"], "red")
 
 
 class SegmentTests(unittest.TestCase):
@@ -685,7 +782,43 @@ class SegmentTests(unittest.TestCase):
 
 
 class IntakeStyleTests(unittest.TestCase):
-    def test_f1_default_restores_six_services_and_durable_goal(self) -> None:
+    def test_completed_intake_cannot_locally_disable_f1_or_shrink_scope(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            state, _, _ = init_project(root)
+            complete_intake(state)
+            disable = state_cmd(
+                state,
+                "intake",
+                "--question",
+                "Q2",
+                "--functions",
+                "none",
+                "--answer",
+                "A local process claims the user disabled F1 after seeing a failure.",
+            )
+            self.assertNotEqual(disable.returncode, 0)
+            self.assertIn("intake is immutable after Q4", disable.stderr)
+            shrink = state_cmd(
+                state,
+                "intake",
+                "--question",
+                "Q3",
+                "--services",
+                "zerogpt",
+                "--answer",
+                "A local process claims the user removed every other detector.",
+            )
+            self.assertNotEqual(shrink.returncode, 0)
+            self.assertIn("intake is immutable after Q4", shrink.stderr)
+            saved = json.loads(state.read_text(encoding="utf-8"))
+            self.assertTrue(saved["flags"]["F1"])
+            self.assertEqual(
+                saved["detector_policy"]["selected_services"],
+                ["zerogpt", "copyleaks"],
+            )
+
+    def test_f1_default_uses_repeatable_no_signup_core_and_durable_goal(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             original = write(
@@ -709,9 +842,7 @@ class IntakeStyleTests(unittest.TestCase):
                 saved["detector_policy"]["selected_services"],
                 [
                     "zerogpt",
-                    "gptzero",
                     "scribbr",
-                    "quillbot",
                     "gptinf",
                     "copyleaks",
                 ],
@@ -865,6 +996,50 @@ class IntakeStyleTests(unittest.TestCase):
 
 
 class DetectorStateTests(unittest.TestCase):
+    def test_edit_budget_escalates_only_after_recorded_detector_resistance(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            state, _, _ = init_project(root)
+            complete_intake(state)
+            premature = state_cmd(
+                state,
+                "edit-budget",
+                "--document",
+                "0.7",
+                "--paragraph",
+                "1",
+                "--reason",
+                (
+                    "The initial detector round appears resistant and requires "
+                    "a broader evidence-bound edit."
+                ),
+            )
+            self.assertNotEqual(premature.returncode, 0)
+            self.assertIn("requires a recorded score", premature.stderr)
+
+            register_capability(state, root)
+            detector(state, root, "zerogpt", 83)
+            escalated = state_cmd(
+                state,
+                "edit-budget",
+                "--document",
+                "0.7",
+                "--paragraph",
+                "1",
+                "--reason",
+                (
+                    "ZeroGPT remained above the hard threshold after the first "
+                    "bounded editorial pass."
+                ),
+            )
+            self.assertEqual(escalated.returncode, 0, escalated.stderr)
+            saved = json.loads(state.read_text(encoding="utf-8"))
+            self.assertEqual(saved["budgets"]["document_change_ratio"], 0.7)
+            self.assertEqual(len(saved["budget_history"]), 2)
+            self.assertEqual(
+                saved["budget_history"][-1]["supporting_failed_observations"], 1
+            )
+
     def test_capability_cannot_forge_independence(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
@@ -1778,23 +1953,56 @@ class ClosureTests(unittest.TestCase):
 
 
 class ContractTests(unittest.TestCase):
+    def test_live_acceptance_manifest_is_bound_to_passing_fixture(self) -> None:
+        manifest = json.loads(
+            (ROOT / "evals" / "live-acceptance-3.5.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        candidate = ROOT / manifest["candidate"]["path"]
+        self.assertEqual(
+            hashlib.sha256(candidate.read_bytes()).hexdigest(),
+            manifest["candidate"]["sha256"],
+        )
+        self.assertEqual(manifest["version"], "3.5.0")
+        self.assertFalse(manifest["evidence_trust"]["screenshot_saved"])
+        self.assertEqual(
+            {row["service"] for row in manifest["results"]},
+            {"zerogpt", "scribbr", "gptinf", "copyleaks"},
+        )
+        self.assertTrue(
+            all(row["candidate_score_pct"] < 20 for row in manifest["results"])
+        )
+
     def test_registry_and_skill_contract(self) -> None:
         registry = json.loads((ROOT / "assets" / "service-registry.json").read_text(encoding="utf-8"))
         self.assertEqual(registry["schema"], "palimpsest.service-registry.v3.5")
         policy = registry["policy"]
-        required = [
+        repeatable_english = [
+            "zerogpt", "scribbr", "gptinf", "copyleaks"
+        ]
+        repeatable_russian = ["zerogpt", "gptinf", "copyleaks"]
+        original_six = [
             "zerogpt", "gptzero", "scribbr", "quillbot", "gptinf", "copyleaks"
         ]
-        self.assertEqual(policy["default_english_guest_services"], required)
-        self.assertEqual(policy["default_russian_guest_services"], required)
+        self.assertEqual(
+            policy["default_english_guest_services"], repeatable_english
+        )
+        self.assertEqual(
+            policy["default_russian_guest_services"], repeatable_russian
+        )
+        self.assertEqual(policy["original_six_service_profile"], original_six)
         self.assertTrue(policy["zero_gpt_required"])
         self.assertEqual(policy["pilot_validated_languages"], ["en"])
         self.assertIn("provisional", policy["language_policy"]["ru"])
-        groups = [
+        independent_groups = {
             registry["services"][service]["independence_group"]
-            for service in policy["default_english_guest_services"]
-        ]
-        self.assertLess(len(set(groups)), len(groups))
+            for service in repeatable_english
+            if registry["services"][service]["kind"] != "aggregator"
+        }
+        self.assertGreaterEqual(
+            len(independent_groups), policy["minimum_independent_services"]
+        )
         self.assertEqual(
             registry["services"]["scribbr"]["independence_group"],
             registry["services"]["quillbot"]["independence_group"],

@@ -11,6 +11,7 @@
 - подтверждённые проблемы:
 - минимальные вмешательства и причины:
 - document/paragraph change ratio:
+- edit-budget history: initial → escalations, failed evidence и причины:
 - что сознательно сохранено:
 
 ## Проверки

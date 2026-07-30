@@ -41,13 +41,18 @@ Challenge связывает capture с текущей задачей и обн�
 
 ### Точный CEFR и полный голос
 
-Readability/style metrics — экраны drift. Короткие тексты шумны. Нужна
-side-by-side редакторская проверка.
+Readability/style metrics — экраны drift. Короткие тексты шумны, поэтому style
+screen использует более широкий, но всё равно блокирующий ceiling (а не
+автоматический pass). Нужна side-by-side редакторская проверка. Явно выбранный
+пользователем уровень авторитетнее автоматической source estimate;
+`infer_from_source` сохраняет строгий source-relative envelope.
 
 ### Population accuracy
 
-Имеющийся EN pilot мал и не является population benchmark. RU corpus остаётся
-provisional. Registry фиксирует наблюдения, а не вечный рейтинг сервисов.
+Имеющийся EN pilot и один успешный forward edit-cycle не являются population
+benchmark. Они доказывают работоспособность процесса на конкретном образце, а
+не гарантируют любой будущий текст. RU corpus остаётся provisional. Registry
+фиксирует наблюдения, а не вечный рейтинг сервисов.
 
 ## Поведение при несовместимых целях
 

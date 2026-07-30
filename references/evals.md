@@ -32,6 +32,14 @@
 26. plateau ошибочно завершил F1;
 27. blocked mandatory service или risk-sampling ошибочно прошли;
 28. final detector round зарегистрирован до F2/F3/F4.
+29. explicit B2 ошибочно блокируется из-за noisy C2 source estimate;
+30. lexical coverage false positive блокирует exact semantic mapping;
+31. semantic mapping ошибочно снимает number/negation/modality hard finding;
+32. edit budget расширяется без зарегистрированного detector resistance;
+33. sign-up-limited сервис тихо попадает в no-sign-up default;
+34. live success manifest не совпадает с SHA passing fixture.
+35. после failed F1 локальный процесс повторно записывает Q2/Q3 и снимает
+    обязательную функцию или сервис.
 
 ## Автоматический набор
 
@@ -73,6 +81,11 @@ book-scale редакторской апробацией, не доказыва�
 - longform-сценарий с добавленным абзацем и `sync`;
 - F4-сценарий с намеренно близким источнику фрагментом;
 - закрытие state без ручных подмен.
+
+Если screenshot capture среды не сработал, live report обязан прямо это
+сказать. DOM transcription можно использовать как forward-test observation,
+но нельзя называть подписанным receipt или регистрировать вместо требуемого raw
+capture.
 
 High-score yellow path отсутствует: любой score `>=20%` обязан оставить G3 red
 и проект OPEN. Yellow проверяется только для non-score ограничений.

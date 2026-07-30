@@ -258,6 +258,9 @@ def refresh_goal(st: dict) -> None:
         "functions": [name for name, enabled in st.get("flags", {}).items() if enabled],
         "style_mode": st.get("style_mode", "unselected"),
         "english_level": st.get("english_level", {}).get("target", "not_applicable"),
+        "english_level_mode": st.get("english_level", {}).get(
+            "target_mode", "not_applicable"
+        ),
         "requirements": st.get("intake", {}).get("Q4_requirements", {}).get("answer", ""),
         "score_mandatory": score_mandatory,
         "mandatory_detectors": list(selected) if score_mandatory else [],
@@ -332,6 +335,10 @@ def cmd_init(args: argparse.Namespace) -> int:
         if args.para_budget is not None
         else (0.60 if flags["F1"] else (0.35 if route == "surgical" else 0.45))
     )
+    if not 0 <= budget <= 1:
+        return fail("--budget must be between 0 and 1")
+    if not 0 <= para_budget <= 1:
+        return fail("--para-budget must be between 0 and 1")
     original_text = V.read_text(original)
     source_language = language_profile(original_text)
     detected_language = source_language["detected"]
@@ -388,6 +395,7 @@ def cmd_init(args: argparse.Namespace) -> int:
         "english_level": {
             "requested": "unselected" if language == "en" else "not_applicable",
             "target": "unselected" if language == "en" else "not_applicable",
+            "target_mode": "unselected" if language == "en" else "not_applicable",
             "source_estimate": "",
             "source_profile": {},
             "policy": (
@@ -411,10 +419,19 @@ def cmd_init(args: argparse.Namespace) -> int:
             "Q3_detectors": {"answer": "", "source": ""},
             "Q4_requirements": {"answer": "", "source": ""},
         },
+        "intake_locked": False,
         "budgets": {
             "document_change_ratio": budget,
             "paragraph_change_ratio": para_budget,
         },
+        "budget_history": [
+            {
+                "document_change_ratio": budget,
+                "paragraph_change_ratio": para_budget,
+                "reason": "initial route/function policy",
+                "recorded_at": V.now(),
+            }
+        ],
         "detector_policy": {
             "selected_services": services,
             "score_mandatory": bool(flags["F1"]),
@@ -480,6 +497,11 @@ def cmd_intake(args: argparse.Namespace) -> int:
         with V.locked_json(path) as st:
             if st.get("schema") != STATE_SCHEMA:
                 raise StateError("not a Palimpsest v3 state")
+            if st.get("intake_locked"):
+                raise StateError(
+                    "intake is immutable after Q4; initialize a new state for "
+                    "a user-approved function, detector-scope, or requirement change"
+                )
             expected_order = ["Q1", "Q2", "Q3", "Q4"]
             current_index = expected_order.index(args.question)
             missing_before = [
@@ -539,6 +561,11 @@ def cmd_intake(args: argparse.Namespace) -> int:
                     st["english_level"] = {
                         "requested": requested,
                         "target": target,
+                        "target_mode": (
+                            "inferred"
+                            if requested == "infer_from_source"
+                            else "explicit"
+                        ),
                         "source_estimate": level_payload["estimated_cefr"],
                         "source_profile": level_payload,
                         "policy": (
@@ -619,6 +646,8 @@ def cmd_intake(args: argparse.Namespace) -> int:
                 "source": args.source,
                 "recorded_at": V.now(),
             }
+            if args.question == "Q4":
+                st["intake_locked"] = True
             refresh_goal(st)
             add_event(st, "intake", question=args.question, source=args.source)
     except (FileNotFoundError, StateError) as exc:
@@ -760,7 +789,7 @@ def template_payload(st: dict, kind: str) -> dict | str:
             f"Mandatory detectors: {selected}. Hard pass: каждый score <20%; "
             "target: каждый score <15%.\n\n"
             "[Добавить before/after service×target table, detector rounds, "
-            "fidelity, style, English level и F2/F3/F4 evidence.]\n\n"
+            "budget history, fidelity, style, English level и F2/F3/F4 evidence.]\n\n"
             "## Ограничения\n\n"
             "[Указать target misses 15–<20, blocked/open blockers, provisional "
             "corpus и trust boundary; высокий score не называть успехом.]\n"
@@ -800,6 +829,9 @@ def template_payload(st: dict, kind: str) -> dict | str:
         )
         payload["english_level_target"] = st.get("english_level", {}).get(
             "target", "not_applicable"
+        )
+        payload["english_level_target_mode"] = st.get("english_level", {}).get(
+            "target_mode", "not_applicable"
         )
         payload["english_source_estimate"] = st.get("english_level", {}).get(
             "source_estimate", ""
@@ -1126,6 +1158,13 @@ def validate_attestation(st: dict, kind: str, path: Path) -> tuple[bool, list[st
         expected_level = st.get("english_level", {}).get("target", "not_applicable")
         if data.get("english_level_target") != expected_level:
             problems.append("style_review English level differs from the intake target")
+        expected_mode = st.get("english_level", {}).get(
+            "target_mode", "not_applicable"
+        )
+        if data.get("english_level_target_mode") != expected_mode:
+            problems.append(
+                "style_review English target mode differs from the intake decision"
+            )
         if data.get("english_source_estimate") != st.get("english_level", {}).get(
             "source_estimate", ""
         ):
@@ -1785,6 +1824,13 @@ def validate_plateau_candidate(
                 str(candidate),
                 "--target",
                 st["english_level"]["target"],
+                "--target-mode",
+                (
+                    "inferred"
+                    if st.get("english_level", {}).get("requested")
+                    == "infer_from_source"
+                    else "explicit"
+                ),
                 "--json",
             ]
         )
@@ -2228,6 +2274,87 @@ def cmd_move(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_edit_budget(args: argparse.Namespace) -> int:
+    """Escalate an F1 edit envelope only after observed detector resistance."""
+    path = state_path(args.state)
+    reason = args.reason.strip()
+    if len(reason) < 40:
+        return fail("--reason must contain 40+ characters")
+    if not 0 <= args.document <= 0.85:
+        return fail("--document must be between 0 and 0.85")
+    if not 0 <= args.paragraph <= 1:
+        return fail("--paragraph must be between 0 and 1")
+    try:
+        with V.locked_json(path) as st:
+            if st.get("schema") != STATE_SCHEMA:
+                raise StateError("not a Palimpsest v3.5 state")
+            if not st.get("flags", {}).get("F1"):
+                raise StateError("edit-budget escalation is available only for active F1")
+            previous_document = float(st["budgets"]["document_change_ratio"])
+            previous_paragraph = float(st["budgets"]["paragraph_change_ratio"])
+            if args.document < previous_document or args.paragraph < previous_paragraph:
+                raise StateError(
+                    "edit-budget only records progressive escalation; "
+                    "reinitialize to impose a smaller envelope"
+                )
+            if (
+                args.document == previous_document
+                and args.paragraph == previous_paragraph
+            ):
+                raise StateError("new edit budget is identical to the active budget")
+            threshold = float(st["detector_policy"]["threshold_pct"])
+            resistant_results = [
+                item
+                for item in st.get("detector_results", [])
+                if float(item.get("score_pct", -1)) >= threshold
+            ]
+            if not resistant_results:
+                raise StateError(
+                    "budget escalation requires a recorded score at or above "
+                    "the hard threshold"
+                )
+            st["budgets"] = {
+                "document_change_ratio": args.document,
+                "paragraph_change_ratio": args.paragraph,
+            }
+            st.setdefault("budget_history", []).append(
+                {
+                    "document_change_ratio": args.document,
+                    "paragraph_change_ratio": args.paragraph,
+                    "previous_document_change_ratio": previous_document,
+                    "previous_paragraph_change_ratio": previous_paragraph,
+                    "reason": reason,
+                    "supporting_failed_observations": len(resistant_results),
+                    "recorded_at": V.now(),
+                }
+            )
+            # Both artifacts assert final minimality and must be renewed under
+            # the new, explicitly broader envelope.
+            st.get("artifacts", {}).pop("style_review", None)
+            st.get("artifacts", {}).pop("report", None)
+            add_event(
+                st,
+                "edit_budget_escalated",
+                previous_document=previous_document,
+                document=args.document,
+                previous_paragraph=previous_paragraph,
+                paragraph=args.paragraph,
+            )
+    except (
+        FileNotFoundError,
+        StateError,
+        KeyError,
+        ValueError,
+        json.JSONDecodeError,
+    ) as exc:
+        return fail(str(exc))
+    print(
+        "edit budget escalated after detector resistance: "
+        f"document={args.document:g}, paragraph={args.paragraph:g}"
+    )
+    return 0
+
+
 def cmd_park(args: argparse.Namespace) -> int:
     path = state_path(args.state)
     try:
@@ -2290,6 +2417,109 @@ def semantic_authorization_units(st: dict) -> list[str]:
         str(row.get("id"))
         for row in data.get("source_units", [])
         if isinstance(row, dict) and row.get("verdict") == "authorized_change"
+    ]
+
+
+def semantic_coverage_reconciliation(
+    st: dict,
+    fidelity_payload: dict | None,
+) -> tuple[bool, list[str]]:
+    """Reconcile only lexical coverage false positives, never hard invariants.
+
+    ``fidelity_check.py`` deliberately over-flags deeply paraphrased sentences.
+    A current, digest-bound semantic review may reconcile CLAIM_DROPPED and
+    CLAIM_ADDED, but only when the exact finding is mapped to a preserved source
+    unit/current excerpt.  Numbers, polarity, modality, causality, chronology,
+    citations, protected literals, and every other deterministic finding remain
+    hard blockers regardless of an attestation.
+    """
+    if not fidelity_payload:
+        return False, ["fidelity payload is unavailable"]
+    errors = [
+        item
+        for item in fidelity_payload.get("findings", [])
+        if isinstance(item, dict) and item.get("severity") == "error"
+    ]
+    if not errors:
+        return False, ["no lexical coverage finding needs reconciliation"]
+    allowed = {"CLAIM_DROPPED", "CLAIM_ADDED"}
+    hard_codes = sorted(
+        {
+            str(item.get("code", "UNKNOWN"))
+            for item in errors
+            if item.get("code") not in allowed
+        }
+    )
+    if hard_codes:
+        return False, [
+            "semantic review cannot override hard fidelity findings: "
+            + ", ".join(hard_codes)
+        ]
+    semantic_ok, semantic_msg = artifact_health(st, "semantic_review")
+    if not semantic_ok:
+        return False, [semantic_msg]
+    semantic_path = Path(st["artifacts"]["semantic_review"]["path"])
+    semantic = V.load_json(semantic_path)
+    rows = [
+        row
+        for row in semantic.get("source_units", [])
+        if isinstance(row, dict)
+    ]
+    if any(row.get("verdict") != "preserved" for row in rows):
+        return False, [
+            "coverage reconciliation accepts preserved units only; "
+            "authorized changes require a new immutable source baseline"
+        ]
+
+    problems: list[str] = []
+    reconciled: list[str] = []
+    for finding in errors:
+        code = str(finding.get("code"))
+        excerpt = str(finding.get("excerpt", "")).strip()
+        if code == "CLAIM_DROPPED":
+            row: dict | None = None
+            sentence_number = finding.get("dropped_sentence")
+            if st.get("route") == "surgical" and isinstance(sentence_number, int):
+                expected_id = f"S{sentence_number:04d}"
+                row = next((item for item in rows if item.get("id") == expected_id), None)
+            if row is None:
+                row = next(
+                    (
+                        item
+                        for item in rows
+                        if excerpt
+                        and excerpt in str(item.get("original_excerpt", ""))
+                    ),
+                    None,
+                )
+            if row is None:
+                problems.append(
+                    "CLAIM_DROPPED finding is not bound to a preserved source unit"
+                )
+            else:
+                reconciled.append(f"{code}:{row.get('id')}")
+        elif code == "CLAIM_ADDED":
+            mapped = any(
+                excerpt
+                and any(
+                    excerpt in str(evidence.get("excerpt", ""))
+                    for evidence in row.get("edited_evidence", [])
+                    if isinstance(evidence, dict)
+                )
+                for row in rows
+            )
+            if not mapped:
+                problems.append(
+                    "CLAIM_ADDED finding is not contained in any exact edited mapping"
+                )
+            else:
+                reconciled.append(f"{code}:mapped")
+    if problems:
+        return False, problems
+    return True, [
+        "lexical claim-coverage findings reconciled by the current exact "
+        "source-unit review: " + ", ".join(reconciled),
+        "hard fidelity invariants were not overridden",
     ]
 
 
@@ -2592,10 +2822,26 @@ def assess_style_metric(st: dict, payload: dict | None) -> tuple[bool, list[str]
         return False, ["style-distance payload is unavailable"]
     reliability = str(payload.get("reliability", ""))
     if reliability != "ok":
-        return True, [
-            "short-text style distance is advisory only; no numeric match is claimed",
-            reliability or "reliability was not reported",
-        ]
+        distance = float(payload.get("distance", 101))
+        mode = st.get("style_mode")
+        if mode == "source_as_reference":
+            ok = distance <= 45.0
+            return ok, [
+                "short-text style distance uses a wider but still blocking "
+                f"source ceiling: {distance:g}/100 "
+                f"({'within' if ok else 'above'} 45)",
+                reliability or "reliability was not reported",
+            ]
+        if mode == "external_reference":
+            improvement = float(payload.get("improvement", -101))
+            ok = distance <= 60.0 and improvement >= -5.0
+            return ok, [
+                "short-text external-reference distance uses a wider blocking "
+                f"ceiling: {distance:g}/100 (ceiling 60)",
+                f"baseline improvement {improvement:+g} (floor -5)",
+                reliability or "reliability was not reported",
+            ]
+        return False, ["style baseline is not selected"]
     distance = float(payload.get("distance", 101))
     mode = st.get("style_mode")
     if mode == "source_as_reference":
@@ -2628,6 +2874,14 @@ def machine_checks(st: dict, state_file: Path) -> dict:
     )
     if fidelity is not None:
         V.atomic_write_json(fidelity_out, fidelity)
+    fidelity_raw_ok = bool(fidelity and fidelity.get("ok") and fidelity_rc == 0)
+    coverage_reconciled = False
+    coverage_reconciliation_details: list[str] = []
+    if not fidelity_raw_ok:
+        (
+            coverage_reconciled,
+            coverage_reconciliation_details,
+        ) = semantic_coverage_reconciliation(st, fidelity)
     minimality, minimality_rc, minimality_err = run_json(
         [
             sys.executable, str(SCRIPTS / "minimality.py"),
@@ -2682,6 +2936,13 @@ def machine_checks(st: dict, state_file: Path) -> dict:
                 "--original", st["files"]["original"],
                 "--edited", st["files"]["working"],
                 "--target", st["english_level"]["target"],
+                "--target-mode",
+                (
+                    "inferred"
+                    if st.get("english_level", {}).get("requested")
+                    == "infer_from_source"
+                    else "explicit"
+                ),
                 "--json",
             ]
         )
@@ -2689,7 +2950,10 @@ def machine_checks(st: dict, state_file: Path) -> dict:
     annotations_clean = "⟦" not in working_text and "⟧" not in working_text
     return {
         "fidelity": {
-            "ok": bool(fidelity and fidelity.get("ok") and fidelity_rc == 0),
+            "ok": fidelity_raw_ok or coverage_reconciled,
+            "raw_ok": fidelity_raw_ok,
+            "coverage_reconciled": coverage_reconciled,
+            "coverage_reconciliation_details": coverage_reconciliation_details,
             "returncode": fidelity_rc,
             "error": fidelity_err,
             "report": str(fidelity_out) if fidelity is not None else "",
@@ -2715,7 +2979,7 @@ def machine_checks(st: dict, state_file: Path) -> dict:
             "returncode": style_rc,
             "error": style_err,
             "payload": style,
-            "advisory_when_low_reliability": True,
+            "low_reliability_policy": "wider_blocking_ceiling_not_automatic_pass",
         },
         "english_level": {
             "ok": (
@@ -2832,7 +3096,19 @@ def verify_state(st: dict, state_file: Path) -> dict:
     fidelity_ok = checks["fidelity"]["ok"]
     minimality_ok = checks["minimality"]["ok"]
     details = [
-        f"fidelity machine screen: {'pass' if fidelity_ok else 'fail'}",
+        (
+            "fidelity machine screen: "
+            + (
+                "pass"
+                if checks["fidelity"].get("raw_ok")
+                else (
+                    "lexical coverage reconciled"
+                    if checks["fidelity"].get("coverage_reconciled")
+                    else "fail"
+                )
+            )
+        ),
+        *checks["fidelity"].get("coverage_reconciliation_details", []),
         f"edit budget: {'pass' if minimality_ok else 'fail'}",
         semantic_msg,
     ]
@@ -2843,8 +3119,11 @@ def verify_state(st: dict, state_file: Path) -> dict:
         )
     g7_color = (
         "red"
-        if not (fidelity_ok and minimality_ok and semantic_ok)
-        else ("yellow" if authorized_units else "green")
+        if (
+            not (fidelity_ok and minimality_ok and semantic_ok)
+            or bool(authorized_units)
+        )
+        else "green"
     )
     gates["G7"] = gate(
         g7_color,
@@ -3149,6 +3428,15 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--sample-ids")
     p.add_argument("--user-quote")
     p.set_defaults(func=cmd_detector_policy)
+
+    p = sub.add_parser(
+        "edit-budget",
+        help="progressively widen the F1 edit envelope after recorded detector resistance",
+    )
+    p.add_argument("--document", type=float, required=True)
+    p.add_argument("--paragraph", type=float, required=True)
+    p.add_argument("--reason", required=True)
+    p.set_defaults(func=cmd_edit_budget)
 
     p = sub.add_parser("move", help="record a hypothesis-driven edit")
     p.add_argument("--id", required=True)

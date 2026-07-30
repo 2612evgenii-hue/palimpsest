@@ -75,6 +75,54 @@ class FixtureSensitivityTests(unittest.TestCase):
         self.assertLess(edited["advisory_ai_smell"], original["advisory_ai_smell"])
         self.assertEqual(edited["counts"]["P0"], 0)
 
+    def test_live_success_fixture_preserves_internal_safety_contract(self) -> None:
+        candidate = FIXTURES / "edited-success-en.md"
+        pattern = self.scan("edited-success-en.md")
+        self.assertEqual(pattern["counts"], {"P0": 0, "P1": 0, "P2": 0})
+
+        minimality = run(
+            MINIMALITY,
+            "--original",
+            FIXTURES / "ai-en.md",
+            "--current",
+            candidate,
+            "--budget",
+            "0.85",
+            "--para-budget",
+            "1",
+            "--json",
+        )
+        self.assertEqual(minimality.returncode, 0, minimality.stderr)
+        self.assertAlmostEqual(data(minimality)["doc_change_ratio"], 0.7925, places=4)
+
+        level = run(
+            ENGLISH_LEVEL,
+            "--original",
+            FIXTURES / "ai-en.md",
+            "--edited",
+            candidate,
+            "--target",
+            "B2",
+            "--target-mode",
+            "explicit",
+            "--json",
+        )
+        self.assertEqual(level.returncode, 0, level.stderr)
+        self.assertEqual(data(level)["edited"]["estimated_cefr"], "B2")
+
+        fidelity = run(
+            FIDELITY,
+            "--original",
+            FIXTURES / "ai-en.md",
+            "--edited",
+            candidate,
+            "--json",
+        )
+        self.assertEqual(fidelity.returncode, 1)
+        codes = {item["code"] for item in data(fidelity)["findings"]}
+        self.assertTrue(codes)
+        self.assertLessEqual(codes, {"CLAIM_DROPPED", "CLAIM_ADDED"})
+
 
 PATTERN_CASES = {
     "en_delve": ("The report will delve into the evidence.", "EN-L1-delve"),
@@ -299,7 +347,7 @@ class StyleTests(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("must not be negative", details[1])
 
-    def test_short_style_metric_is_explicitly_advisory(self) -> None:
+    def test_short_style_metric_rejects_extreme_drift(self) -> None:
         ok, details = STATE_MODULE.assess_style_metric(
             {"style_mode": "source_as_reference"},
             {
@@ -307,8 +355,19 @@ class StyleTests(unittest.TestCase):
                 "distance": 80,
             },
         )
+        self.assertFalse(ok)
+        self.assertIn("above 45", details[0])
+
+    def test_short_style_metric_keeps_wider_but_finite_envelope(self) -> None:
+        ok, details = STATE_MODULE.assess_style_metric(
+            {"style_mode": "source_as_reference"},
+            {
+                "reliability": "low: short text",
+                "distance": 42.9,
+            },
+        )
         self.assertTrue(ok)
-        self.assertIn("advisory only", details[0])
+        self.assertIn("within 45", details[0])
 
 
 class FidelityRegressionTests(unittest.TestCase):
@@ -445,6 +504,25 @@ class EnglishLevelTests(unittest.TestCase):
             self.assertEqual(proc.returncode, 1)
             codes = {item["code"] for item in data(proc)["findings"]}
             self.assertIn("ENGLISH_LEVEL_DRIFT", codes)
+
+    def test_explicit_level_overrides_noisy_source_estimate(self) -> None:
+        proc = run(
+            ENGLISH_LEVEL,
+            "--original",
+            FIXTURES / "ai-en.md",
+            "--edited",
+            FIXTURES / "edited-success-en.md",
+            "--target",
+            "B2",
+            "--target-mode",
+            "explicit",
+            "--json",
+        )
+        result = data(proc)
+        self.assertEqual(result["source"]["estimated_cefr"], "C2")
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertEqual(result["target_mode"], "explicit")
+        self.assertEqual(result["edited"]["estimated_cefr"], "B2")
 
 
 class SegmentRegressionTests(unittest.TestCase):

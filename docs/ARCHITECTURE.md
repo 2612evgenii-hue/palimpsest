@@ -17,6 +17,7 @@ stateDiagram-v2
     [*] --> OPEN
     OPEN --> ROUND_FAIL: any score >=20 / missing / blocked
     ROUND_FAIL --> OPEN: mark + bounded edit
+    ROUND_FAIL --> OPEN: evidence-bound edit-budget escalation
     OPEN --> ROUND_PASS: all current scores <20
     ROUND_PASS --> OPEN: any edit or F2/F3/F4 artifact after round
     ROUND_PASS --> CLOSED: every gate green and final round is last
@@ -60,7 +61,8 @@ baseline. G3 становится green только для current round `pass`
 - overlap и report;
 - closure digest.
 
-Изменение Q3 очищает capability, results, rounds, plateaus и waivers.
+После Q4 intake immutable. Пользовательское изменение Q3 создаёт новый state;
+capability, results, rounds, plateaus и waivers старого state не переносятся.
 
 ## Long-form
 
@@ -76,5 +78,6 @@ State защищает от stale и изменённого evidence, но не 
 - bare score запрещён;
 - registry facts неизменяемы;
 - local waiver не завершает score_mandatory;
-- semantic authorized change остаётся ограничением без внешнего receipt;
+- semantic authorized change оставляет G7 red; подтверждённую смысловую правку
+  нужно перенести в новый immutable source baseline;
 - никаких обещаний авторства или будущей необнаружимости.
