@@ -304,12 +304,26 @@ def recompute_selection_v2(data: dict, prereg: dict) -> dict:
         for item in pair_results
         if item["status"] == "single_family_window"
     ]
+    selected_results = {
+        item["pair"]: item for item in pair_results if item["pair"] in selected
+    }
+    stable_selected = [
+        pair
+        for pair in selected
+        if all(
+            cell["ai_noise_range_pct"] <= 5
+            for cell in selected_results[pair]["cells"]
+        )
+    ]
+    unstable_selected = [pair for pair in selected if pair not in stable_selected]
     return {
         "pair_results": pair_results,
         "selected_pairs": selected,
+        "stable_selected_pairs": stable_selected,
+        "unstable_selected_pairs": unstable_selected,
         "diagnostic_pairs": diagnostic,
         "maximum_selected_pairs": selection_rule["maximum_selected_pairs"],
-        "edit_variants_allowed": bool(selected),
+        "edit_variants_allowed": bool(stable_selected),
     }
 
 
@@ -345,6 +359,12 @@ def load_result(path: Path) -> dict:
     computed = recompute_selection(data, prereg)
     if data.get("selection") != computed:
         raise ValueError("declared baseline scout selection does not recompute")
+    if (
+        prereg.get("schema") == "palimpsest.baseline-scout-preregistration.v2"
+        and data.get("interpretation", {}).get("next_experiment_scope")
+        != computed["stable_selected_pairs"]
+    ):
+        raise ValueError("scout v2 next experiment scope ignores stability")
     return data
 
 

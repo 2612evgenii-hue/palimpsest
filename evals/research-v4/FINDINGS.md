@@ -260,3 +260,37 @@ Scientific-ячейка не доказывает пользу правки, п�
 правка. Калибровочный успех `micro-01` не переносится и правило в production
 не допускается. Полный результат:
 [`holdout-02-result.json`](holdout-02-result.json).
+
+## Baseline-scout-02: стабильное cross-family окно
+
+Шесть новых AI-polish/human пар, порядок, exact SHA и пороги были опубликованы
+commit `c45afb3` до первого score. Scout не содержал edit-вариантов. Первичная
+матрица включила все 24 pair×role×service ячейки; для трёх пар, где хотя бы
+один сервис прошёл frozen usable-cell rule, обе human/AI ячейки обоих сервисов
+повторены до `n=3`. Всего включено 48 exact-SHA scans с transition signal.
+Scores считаны из terminal DOM state; screenshot-capture отсутствует. Поэтому
+результат годится для внутреннего выбора calibration scope, но имеет более
+слабую evidence-доказательность и не используется как внешний accuracy claim.
+
+| Pair | ZeroGPT human → AI | Scribbr human → AI | Same-SHA AI range | Класс |
+|---|---:|---:|---:|---|
+| arxiv-polish-03 | 0% → 25% | 0% → 6% | 0 / 0 п.п. | single-family diagnostic |
+| arxiv-polish-04 | 0% → 0% | 0% → 0% | 0 / 0 п.п. | unusable floor |
+| news-polish-03 | 17,5% → 22,3% | 0% → 0% | 0 / 0 п.п. | AI−human gap too small |
+| news-polish-04 | 30,3% → 46,7% | 0% → 29% | 0 / 0 п.п. | stable cross-family |
+| essay-b1-polish-02 | 26,3% → 100% | 0% → 100% | 0 / 0 п.п. | unusable ceiling |
+| qa-polish-02 | 0% → 47,2/46,3/40,6% | 0% → 51% | 6,6 / 0 п.п. | cross-family, unstable |
+
+Frozen selection формально выбрал `news-polish-04` и `qa-polish-02`, но общий
+протокол заранее запрещает использовать same-SHA range больше `5 п.п.` для
+admission. Валидатор поэтому отдельно вычисляет stable scope:
+только `news-polish-04`. Подделка next-experiment scope, SHA, repeat policy или
+transition signal отклоняется.
+
+Практический вывод: впервые есть строгий EN-текст, где малое изменение можно
+измерять одновременно в ZeroGPT и Scribbr без пола, потолка и видимого шума.
+Это всё ещё не правило гуманизации и не detector accuracy claim. Следующий
+однофакторный план должен быть опубликован до scores и сохранять factual
+content, formal-news genre, current C2 envelope и source-as-reference style.
+Полный результат:
+[`baseline-scout-02-result.json`](baseline-scout-02-result.json).

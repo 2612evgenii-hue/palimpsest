@@ -397,6 +397,16 @@ class ResearchScoutTests(unittest.TestCase):
     def result_path(self) -> Path:
         return ROOT / "evals/research-v4/baseline-scout-01-result.json"
 
+    def result_path_two(self) -> Path:
+        return ROOT / "evals/research-v4/baseline-scout-02-result.json"
+
+    def copied_result_two(self, root: Path, data: dict) -> Path:
+        prereg = ROOT / "evals/research-v4/baseline-scout-02-preregistration.json"
+        (root / prereg.name).write_bytes(prereg.read_bytes())
+        result = root / "result.json"
+        result.write_text(json.dumps(data), encoding="utf-8")
+        return result
+
     def test_baseline_scout_recomputes_frozen_selection(self) -> None:
         data = research_scout.load_result(self.result_path())
         self.assertEqual(
@@ -523,6 +533,8 @@ class ResearchScoutTests(unittest.TestCase):
             prereg,
         )
         self.assertEqual(selection["selected_pairs"], ["p1"])
+        self.assertEqual(selection["stable_selected_pairs"], ["p1"])
+        self.assertEqual(selection["unstable_selected_pairs"], [])
         self.assertEqual(selection["diagnostic_pairs"], ["p2"])
         self.assertTrue(selection["edit_variants_allowed"])
         tampered = json.loads(json.dumps({"observations": observations}))
@@ -530,6 +542,41 @@ class ResearchScoutTests(unittest.TestCase):
         first_observation["transition_signals"][0] = "loading_or_disabled_observed"
         with self.assertRaisesRegex(ValueError, "first-scan transition"):
             research_scout.recompute_selection(tampered, prereg)
+
+    def test_cross_family_scout_two_keeps_only_stable_news_scope(self) -> None:
+        data = research_scout.load_result(self.result_path_two())
+        self.assertEqual(
+            data["selection"]["selected_pairs"],
+            ["news-polish-04", "qa-polish-02"],
+        )
+        self.assertEqual(
+            data["selection"]["stable_selected_pairs"],
+            ["news-polish-04"],
+        )
+        self.assertEqual(
+            data["selection"]["unstable_selected_pairs"],
+            ["qa-polish-02"],
+        )
+        self.assertEqual(
+            data["interpretation"]["next_experiment_scope"],
+            ["news-polish-04"],
+        )
+
+    def test_cross_family_scout_two_rejects_forged_stable_scope(self) -> None:
+        data = json.loads(self.result_path_two().read_text(encoding="utf-8"))
+        data["interpretation"]["next_experiment_scope"] = ["qa-polish-02"]
+        with tempfile.TemporaryDirectory() as directory:
+            path = self.copied_result_two(Path(directory), data)
+            with self.assertRaisesRegex(ValueError, "ignores stability"):
+                research_scout.load_result(path)
+
+    def test_cross_family_scout_two_rejects_missing_transition(self) -> None:
+        data = json.loads(self.result_path_two().read_text(encoding="utf-8"))
+        data["observations"][0]["transition_signals"][1] = "missing"
+        with tempfile.TemporaryDirectory() as directory:
+            path = self.copied_result_two(Path(directory), data)
+            with self.assertRaisesRegex(ValueError, "transition signal"):
+                research_scout.load_result(path)
 
 
 class ResearchMicroEditTests(unittest.TestCase):

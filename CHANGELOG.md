@@ -38,12 +38,15 @@
   вычисляет verdict, не доверяя заявленному analysis;
 - production skill прямо запрещает использовать «сделать claim прямее» как
   detector-рецепт; это допустимо только по смысловой/редакторской причине;
-- до новых edit-вариантов заморожен `baseline-scout-02` на шести новых
+- завершён `baseline-scout-02` на шести новых
   AI-polish/human EN-парах, из которых четыре относятся к строгому
   scientific/formal-news письму;
-- scout v2 разрешает следующий edit experiment только при одновременном
-  измеримом AI−human окне в ZeroGPT и Scribbr, требует transition signal и
-  повторяет полную двухсервисную baseline-матрицу;
+- стабильное cross-family окно найдено на `news-polish-04`: ZeroGPT
+  human/AI `30,3/46,7%`, Scribbr `0/29%`, все повторы без шума;
+- technical pair исключён из следующего scope из-за ZeroGPT same-SHA range
+  `6,6 п.п.`, хотя первичный двухсервисный baseline прошёл;
+- scout v2 требует transition signal, повторяет полную двухсервисную матрицу,
+  заново вычисляет стабильный scope и отклоняет его подделку;
 - skill запрещает blanket split/merge по vendor-подсказке и требует
   quality-first screening до live recheck;
 - полный selftest расширен новыми holdout/scout/anti-forgery слоями.

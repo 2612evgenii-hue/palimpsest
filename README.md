@@ -80,13 +80,15 @@ Scribbr остался на полу `0%`. Результат — `0/2`, пра�
 Это также запрещает трактовать «сделать claim прямее» как универсальный
 detector-рецепт: такая правка остаётся только редакторским инструментом.
 
-До следующего edit-фактора заморожен `baseline-scout-02`: шесть новых
-AI-polish/human EN-пар (два scientific abstracts, два formal-news текста,
-B1 learner essay и technical explanation). В отличие от первого scout,
-вариантный эксперимент разрешается только для текста, где и ZeroGPT, и Scribbr
-одновременно находятся вне пола/потолка, дают достаточный разрыв AI−human и
-проходят transition-safe повторы. Если такого окна нет, новые правки на этих
-текстах не создаются.
+`Baseline-scout-02` затем проверил шесть новых AI-polish/human EN-пар и
+впервые нашёл стабильное измерительное окно сразу в двух семьях. На
+`news-polish-04` ZeroGPT дал human `30,3%` и AI `46,7%`, Scribbr — `0%` и
+`29%`; все четыре ячейки повторились без шума. Technical pair формально прошёл
+первичный отбор, но ZeroGPT AI same-SHA range составил `6,6 п.п.`, поэтому
+исключён из следующего experiment scope. Scientific-03 остался
+одно-сервисной диагностикой, а B1 AI-polish упёрся в `100%` обоих сервисов.
+Итоговый следующий scope — только стабильный formal-news текст; правил
+редактирования scout не проверял и не допустил.
 
 См.
 [протокол](evals/research-v4/PROTOCOL.md),
@@ -98,7 +100,7 @@ B1 learner essay и technical explanation). В отличие от первог�
 [baseline scout-01](evals/research-v4/baseline-scout-01-result.json) /
 [micro-01](evals/research-v4/micro-01-result.json) /
 [holdout-02](evals/research-v4/holdout-02-result.json) /
-[baseline scout-02 preregistration](evals/research-v4/baseline-scout-02-preregistration.json).
+[baseline scout-02](evals/research-v4/baseline-scout-02-result.json).
 
 Воспроизвести закреплённый corpus, варианты pilot-05 и проверку Pareto:
 
@@ -125,6 +127,8 @@ python3 scripts/research_holdout.py \
 python3 scripts/research_corpus.py \
   --manifest evals/research-v4/scout-02-corpus-manifest.json \
   --out-dir work/research-corpus-scout02
+python3 scripts/research_scout.py \
+  --result evals/research-v4/baseline-scout-02-result.json
 ```
 
 ## Для чего нужен Palimpsest
