@@ -1,0 +1,113 @@
+{
+  "schema": "palimpsest.research-corpus.v1",
+  "dataset": {
+    "id": "yaful/MAGE",
+    "revision": "342663f0a2b775455c023f5d36a1341ff0ec5402",
+    "config": "default",
+    "split": "test",
+    "license": "apache-2.0",
+    "source_url": "https://huggingface.co/datasets/yaful/MAGE"
+  },
+  "samples": [
+    {
+      "id": "pubmed-01-human",
+      "row_index": 57986,
+      "source": "pubmed_human",
+      "authorship": "human",
+      "topic_pair": "pubmed-01",
+      "partition": "calibration",
+      "word_count": 109,
+      "sha256": "0160e2fa040fcb3ea1207f875ba7fca47dd07d18f31bf0aec6f6f5130ee60bea"
+    },
+    {
+      "id": "pubmed-01-ai",
+      "row_index": 58186,
+      "source": "pubmed_gpt4",
+      "authorship": "ai",
+      "topic_pair": "pubmed-01",
+      "partition": "calibration",
+      "word_count": 242,
+      "sha256": "dcab5ddecf148ef377c9161409df8af57e7324bbae076ffc22351b74d23c5bbc"
+    },
+    {
+      "id": "pubmed-02-human",
+      "row_index": 57987,
+      "source": "pubmed_human",
+      "authorship": "human",
+      "topic_pair": "pubmed-02",
+      "partition": "calibration",
+      "word_count": 106,
+      "sha256": "0bba6436453f19d0bb72faea4a22b7ab4dbd76e52f836ff793d380bd44e98e66"
+    },
+    {
+      "id": "pubmed-02-ai",
+      "row_index": 58187,
+      "source": "pubmed_gpt4",
+      "authorship": "ai",
+      "topic_pair": "pubmed-02",
+      "partition": "calibration",
+      "word_count": 212,
+      "sha256": "1a5598d6eceb9bb912f78a1ca68bffaa21f4dc94f6750dbfafcee853e348bf79"
+    },
+    {
+      "id": "pubmed-03-human",
+      "row_index": 57988,
+      "source": "pubmed_human",
+      "authorship": "human",
+      "topic_pair": "pubmed-03",
+      "partition": "holdout",
+      "word_count": 110,
+      "sha256": "0b6cbb3aadd0ee29674a86068e8b4ffb3d7a686ceb925da6d6eca3c79cf2d022"
+    },
+    {
+      "id": "pubmed-03-ai",
+      "row_index": 58188,
+      "source": "pubmed_gpt4",
+      "authorship": "ai",
+      "topic_pair": "pubmed-03",
+      "partition": "holdout",
+      "word_count": 132,
+      "sha256": "7b74e3305ae6549927210da439b07138c337ffa4bbdd5b5ed1e9fa764ad92f2d"
+    },
+    {
+      "id": "pubmed-04-human",
+      "row_index": 57989,
+      "source": "pubmed_human",
+      "authorship": "human",
+      "topic_pair": "pubmed-04",
+      "partition": "holdout",
+      "word_count": 105,
+      "sha256": "47e93e98b7508157cce6b672bfe38a5fae7183322c7a5b9da35a3cb90df5fd08"
+    },
+    {
+      "id": "pubmed-04-ai",
+      "row_index": 58189,
+      "source": "pubmed_gpt4",
+      "authorship": "ai",
+      "topic_pair": "pubmed-04",
+      "partition": "holdout",
+      "word_count": 97,
+      "sha256": "587beff7f65bd785fea713ad30ff6d423c31ff98fa7207d24ae5be4eb52684bb"
+    },
+    {
+      "id": "pubmed-05-human",
+      "row_index": 57992,
+      "source": "pubmed_human",
+      "authorship": "human",
+      "topic_pair": "pubmed-05",
+      "partition": "calibration",
+      "word_count": 147,
+      "sha256": "c30401eb87bb9f50d560c950a4ec3bb279f872228bd613f73a1441a5f331932e"
+    },
+    {
+      "id": "pubmed-05-ai",
+      "row_index": 58192,
+      "source": "pubmed_gpt4",
+      "authorship": "ai",
+      "topic_pair": "pubmed-05",
+      "partition": "calibration",
+      "word_count": 199,
+      "sha256": "3d78f3cb35d03ebacb5fab9b1e9ea73d9160d9de2dcd99af9d3638bd8d9070dd"
+    }
+  ]
+}

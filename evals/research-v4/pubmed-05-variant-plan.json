@@ -1,0 +1,13 @@
+{
+  "schema": "palimpsest.variant-plan.v1",
+  "sample_id": "pubmed-05-ai",
+  "original_sha256": "3d78f3cb35d03ebacb5fab9b1e9ea73d9160d9de2dcd99af9d3638bd8d9070dd",
+  "operations": [
+    {
+      "id": "s1-remove-answer-frame",
+      "factor": "answer_frame",
+      "old": "Yes, microteaching and standardized students can support faculty development for clinical teaching.",
+      "new": "Microteaching and standardized students can support faculty development for clinical teaching."
+    }
+  ]
+}
