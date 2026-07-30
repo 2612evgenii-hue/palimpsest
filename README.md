@@ -56,13 +56,18 @@ Human control при этом получил 38% в ZeroGPT, 0% в Scribbr и 99
 live-score: оба кандидата сохранили грубую метку C2, но вышли за допустимый
 reading-grade envelope. Оба AI baseline затем дали 100% ×3 в ZeroGPT/Scribbr,
 а четыре прошедших quality screen компаратора остались на 100%. Ни один вариант
-не превращён в «рецепт». См.
+не превращён в «рецепт». Новый preregistered baseline scout выбрал два
+несатурированных AI-polish кейса для следующего микроэксперимента: ZeroGPT
+стабилен на `63,7–63,8%` для scientific abstract и `76,3%` для formal news,
+тогда как Scribbr дал тем же SHA соответственно `100%` и `0%`. Это
+инструментальный отбор, не доказательство правила. См.
 [протокол](evals/research-v4/PROTOCOL.md),
 [текущие результаты](evals/research-v4/FINDINGS.md) и
 [машиночитаемые pilot-03](evals/research-v4/pilot-03-canonical.json) /
 [pilot-04](evals/research-v4/pilot-04-b1-canonical.json) /
 [pilot-05](evals/research-v4/pilot-05-tech-canonical.json) /
-[holdout-01](evals/research-v4/holdout-01-pubmed-canonical.json).
+[holdout-01](evals/research-v4/holdout-01-pubmed-canonical.json) /
+[baseline scout-01](evals/research-v4/baseline-scout-01-result.json).
 
 Воспроизвести закреплённый corpus, варианты pilot-05 и проверку Pareto:
 
@@ -80,6 +85,8 @@ python3 scripts/research_variants.py \
   --out-dir work/qa-tech-01-progressive
 python3 scripts/research_pilot.py \
   --pilot evals/research-v4/pilot-05-tech-canonical.json
+python3 scripts/research_scout.py \
+  --result evals/research-v4/baseline-scout-01-result.json
 ```
 
 ## Для чего нужен Palimpsest

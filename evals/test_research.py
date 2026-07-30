@@ -15,6 +15,7 @@ sys.path.insert(0, str(SCRIPTS))
 import research_matrix  # noqa: E402
 import research_corpus  # noqa: E402
 import research_pilot  # noqa: E402
+import research_scout  # noqa: E402
 import research_variants  # noqa: E402
 
 
@@ -344,6 +345,63 @@ class ResearchCorpusTests(unittest.TestCase):
             tampered.write_text(json.dumps(pilot), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "declared pareto mismatch"):
                 research_pilot.validate_declared_pareto(tampered)
+
+
+class ResearchScoutTests(unittest.TestCase):
+    def result_path(self) -> Path:
+        return ROOT / "evals/research-v4/baseline-scout-01-result.json"
+
+    def test_baseline_scout_recomputes_frozen_selection(self) -> None:
+        data = research_scout.load_result(self.result_path())
+        self.assertEqual(
+            data["selection"]["selected_pairs"],
+            ["arxiv-polish-01", "news-polish-01"],
+        )
+        cells = {
+            (cell["pair"], cell["service"]): cell
+            for cell in data["selection"]["passing_cells"]
+        }
+        self.assertEqual(
+            cells[("arxiv-polish-01", "zerogpt")]["ai_scores_pct"],
+            [63.7, 63.8, 63.7],
+        )
+        self.assertEqual(
+            cells[("news-polish-01", "zerogpt")]["ai_scores_pct"],
+            [76.3, 76.3, 76.3],
+        )
+
+    def test_baseline_scout_rejects_forged_selection(self) -> None:
+        data = json.loads(self.result_path().read_text(encoding="utf-8"))
+        data["selection"]["selected_pairs"] = ["essay-b2-01"]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            prereg = ROOT / "evals/research-v4/baseline-scout-01-preregistration.json"
+            (root / prereg.name).write_bytes(prereg.read_bytes())
+            path = root / "result.json"
+            path.write_text(json.dumps(data), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "does not recompute"):
+                research_scout.load_result(path)
+
+    def test_baseline_scout_rejects_unfrozen_extra_repeats(self) -> None:
+        data = json.loads(self.result_path().read_text(encoding="utf-8"))
+        observation = next(
+            item
+            for item in data["observations"]
+            if item["pair"] == "essay-b2-01"
+            and item["role"] == "ai"
+            and item["service"] == "zerogpt"
+        )
+        observation["scores_pct"].append(10.6)
+        observation["terminal_states"].append("complete")
+        observation["observed_at"].append("2026-07-30T17:00:00Z")
+        prereg = json.loads(
+            (
+                ROOT
+                / "evals/research-v4/baseline-scout-01-preregistration.json"
+            ).read_text(encoding="utf-8")
+        )
+        with self.assertRaisesRegex(ValueError, "repeat policy"):
+            research_scout.recompute_selection(data, prereg)
 
 
 class ResearchVariantTests(unittest.TestCase):

@@ -1,0 +1,346 @@
+{
+  "schema": "palimpsest.baseline-scout-result.v1",
+  "experiment_id": "baseline-scout-01-resolvable-window",
+  "status": "completed",
+  "preregistration": {
+    "path": "baseline-scout-01-preregistration.json",
+    "sha256": "3860d1eba00b2e4f4411f15b42736ddbd53a93c85ec5f1e33cc34207242a5d2d",
+    "git_commit": "534eda93212e956d3796590fb54a3c8f3696b5c4"
+  },
+  "observations": [
+    {
+      "pair": "essay-b2-01",
+      "role": "human",
+      "service": "zerogpt",
+      "scores_pct": [0],
+      "candidate_sha256": "fde002808f4d2dc4de38eecbb95afe140f59225b0ec85bcc122b649ec930f413",
+      "post_visible_text_sha256": "fde002808f4d2dc4de38eecbb95afe140f59225b0ec85bcc122b649ec930f413",
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T16:40:30.860Z"]
+    },
+    {
+      "pair": "essay-b2-01",
+      "role": "ai",
+      "service": "zerogpt",
+      "scores_pct": [10.6],
+      "candidate_sha256": "fa57294f03f196a85ceab6b8c7cfac6de7e33ebabf10672e4d2da7f6b2ca0e37",
+      "post_visible_text_sha256": "fa57294f03f196a85ceab6b8c7cfac6de7e33ebabf10672e4d2da7f6b2ca0e37",
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T16:41:27.709Z"]
+    },
+    {
+      "pair": "arxiv-polish-01",
+      "role": "human",
+      "service": "zerogpt",
+      "scores_pct": [0, 0, 0],
+      "candidate_sha256": "beeb53b69015e5433c32cafb47f0468c0ecd6f2800c1f8ffe790dc2973fa4672",
+      "post_visible_text_sha256": "beeb53b69015e5433c32cafb47f0468c0ecd6f2800c1f8ffe790dc2973fa4672",
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T16:41:33.419Z",
+        "2026-07-30T16:49:09.843Z",
+        "2026-07-30T16:49:13.378Z"
+      ]
+    },
+    {
+      "pair": "arxiv-polish-01",
+      "role": "ai",
+      "service": "zerogpt",
+      "scores_pct": [63.7, 63.8, 63.7],
+      "candidate_sha256": "49ce9ed9f3889e5c230c501e76bb0bbcece879750d23e00302e9ef67b1548892",
+      "post_visible_text_sha256": "49ce9ed9f3889e5c230c501e76bb0bbcece879750d23e00302e9ef67b1548892",
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T16:43:04.010Z",
+        "2026-07-30T16:49:11.863Z",
+        "2026-07-30T16:49:15.174Z"
+      ]
+    },
+    {
+      "pair": "news-polish-01",
+      "role": "human",
+      "service": "zerogpt",
+      "scores_pct": [0, 0, 0],
+      "candidate_sha256": "1fdbbfdba75ea5fd72c0c89f16e57f0ef3d294739e1c21165ab19c8f20341cb5",
+      "post_visible_text_sha256": "1fdbbfdba75ea5fd72c0c89f16e57f0ef3d294739e1c21165ab19c8f20341cb5",
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T16:43:10.360Z",
+        "2026-07-30T16:49:25.939Z",
+        "2026-07-30T16:49:29.940Z"
+      ]
+    },
+    {
+      "pair": "news-polish-01",
+      "role": "ai",
+      "service": "zerogpt",
+      "scores_pct": [76.3, 76.3, 76.3],
+      "candidate_sha256": "9d643193ce1c5068120c9fad4eebc9a9027f2b36f62a86ce830efd3f7734c200",
+      "post_visible_text_sha256": "9d643193ce1c5068120c9fad4eebc9a9027f2b36f62a86ce830efd3f7734c200",
+      "terminal_states": ["complete", "complete", "complete"],
+      "capture_status": "missing",
+      "observed_at": [
+        "2026-07-30T16:43:15.717Z",
+        "2026-07-30T16:49:28.223Z",
+        "2026-07-30T16:49:31.981Z"
+      ]
+    },
+    {
+      "pair": "pubmed-02",
+      "role": "human",
+      "service": "zerogpt",
+      "scores_pct": [89.6],
+      "candidate_sha256": "0bba6436453f19d0bb72faea4a22b7ab4dbd76e52f836ff793d380bd44e98e66",
+      "post_visible_text_sha256": "0bba6436453f19d0bb72faea4a22b7ab4dbd76e52f836ff793d380bd44e98e66",
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T16:43:21.839Z"]
+    },
+    {
+      "pair": "pubmed-02",
+      "role": "ai",
+      "service": "zerogpt",
+      "scores_pct": [100],
+      "candidate_sha256": "1a5598d6eceb9bb912f78a1ca68bffaa21f4dc94f6750dbfafcee853e348bf79",
+      "post_visible_text_sha256": "1a5598d6eceb9bb912f78a1ca68bffaa21f4dc94f6750dbfafcee853e348bf79",
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T16:43:26.070Z"]
+    },
+    {
+      "pair": "pubmed-05",
+      "role": "human",
+      "service": "zerogpt",
+      "scores_pct": [22.3],
+      "candidate_sha256": "c30401eb87bb9f50d560c950a4ec3bb279f872228bd613f73a1441a5f331932e",
+      "post_visible_text_sha256": "c30401eb87bb9f50d560c950a4ec3bb279f872228bd613f73a1441a5f331932e",
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T16:43:31.109Z"]
+    },
+    {
+      "pair": "pubmed-05",
+      "role": "ai",
+      "service": "zerogpt",
+      "scores_pct": [94],
+      "candidate_sha256": "3d78f3cb35d03ebacb5fab9b1e9ea73d9160d9de2dcd99af9d3638bd8d9070dd",
+      "post_visible_text_sha256": "3d78f3cb35d03ebacb5fab9b1e9ea73d9160d9de2dcd99af9d3638bd8d9070dd",
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T16:43:39.173Z"]
+    },
+    {
+      "pair": "essay-b2-01",
+      "role": "human",
+      "service": "scribbr",
+      "scores_pct": [0],
+      "ai_generated_pct": [0],
+      "ai_refined_pct": [0],
+      "human_pct": [100],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "fde002808f4d2dc4de38eecbb95afe140f59225b0ec85bcc122b649ec930f413",
+      "post_visible_text_sha256": "fde002808f4d2dc4de38eecbb95afe140f59225b0ec85bcc122b649ec930f413",
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T16:46:46.868Z"]
+    },
+    {
+      "pair": "essay-b2-01",
+      "role": "ai",
+      "service": "scribbr",
+      "scores_pct": [0],
+      "ai_generated_pct": [0],
+      "ai_refined_pct": [0],
+      "human_pct": [100],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "fa57294f03f196a85ceab6b8c7cfac6de7e33ebabf10672e4d2da7f6b2ca0e37",
+      "post_visible_text_sha256": "fa57294f03f196a85ceab6b8c7cfac6de7e33ebabf10672e4d2da7f6b2ca0e37",
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T16:46:52.918Z"]
+    },
+    {
+      "pair": "arxiv-polish-01",
+      "role": "human",
+      "service": "scribbr",
+      "scores_pct": [0],
+      "ai_generated_pct": [0],
+      "ai_refined_pct": [0],
+      "human_pct": [100],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "beeb53b69015e5433c32cafb47f0468c0ecd6f2800c1f8ffe790dc2973fa4672",
+      "post_visible_text_sha256": "beeb53b69015e5433c32cafb47f0468c0ecd6f2800c1f8ffe790dc2973fa4672",
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T16:47:10.803Z"]
+    },
+    {
+      "pair": "arxiv-polish-01",
+      "role": "ai",
+      "service": "scribbr",
+      "scores_pct": [100],
+      "ai_generated_pct": [100],
+      "ai_refined_pct": [0],
+      "human_pct": [0],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "49ce9ed9f3889e5c230c501e76bb0bbcece879750d23e00302e9ef67b1548892",
+      "post_visible_text_sha256": "49ce9ed9f3889e5c230c501e76bb0bbcece879750d23e00302e9ef67b1548892",
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T16:47:19.783Z"]
+    },
+    {
+      "pair": "news-polish-01",
+      "role": "human",
+      "service": "scribbr",
+      "scores_pct": [0],
+      "ai_generated_pct": [0],
+      "ai_refined_pct": [0],
+      "human_pct": [100],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "1fdbbfdba75ea5fd72c0c89f16e57f0ef3d294739e1c21165ab19c8f20341cb5",
+      "post_visible_text_sha256": "1fdbbfdba75ea5fd72c0c89f16e57f0ef3d294739e1c21165ab19c8f20341cb5",
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T16:47:34.027Z"]
+    },
+    {
+      "pair": "news-polish-01",
+      "role": "ai",
+      "service": "scribbr",
+      "scores_pct": [0],
+      "ai_generated_pct": [0],
+      "ai_refined_pct": [0],
+      "human_pct": [100],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "9d643193ce1c5068120c9fad4eebc9a9027f2b36f62a86ce830efd3f7734c200",
+      "post_visible_text_sha256": "9d643193ce1c5068120c9fad4eebc9a9027f2b36f62a86ce830efd3f7734c200",
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T16:47:45.662Z"]
+    },
+    {
+      "pair": "pubmed-02",
+      "role": "human",
+      "service": "scribbr",
+      "scores_pct": [0],
+      "ai_generated_pct": [0],
+      "ai_refined_pct": [0],
+      "human_pct": [100],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "0bba6436453f19d0bb72faea4a22b7ab4dbd76e52f836ff793d380bd44e98e66",
+      "post_visible_text_sha256": "0bba6436453f19d0bb72faea4a22b7ab4dbd76e52f836ff793d380bd44e98e66",
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T16:48:02.290Z"]
+    },
+    {
+      "pair": "pubmed-02",
+      "role": "ai",
+      "service": "scribbr",
+      "scores_pct": [100],
+      "ai_generated_pct": [100],
+      "ai_refined_pct": [0],
+      "human_pct": [0],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "1a5598d6eceb9bb912f78a1ca68bffaa21f4dc94f6750dbfafcee853e348bf79",
+      "post_visible_text_sha256": "1a5598d6eceb9bb912f78a1ca68bffaa21f4dc94f6750dbfafcee853e348bf79",
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T16:48:14.453Z"]
+    },
+    {
+      "pair": "pubmed-05",
+      "role": "human",
+      "service": "scribbr",
+      "scores_pct": [0],
+      "ai_generated_pct": [0],
+      "ai_refined_pct": [0],
+      "human_pct": [100],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "c30401eb87bb9f50d560c950a4ec3bb279f872228bd613f73a1441a5f331932e",
+      "post_visible_text_sha256": "c30401eb87bb9f50d560c950a4ec3bb279f872228bd613f73a1441a5f331932e",
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T16:48:29.923Z"]
+    },
+    {
+      "pair": "pubmed-05",
+      "role": "ai",
+      "service": "scribbr",
+      "scores_pct": [100],
+      "ai_generated_pct": [100],
+      "ai_refined_pct": [0],
+      "human_pct": [0],
+      "model_version": "v7.1.0",
+      "candidate_sha256": "3d78f3cb35d03ebacb5fab9b1e9ea73d9160d9de2dcd99af9d3638bd8d9070dd",
+      "post_visible_text_sha256": "3d78f3cb35d03ebacb5fab9b1e9ea73d9160d9de2dcd99af9d3638bd8d9070dd",
+      "terminal_states": ["complete"],
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T16:48:43.123Z"]
+    },
+    {
+      "pair": "arxiv-polish-01",
+      "role": "ai",
+      "service": "copyleaks",
+      "scores_pct": [],
+      "candidate_sha256": "49ce9ed9f3889e5c230c501e76bb0bbcece879750d23e00302e9ef67b1548892",
+      "post_visible_text_sha256": "49ce9ed9f3889e5c230c501e76bb0bbcece879750d23e00302e9ef67b1548892",
+      "terminal_states": ["blocked"],
+      "error_code": "scan_limit_reached",
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T16:53:39.635Z"]
+    },
+    {
+      "pair": "news-polish-01",
+      "role": "ai",
+      "service": "copyleaks",
+      "scores_pct": [],
+      "candidate_sha256": "9d643193ce1c5068120c9fad4eebc9a9027f2b36f62a86ce830efd3f7734c200",
+      "post_visible_text_sha256": "9d643193ce1c5068120c9fad4eebc9a9027f2b36f62a86ce830efd3f7734c200",
+      "terminal_states": ["error"],
+      "error_code": "timeout_loading_16_progressbars",
+      "capture_status": "missing",
+      "observed_at": ["2026-07-30T16:55:50.598Z"]
+    }
+  ],
+  "selection": {
+    "passing_cells": [
+      {
+        "pair": "arxiv-polish-01",
+        "service": "zerogpt",
+        "human_scores_pct": [0, 0, 0],
+        "ai_scores_pct": [63.7, 63.8, 63.7],
+        "human_median_pct": 0,
+        "ai_median_pct": 63.7,
+        "ai_noise_range_pct": 0.1,
+        "gap_pct": 63.7
+      },
+      {
+        "pair": "news-polish-01",
+        "service": "zerogpt",
+        "human_scores_pct": [0, 0, 0],
+        "ai_scores_pct": [76.3, 76.3, 76.3],
+        "human_median_pct": 0,
+        "ai_median_pct": 76.3,
+        "ai_noise_range_pct": 0,
+        "gap_pct": 76.3
+      }
+    ],
+    "selected_pairs": ["arxiv-polish-01", "news-polish-01"],
+    "maximum_selected_pairs": 3
+  },
+  "summary": [
+    "Two of five frozen pairs met the preregistered resolvability rule, both through ZeroGPT.",
+    "Scribbr v7.1.0 placed the same AI-polish samples at opposite extremes: scientific abstract 100%, formal news 0%.",
+    "ZeroGPT scored the B2 AI-native essay at 10.6% and its human control at 0%, below the frozen lower bound for a reduction experiment.",
+    "ZeroGPT produced a severe human false positive on PubMed-02 (89.6%) and a smaller one on PubMed-05 (22.3%).",
+    "Copyleaks produced no admissible numeric result: one scan-limit block and one loading timeout with 16 progress indicators.",
+    "The scout selects instrumentation targets only; it does not establish an editing factor or a cross-detector effect."
+  ]
+}

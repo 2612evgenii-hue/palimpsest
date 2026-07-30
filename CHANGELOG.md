@@ -14,9 +14,14 @@
   одном прогрессивном кандидате;
 - добавлен preregistered PubMed holdout: confirmatory split отклонён на обоих
   текстах из-за source-relative C2 drift до detector scan;
+- добавлен preregistered baseline scout на пяти EN-парах: два AI-polish текста
+  выбраны только как несатурированные ZeroGPT-мишени, а Scribbr на тех же SHA
+  расходится до противоположных `100%` и `0%`;
+- новый `research_scout.py` заново вычисляет frozen selection, repeat policy,
+  SHA binding и отклоняет подделанное решение scout;
 - skill запрещает blanket split/merge по vendor-подсказке и требует
   quality-first screening до live recheck;
-- полный selftest расширен с 114 тестов новым holdout/anti-forgery слоем.
+- полный selftest расширен новыми holdout/scout/anti-forgery слоями.
 
 ## 3.5.0 — 2026-07-30
 
